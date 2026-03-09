@@ -9,7 +9,7 @@ from pathlib import Path
 
 PROJECTS_DIR = Path("projects")
 APP_TITLE = "📂 Project Viewer"
-APP_PASSWORD = st.secrets.get("password", "changeme")
+APP_PASSWORD = st.secrets.get("password", "helloworld")
 
 LANG_MAP = {
     ".py": "python", ".js": "javascript", ".jsx": "jsx", ".ts": "typescript",
