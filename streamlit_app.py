@@ -7,7 +7,7 @@ from pathlib import Path
 # CONFIG & CONSTANTS
 # ─────────────────────────────────────────────
 
-PROJECTS_DIR = Path("projects")
+PROJECTS_DIR = Path("Projects")
 APP_TITLE = "📂 Project Viewer"
 APP_PASSWORD = st.secrets.get("password", "helloworld")
 
@@ -82,15 +82,15 @@ def main():
     # Ensure directory exists
     PROJECTS_DIR.mkdir(exist_ok=True)
     
-    projects = [p for p in PROJECTS_DIR.iterdir() if p.is_dir() and p.name not in IGNORE]
+    Projects = [p for p in PROJECTS_DIR.iterdir() if p.is_dir() and p.name not in IGNORE]
 
     with st.sidebar:
         st.title(APP_TITLE)
-        if not projects:
+        if not Projects:
             st.info(f"Empty directory: `{PROJECTS_DIR}/`")
             return
 
-        selected_project_path = st.radio("Select Project", projects, format_func=lambda x: x.name)
+        selected_project_path = st.radio("Select Project", Projects, format_func=lambda x: x.name)
         
         st.divider()
         st.download_button(
