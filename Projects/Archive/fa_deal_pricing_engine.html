@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FA Deal Pricing Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg-0: #04080d;
+  --bg-1: #0b1018;
+  --bg-2: #111a28;
+  --bg-3: #182438;
+  --bg-input: #0e1620;
+  --border: #1e3048;
+  --border-focus: #2d8cf0;
+  --t0: #eef2f9;
+  --t1: #b8c6dc;
+  --t2: #7a8faa;
+  --t3: #4e6380;
+  --accent: #2d8cf0;
+  --accent-dim: rgba(45,140,240,0.10);
+  --green: #0fc882;
+  --green-dim: rgba(15,200,130,0.08);
+  --red: #f0463c;
+  --red-dim: rgba(240,70,60,0.08);
+  --amber: #e8a317;
+  --amber-dim: rgba(232,163,23,0.08);
+  --teal: #1ac7c7;
+  --teal-dim: rgba(26,199,199,0.08);
+  --purple: #8a63f2;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Instrument Sans',sans-serif; background:var(--bg-0); color:var(--t0); min-height:100vh; }
+body::before { content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse at 20% 0%, rgba(45,140,240,0.04) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 100%, rgba(26,199,199,0.03) 0%, transparent 50%);
+  pointer-events:none; z-index:0; }
+.app { position:relative; z-index:1; max-width:1480px; margin:0 auto; }
+
+/* Header */
+.header { padding:18px 32px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border); background:rgba(4,8,13,0.92); backdrop-filter:blur(20px);
+  position:sticky; top:0; z-index:100; }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-mark { width:32px; height:32px; border-radius:8px; display:grid; place-items:center;
+  background:linear-gradient(135deg, var(--accent), var(--teal));
+  font-family:'Fira Code',monospace; font-weight:700; font-size:11px; color:white; }
+.brand-name { font-size:15px; font-weight:600; letter-spacing:-0.3px; }
+.brand-name span { color:var(--t3); font-weight:400; margin-left:6px; }
+.header-actions { display:flex; gap:8px; }
+.btn { padding:9px 18px; border:none; border-radius:7px; font-family:inherit;
+  font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+.btn-accent { background:var(--accent); color:white; }
+.btn-accent:hover { background:#4da3ff; transform:translateY(-1px); }
+.btn-ghost { background:transparent; color:var(--t2); border:1px solid var(--border); }
+.btn-ghost:hover { border-color:var(--t2); color:var(--t0); }
+.btn-teal { background:var(--teal); color:var(--bg-0); }
+
+/* Layout */
+.main { display:grid; grid-template-columns:380px 1fr; min-height:calc(100vh - 58px); }
+
+/* Left Panel - Deal Inputs */
+.input-panel { background:var(--bg-1); border-right:1px solid var(--border); padding:24px;
+  overflow-y:auto; max-height:calc(100vh - 58px); position:sticky; top:58px; }
+.input-section { margin-bottom:24px; }
+.input-section-title { font-size:11px; color:var(--accent); text-transform:uppercase;
+  letter-spacing:1px; font-weight:600; margin-bottom:14px;
+  display:flex; align-items:center; gap:8px; }
+.input-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.field { margin-bottom:14px; }
+.field-label { display:block; font-size:11px; color:var(--t2); margin-bottom:5px; font-weight:500; }
+.field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+input[type="number"], input[type="text"], select {
+  width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--border);
+  border-radius:7px; color:var(--t0); font-family:'Fira Code',monospace; font-size:12px;
+  transition:border-color 0.2s; outline:none; }
+input:focus, select:focus { border-color:var(--border-focus); }
+select { cursor:pointer; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237a8faa'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+option { background:var(--bg-2); }
+
+.range-display { display:flex; justify-content:space-between; align-items:center; }
+.range-value { font-family:'Fira Code',monospace; font-size:13px; color:var(--accent); font-weight:500; }
+input[type="range"] { width:100%; -webkit-appearance:none; background:transparent; margin:8px 0; }
+input[type="range"]::-webkit-slider-track { height:4px; background:var(--border); border-radius:2px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px;
+  border-radius:50%; background:var(--accent); cursor:pointer; margin-top:-6px;
+  box-shadow:0 0 8px rgba(45,140,240,0.4); }
+
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
+.toggle-label { font-size:12px; color:var(--t1); }
+.toggle { position:relative; width:40px; height:22px; cursor:pointer; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-track { position:absolute; inset:0; background:var(--border); border-radius:11px; transition:0.2s; }
+.toggle input:checked + .toggle-track { background:var(--accent); }
+.toggle-track::after { content:''; position:absolute; width:16px; height:16px; border-radius:50%;
+  background:white; left:3px; top:3px; transition:0.2s; }
+.toggle input:checked + .toggle-track::after { transform:translateX(18px); }
+
+.calc-btn { width:100%; padding:14px; background:linear-gradient(135deg, var(--accent), var(--teal));
+  border:none; border-radius:10px; color:white; font-family:inherit;
+  font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; letter-spacing:0.3px; }
+.calc-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(45,140,240,0.25); }
+
+/* Right Panel - Results */
+.results-panel { padding:28px 32px; overflow-y:auto; }
+.results-empty { display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:60vh; text-align:center; }
+.results-empty-icon { font-size:56px; margin-bottom:16px; opacity:0.4; }
+.results-empty h2 { font-size:20px; font-weight:600; color:var(--t1); margin-bottom:8px; }
+.results-empty p { font-size:13px; color:var(--t3); max-width:360px; line-height:1.7; }
+
+/* Result sections */
+.result-section { margin-bottom:28px; animation:fadeUp 0.4s ease-out both; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.result-section:nth-child(2) { animation-delay:0.1s; }
+.result-section:nth-child(3) { animation-delay:0.2s; }
+.result-section:nth-child(4) { animation-delay:0.3s; }
+
+.section-bar { display:flex; align-items:center; gap:10px; margin-bottom:16px; padding-bottom:10px;
+  border-bottom:1px solid var(--border); }
+.section-num { font-family:'Fira Code',monospace; font-size:10px; padding:3px 8px; border-radius:4px; }
+.num-blue { background:var(--accent-dim); color:var(--accent); }
+.num-green { background:var(--green-dim); color:var(--green); }
+.num-teal { background:var(--teal-dim); color:var(--teal); }
+.num-amber { background:var(--amber-dim); color:var(--amber); }
+.section-title { font-size:15px; font-weight:600; letter-spacing:-0.3px; }
+.section-meta { margin-left:auto; font-size:10px; color:var(--t3); font-family:'Fira Code',monospace; }
+
+/* KPI row */
+.kpi-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:20px; }
+.kpi { background:var(--bg-2); border:1px solid var(--border); border-radius:9px; padding:16px;
+  position:relative; overflow:hidden; }
+.kpi::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.kpi.k-green::after { background:var(--green); } .kpi.k-red::after { background:var(--red); }
+.kpi.k-amber::after { background:var(--amber); } .kpi.k-blue::after { background:var(--accent); }
+.kpi.k-teal::after { background:var(--teal); }
+.kpi-label { font-size:10px; color:var(--t3); text-transform:uppercase; letter-spacing:.7px; font-weight:500; }
+.kpi-val { font-family:'Fira Code',monospace; font-size:20px; font-weight:500; margin:6px 0 2px; }
+.kpi-sub { font-size:10px; color:var(--t3); font-family:'Fira Code',monospace; }
+
+/* Cards */
+.card { background:var(--bg-2); border:1px solid var(--border); border-radius:10px; padding:22px; }
+.card-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.chart-box { position:relative; height:280px; }
+.chart-box.short { height:220px; }
+
+/* Scenario table */
+.scenario-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+.scenario-card { background:var(--bg-1); border:1px solid var(--border); border-radius:10px;
+  padding:20px; text-align:center; transition:all 0.25s; cursor:pointer; position:relative; }
+.scenario-card:hover { border-color:var(--accent); transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+.scenario-card.recommended { border-color:var(--green); }
+.scenario-card.recommended::before { content:'RECOMMENDED'; position:absolute; top:-1px; left:50%;
+  transform:translateX(-50%); background:var(--green); color:var(--bg-0); font-size:8px;
+  font-weight:700; letter-spacing:1px; padding:2px 10px; border-radius:0 0 6px 6px; }
+.sc-name { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--t3);
+  margin-bottom:8px; font-weight:500; }
+.sc-fee { font-family:'Fira Code',monospace; font-size:28px; font-weight:600; margin-bottom:4px; }
+.sc-unit { font-size:11px; color:var(--t2); }
+.sc-detail { margin-top:12px; font-size:11px; color:var(--t2); line-height:1.8; }
+.sc-detail .good { color:var(--green); } .sc-detail .bad { color:var(--red); }
+.sc-detail .neutral { color:var(--amber); }
+
+/* Lifecycle */
+.lifecycle { display:flex; gap:0; overflow-x:auto; padding:8px 0; }
+.lc-step { flex:1; min-width:120px; text-align:center; position:relative; }
+.lc-dot { width:36px; height:36px; border-radius:50%; margin:0 auto 8px;
+  display:grid; place-items:center; font-size:14px; position:relative; z-index:2; }
+.lc-step:not(:last-child)::after { content:''; position:absolute; top:18px; left:calc(50% + 18px);
+  width:calc(100% - 36px); height:2px; background:var(--border); z-index:1; }
+.lc-name { font-size:10px; font-weight:600; color:var(--t1); margin-bottom:3px; }
+.lc-time { font-size:9px; color:var(--t3); font-family:'Fira Code',monospace; }
+.lc-detail { font-size:9px; color:var(--t2); margin-top:4px; line-height:1.4; }
+.lc-dot.blue { background:var(--accent-dim); border:2px solid var(--accent); }
+.lc-dot.teal { background:var(--teal-dim); border:2px solid var(--teal); }
+.lc-dot.green { background:var(--green-dim); border:2px solid var(--green); }
+.lc-dot.amber { background:var(--amber-dim); border:2px solid var(--amber); }
+.lc-dot.purple { background:rgba(138,99,242,0.1); border:2px solid var(--purple); }
+
+/* Deal summary */
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.summary-item { padding:12px 16px; background:var(--bg-1); border-radius:8px;
+  display:flex; justify-content:space-between; align-items:center; }
+.summary-label { font-size:11px; color:var(--t2); }
+.summary-val { font-family:'Fira Code',monospace; font-size:13px; font-weight:500; }
+
+/* Sensitivity */
+.sens-table { width:100%; border-collapse:collapse; font-size:11px; }
+.sens-table th { text-align:center; padding:8px; color:var(--t3); font-size:10px;
+  text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); }
+.sens-table td { text-align:center; padding:8px 6px; border-bottom:1px solid rgba(30,48,72,0.4);
+  font-family:'Fira Code',monospace; font-size:11px; }
+.sens-table .header-col { text-align:left; color:var(--t1); font-weight:500; }
+.margin-good { color:var(--green); } .margin-ok { color:var(--amber); } .margin-bad { color:var(--red); }
+
+/* Print-friendly deal sheet */
+.deal-sheet { display:none; }
+@media print {
+  .deal-sheet { display:block; }
+  .input-panel, .header { display:none; }
+  .main { grid-template-columns:1fr; }
+  body { background:white; color:black; }
+}
+
+@media (max-width:1100px) {
+  .main { grid-template-columns:1fr; }
+  .input-panel { position:relative; max-height:none; }
+  .kpi-row { grid-template-columns:1fr 1fr; }
+  .scenario-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="header">
+  <div class="brand">
+    <div class="brand-mark">DPE</div>
+    <div class="brand-name">Deal Pricing Engine<span>Fund Administration</span></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="resetForm()">↻ Reset</button>
+    <button class="btn btn-ghost" onclick="exportDealSheet()">⬇ Export Deal Sheet</button>
+    <button class="btn btn-accent" onclick="calculate()">Calculate Pricing</button>
+  </div>
+</header>
+
+<div class="main">
+
+<!-- ═══ LEFT: DEAL INPUTS ═══ -->
+<div class="input-panel">
+
+  <div class="input-section">
+    <div class="input-section-title">Fund Details</div>
+    <div class="field">
+      <label class="field-label">Client / Deal Name</label>
+      <input type="text" id="dealName" value="Prospective Fund Co." />
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Fund Type</label>
+        <select id="fundType">
+          <option value="ucits">UCITS</option>
+          <option value="aif">AIF</option>
+          <option value="etf">ETF (UCITS)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Domicile</label>
+        <select id="domicile">
+          <option value="ireland">Ireland</option>
+          <option value="luxembourg">Luxembourg</option>
+          <option value="cayman">Cayman</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Strategy</label>
+        <select id="strategy">
+          <option value="equity">Equity</option>
+          <option value="fixed_income">Fixed Income</option>
+          <option value="multi_asset">Multi-Asset</option>
+          <option value="alternatives">Alternatives / Credit</option>
+          <option value="real_assets">Real Assets</option>
+          <option value="money_market">Money Market</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Complexity</label>
+        <select id="complexity">
+          <option value="standard">Standard</option>
+          <option value="moderate">Moderate</option>
+          <option value="complex">Complex</option>
+          <option value="highly_complex">Highly Complex</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-section">
+    <div class="input-section-title">Scale Parameters</div>
+    <div class="field">
+      <div class="range-display">
+        <label class="field-label">Expected AUM ($M)</label>
+        <span class="range-value" id="aumDisplay">2,000</span>
+      </div>
+      <input type="range" id="aum" min="100" max="20000" step="100" value="2000"
+        oninput="document.getElementById('aumDisplay').textContent=parseInt(this.value).toLocaleString()" />
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Share Classes</label>
+        <input type="number" id="shareClasses" value="5" min="1" max="50" />
+      </div>
+      <div class="field">
+        <label class="field-label">Sub-Funds</label>
+        <input type="number" id="subFunds" value="1" min="1" max="20" />
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">NAV Frequency</label>
+        <select id="navFreq">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Est. Txns / Month</label>
+        <input type="number" id="txnVolume" value="500" min="0" max="50000" />
+      </div>
+    </div>
+  </div>
+
+  <div class="input-section">
+    <div class="input-section-title">Operational Scope</div>
+    <div class="toggle-row">
+      <span class="toggle-label">Transfer Agency</span>
+      <label class="toggle"><input type="checkbox" id="ta" checked /><span class="toggle-track"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Custody (Internal)</span>
+      <label class="toggle"><input type="checkbox" id="custody" /><span class="toggle-track"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">FX Execution</span>
+      <label class="toggle"><input type="checkbox" id="fx" checked /><span class="toggle-track"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Regulatory Reporting (CBI)</span>
+      <label class="toggle"><input type="checkbox" id="regReporting" checked /><span class="toggle-track"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Performance & Attribution</span>
+      <label class="toggle"><input type="checkbox" id="perf" /><span class="toggle-track"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Investor Reporting</span>
+      <label class="toggle"><input type="checkbox" id="investorRep" checked /><span class="toggle-track"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Tax Services</span>
+      <label class="toggle"><input type="checkbox" id="tax" /><span class="toggle-track"></span></label>
+    </div>
+  </div>
+
+  <div class="input-section">
+    <div class="input-section-title">Pricing Parameters</div>
+    <div class="field">
+      <div class="range-display">
+        <label class="field-label">Target Margin (%)</label>
+        <span class="range-value" id="marginDisplay">25%</span>
+      </div>
+      <input type="range" id="targetMargin" min="5" max="50" step="1" value="25"
+        oninput="document.getElementById('marginDisplay').textContent=this.value+'%'" />
+    </div>
+    <div class="field">
+      <label class="field-label">Competitive Context</label>
+      <select id="competitive">
+        <option value="sole_bid">Sole Bid</option>
+        <option value="competitive" selected>Competitive (2-3 bidders)</option>
+        <option value="highly_competitive">Highly Competitive (4+ bidders)</option>
+        <option value="incumbent_defense">Incumbent Defense</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="field-label">Win Probability (%)</label>
+      <input type="number" id="winProb" value="40" min="1" max="100" />
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">⚡ Calculate Pricing & Scenarios</button>
+
+</div>
+
+<!-- ═══ RIGHT: RESULTS ═══ -->
+<div class="results-panel" id="resultsPanel">
+
+  <div class="results-empty" id="emptyState">
+    <div class="results-empty-icon">⚡</div>
+    <h2>Configure Deal Parameters</h2>
+    <p>Set up the deal on the left panel, then click Calculate to generate pricing scenarios, lifecycle schematics, and a deal summary.</p>
+  </div>
+
+  <div id="resultsContent" style="display:none;"></div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// COST MODEL
+// ═══════════════════════════════════════════════════════════════
+const COST_MODEL = {
+  base_cost: { ucits: 85000, aif: 110000, etf: 95000 },
+  complexity_mult: { standard: 1.0, moderate: 1.35, complex: 1.8, highly_complex: 2.5 },
+  domicile_mult: { ireland: 1.0, luxembourg: 1.12, cayman: 0.9 },
+  nav_freq_mult: { daily: 1.0, weekly: 0.55, monthly: 0.35 },
+  strategy_mult: { equity: 1.0, fixed_income: 1.15, multi_asset: 1.25, alternatives: 1.6, real_assets: 1.8, money_market: 0.75 },
+  share_class_cost: 4500,
+  sub_fund_cost: 40000,
+  txn_cost_per: 1.2,
+  services: {
+    ta: { label: 'Transfer Agency', cost: 35000, lifecycle: { step: 'Investor Servicing', icon: '👥', tz: 'GMT/EST' } },
+    custody: { label: 'Custody', cost: 25000, lifecycle: { step: 'Custody & Settlement', icon: '🔒', tz: 'GMT' } },
+    fx: { label: 'FX Execution', cost: 12000, lifecycle: { step: 'FX Management', icon: '💱', tz: 'GMT/EST/APAC' } },
+    regReporting: { label: 'CBI Reporting', cost: 28000, lifecycle: { step: 'Regulatory Filing', icon: '📋', tz: 'GMT' } },
+    perf: { label: 'Performance', cost: 22000, lifecycle: { step: 'Performance Calc', icon: '📊', tz: 'GMT' } },
+    investorRep: { label: 'Investor Reporting', cost: 18000, lifecycle: { step: 'Client Reports', icon: '📄', tz: 'GMT' } },
+    tax: { label: 'Tax Services', cost: 32000, lifecycle: { step: 'Tax Processing', icon: '🏛', tz: 'GMT' } },
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// CALCULATE
+// ═══════════════════════════════════════════════════════════════
+function calculate() {
+  const inputs = getInputs();
+  const costs = computeCosts(inputs);
+  const scenarios = generateScenarios(inputs, costs);
+  const lifecycle = buildLifecycle(inputs);
+  const sensitivity = buildSensitivity(inputs, costs);
+
+  renderResults(inputs, costs, scenarios, lifecycle, sensitivity);
+}
+
+function getInputs() {
+  return {
+    dealName: document.getElementById('dealName').value,
+    fundType: document.getElementById('fundType').value,
+    domicile: document.getElementById('domicile').value,
+    strategy: document.getElementById('strategy').value,
+    complexity: document.getElementById('complexity').value,
+    aum: parseInt(document.getElementById('aum').value),
+    shareClasses: parseInt(document.getElementById('shareClasses').value),
+    subFunds: parseInt(document.getElementById('subFunds').value),
+    navFreq: document.getElementById('navFreq').value,
+    txnVolume: parseInt(document.getElementById('txnVolume').value),
+    targetMargin: parseInt(document.getElementById('targetMargin').value),
+    competitive: document.getElementById('competitive').value,
+    winProb: parseInt(document.getElementById('winProb').value),
+    services: {
+      ta: document.getElementById('ta').checked,
+      custody: document.getElementById('custody').checked,
+      fx: document.getElementById('fx').checked,
+      regReporting: document.getElementById('regReporting').checked,
+      perf: document.getElementById('perf').checked,
+      investorRep: document.getElementById('investorRep').checked,
+      tax: document.getElementById('tax').checked,
+    }
+  };
+}
+
+function computeCosts(inp) {
+  const base = COST_MODEL.base_cost[inp.fundType] || 85000;
+  const complexMult = COST_MODEL.complexity_mult[inp.complexity];
+  const domMult = COST_MODEL.domicile_mult[inp.domicile];
+  const navMult = COST_MODEL.nav_freq_mult[inp.navFreq];
+  const stratMult = COST_MODEL.strategy_mult[inp.strategy];
+
+  let coreCost = base * complexMult * domMult * navMult * stratMult;
+  coreCost += (inp.shareClasses - 1) * COST_MODEL.share_class_cost;
+  coreCost += (inp.subFunds - 1) * COST_MODEL.sub_fund_cost;
+  coreCost += inp.txnVolume * 12 * COST_MODEL.txn_cost_per;
+
+  let serviceCost = 0;
+  const serviceBreakdown = [];
+  for (const [key, enabled] of Object.entries(inp.services)) {
+    if (enabled) {
+      const svc = COST_MODEL.services[key];
+      const adjCost = svc.cost * complexMult;
+      serviceCost += adjCost;
+      serviceBreakdown.push({ name: svc.label, cost: adjCost });
+    }
+  }
+
+  const totalCost = coreCost + serviceCost;
+  return { coreCost, serviceCost, totalCost, serviceBreakdown };
+}
+
+function generateScenarios(inp, costs) {
+  const aumUsd = inp.aum * 1_000_000;
+  const marginTarget = inp.targetMargin / 100;
+
+  // Target price = cost / (1 - margin)
+  const targetFee = (costs.totalCost / (1 - marginTarget)) / aumUsd * 10000; // in bps
+  const targetRevenue = costs.totalCost / (1 - marginTarget);
+  const targetMarginAbs = targetRevenue - costs.totalCost;
+
+  // Competitive adjustment
+  const compAdj = { sole_bid: 1.15, competitive: 1.0, highly_competitive: 0.88, incumbent_defense: 0.92 };
+  const adj = compAdj[inp.competitive] || 1.0;
+
+  // Three scenarios
+  const aggressive = {
+    name: 'Aggressive',
+    fee: Math.round(targetFee * 0.82 * adj * 10) / 10,
+  };
+  aggressive.revenue = aggressive.fee / 10000 * aumUsd;
+  aggressive.margin = (aggressive.revenue - costs.totalCost) / aggressive.revenue * 100;
+  aggressive.breakeven = costs.totalCost / (aggressive.fee / 10000) / 1_000_000;
+
+  const recommended = {
+    name: 'Recommended',
+    fee: Math.round(targetFee * adj * 10) / 10,
+  };
+  recommended.revenue = recommended.fee / 10000 * aumUsd;
+  recommended.margin = (recommended.revenue - costs.totalCost) / recommended.revenue * 100;
+  recommended.breakeven = costs.totalCost / (recommended.fee / 10000) / 1_000_000;
+
+  const premium = {
+    name: 'Premium',
+    fee: Math.round(targetFee * 1.18 * adj * 10) / 10,
+  };
+  premium.revenue = premium.fee / 10000 * aumUsd;
+  premium.margin = (premium.revenue - costs.totalCost) / premium.revenue * 100;
+  premium.breakeven = costs.totalCost / (premium.fee / 10000) / 1_000_000;
+
+  return { aggressive, recommended, premium, targetFee: Math.round(targetFee * adj * 10) / 10 };
+}
+
+function buildLifecycle(inp) {
+  const steps = [
+    { name: 'Trade Capture', icon: '📥', tz: 'GMT/EST', detail: 'T+0 trade matching', color: 'blue' },
+    { name: 'Pricing & Valuation', icon: '💰', tz: 'GMT 16:00', detail: inp.navFreq + ' NAV cycle', color: 'teal' },
+    { name: 'NAV Calculation', icon: '🧮', tz: 'GMT 18:00', detail: inp.shareClasses + ' share classes', color: 'green' },
+  ];
+
+  for (const [key, enabled] of Object.entries(inp.services)) {
+    if (enabled && COST_MODEL.services[key]?.lifecycle) {
+      const lc = COST_MODEL.services[key].lifecycle;
+      steps.push({ name: lc.step, icon: lc.icon, tz: lc.tz, detail: '', color: ['amber', 'purple', 'blue', 'teal'][steps.length % 4] });
+    }
+  }
+
+  steps.push({ name: 'Sign-Off & Release', icon: '✅', tz: 'GMT 20:00', detail: 'Senior review', color: 'green' });
+  return steps;
+}
+
+function buildSensitivity(inp, costs) {
+  const aumLevels = [
+    Math.round(inp.aum * 0.5),
+    Math.round(inp.aum * 0.75),
+    inp.aum,
+    Math.round(inp.aum * 1.5),
+    Math.round(inp.aum * 2.0),
+  ];
+  const feeLevels = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0];
+
+  const grid = [];
+  for (const aum of aumLevels) {
+    const row = { aum };
+    for (const fee of feeLevels) {
+      const rev = fee / 10000 * aum * 1_000_000;
+      const margin = (rev - costs.totalCost) / rev * 100;
+      row['fee_' + fee] = Math.round(margin);
+    }
+    grid.push(row);
+  }
+  return { grid, feeLevels, aumLevels };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+function renderResults(inp, costs, scenarios, lifecycle, sensitivity) {
+  document.getElementById('emptyState').style.display = 'none';
+  const container = document.getElementById('resultsContent');
+  container.style.display = 'block';
+
+  const aumUsd = inp.aum * 1_000_000;
+  const recRev = scenarios.recommended.revenue;
+  const recMargin = scenarios.recommended.margin;
+  const probWeightedRev = recRev * (inp.winProb / 100);
+
+  container.innerHTML = `
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi k-blue">
+        <div class="kpi-label">Recommended Fee</div>
+        <div class="kpi-val" style="color:var(--accent)">${scenarios.recommended.fee} bps</div>
+        <div class="kpi-sub">${inp.competitive.replace('_',' ')}</div>
+      </div>
+      <div class="kpi k-green">
+        <div class="kpi-label">Annual Revenue</div>
+        <div class="kpi-val" style="color:var(--green)">${fmtK(recRev)}</div>
+        <div class="kpi-sub">at $${inp.aum.toLocaleString()}M AUM</div>
+      </div>
+      <div class="kpi k-amber">
+        <div class="kpi-label">Margin</div>
+        <div class="kpi-val" style="color:${recMargin >= 20 ? 'var(--green)' : recMargin >= 10 ? 'var(--amber)' : 'var(--red)'}">${recMargin.toFixed(1)}%</div>
+        <div class="kpi-sub">target: ${inp.targetMargin}%</div>
+      </div>
+      <div class="kpi k-teal">
+        <div class="kpi-label">Prob-Weighted Rev</div>
+        <div class="kpi-val" style="color:var(--teal)">${fmtK(probWeightedRev)}</div>
+        <div class="kpi-sub">${inp.winProb}% win probability</div>
+      </div>
+    </div>
+
+    <!-- Section 1: Pricing Scenarios -->
+    <div class="result-section">
+      <div class="section-bar">
+        <span class="section-num num-blue">01</span>
+        <span class="section-title">Pricing Scenarios</span>
+        <span class="section-meta">3 scenarios · ${inp.competitive.replace('_',' ')}</span>
+      </div>
+      <div class="scenario-grid">
+        ${renderScenarioCard(scenarios.aggressive, false)}
+        ${renderScenarioCard(scenarios.recommended, true)}
+        ${renderScenarioCard(scenarios.premium, false)}
+      </div>
+    </div>
+
+    <!-- Section 2: Cost Breakdown -->
+    <div class="result-section">
+      <div class="section-bar">
+        <span class="section-num num-green">02</span>
+        <span class="section-title">Cost-to-Serve Breakdown</span>
+        <span class="section-meta">Total: ${fmtK(costs.totalCost)}</span>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="chart-box short"><canvas id="costDonut"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="chart-box short"><canvas id="costBar"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Sensitivity Matrix -->
+    <div class="result-section">
+      <div class="section-bar">
+        <span class="section-num num-amber">03</span>
+        <span class="section-title">Margin Sensitivity (Fee × AUM)</span>
+        <span class="section-meta">Adjust any parameter — see impact instantly</span>
+      </div>
+      <div class="card">
+        ${renderSensitivityTable(sensitivity, scenarios.recommended.fee)}
+      </div>
+    </div>
+
+    <!-- Section 4: Lifecycle Schematic -->
+    <div class="result-section">
+      <div class="section-bar">
+        <span class="section-num num-teal">04</span>
+        <span class="section-title">Operational Lifecycle</span>
+        <span class="section-meta">${lifecycle.length} steps · ${inp.navFreq} cycle</span>
+      </div>
+      <div class="card">
+        <div class="lifecycle">
+          ${lifecycle.map(s => `
+            <div class="lc-step">
+              <div class="lc-dot ${s.color}">${s.icon}</div>
+              <div class="lc-name">${s.name}</div>
+              <div class="lc-time">${s.tz}</div>
+              <div class="lc-detail">${s.detail}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: Deal Summary -->
+    <div class="result-section">
+      <div class="section-bar">
+        <span class="section-num num-blue">05</span>
+        <span class="section-title">Deal Summary</span>
+        <span class="section-meta">${inp.dealName}</span>
+      </div>
+      <div class="card">
+        <div class="summary-grid">
+          <div class="summary-item"><span class="summary-label">Client</span><span class="summary-val">${inp.dealName}</span></div>
+          <div class="summary-item"><span class="summary-label">Fund Type</span><span class="summary-val">${inp.fundType.toUpperCase()}</span></div>
+          <div class="summary-item"><span class="summary-label">Domicile</span><span class="summary-val">${inp.domicile.charAt(0).toUpperCase() + inp.domicile.slice(1)}</span></div>
+          <div class="summary-item"><span class="summary-label">Strategy</span><span class="summary-val">${inp.strategy.replace('_',' ')}</span></div>
+          <div class="summary-item"><span class="summary-label">AUM</span><span class="summary-val">$${inp.aum.toLocaleString()}M</span></div>
+          <div class="summary-item"><span class="summary-label">Share Classes</span><span class="summary-val">${inp.shareClasses}</span></div>
+          <div class="summary-item"><span class="summary-label">Sub-Funds</span><span class="summary-val">${inp.subFunds}</span></div>
+          <div class="summary-item"><span class="summary-label">NAV Frequency</span><span class="summary-val">${inp.navFreq}</span></div>
+          <div class="summary-item"><span class="summary-label">Monthly Txns</span><span class="summary-val">${inp.txnVolume.toLocaleString()}</span></div>
+          <div class="summary-item"><span class="summary-label">Complexity</span><span class="summary-val">${inp.complexity.replace('_',' ')}</span></div>
+          <div class="summary-item"><span class="summary-label">Cost-to-Serve</span><span class="summary-val">${fmtK(costs.totalCost)}/yr</span></div>
+          <div class="summary-item"><span class="summary-label">Recommended Fee</span><span class="summary-val" style="color:var(--accent)">${scenarios.recommended.fee} bps</span></div>
+          <div class="summary-item"><span class="summary-label">Projected Revenue</span><span class="summary-val" style="color:var(--green)">${fmtK(recRev)}/yr</span></div>
+          <div class="summary-item"><span class="summary-label">Margin</span><span class="summary-val" style="color:${recMargin >= 20 ? 'var(--green)' : 'var(--amber)'}">${recMargin.toFixed(1)}%</span></div>
+          <div class="summary-item"><span class="summary-label">Break-Even AUM</span><span class="summary-val">$${Math.round(scenarios.recommended.breakeven).toLocaleString()}M</span></div>
+          <div class="summary-item"><span class="summary-label">Win Probability</span><span class="summary-val">${inp.winProb}%</span></div>
+          <div class="summary-item"><span class="summary-label">Prob-Weighted Rev</span><span class="summary-val" style="color:var(--teal)">${fmtK(probWeightedRev)}/yr</span></div>
+          <div class="summary-item"><span class="summary-label">Services Included</span><span class="summary-val">${Object.entries(inp.services).filter(([,v])=>v).length} of 7</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Render charts
+  renderCostCharts(costs);
+}
+
+function renderScenarioCard(sc, isRecommended) {
+  const marginColor = sc.margin >= 20 ? 'good' : sc.margin >= 10 ? 'neutral' : 'bad';
+  return `
+    <div class="scenario-card ${isRecommended ? 'recommended' : ''}">
+      <div class="sc-name">${sc.name}</div>
+      <div class="sc-fee">${sc.fee}</div>
+      <div class="sc-unit">basis points</div>
+      <div class="sc-detail">
+        <div>Revenue: <strong>${fmtK(sc.revenue)}/yr</strong></div>
+        <div>Margin: <span class="${marginColor}">${sc.margin.toFixed(1)}%</span></div>
+        <div>Break-even: $${Math.round(sc.breakeven).toLocaleString()}M</div>
+      </div>
+    </div>`;
+}
+
+function renderSensitivityTable(sens, recFee) {
+  let html = '<table class="sens-table"><thead><tr><th>AUM ($M)</th>';
+  for (const fee of sens.feeLevels) {
+    const isRec = Math.abs(fee - recFee) < 0.3;
+    html += `<th ${isRec ? 'style="color:var(--accent);font-weight:700"' : ''}>${fee} bps${isRec ? ' ★' : ''}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  for (const row of sens.grid) {
+    html += `<tr><td class="header-col">${row.aum.toLocaleString()}</td>`;
+    for (const fee of sens.feeLevels) {
+      const m = row['fee_' + fee];
+      const cls = m >= 20 ? 'margin-good' : m >= 10 ? 'margin-ok' : 'margin-bad';
+      html += `<td class="${cls}">${m}%</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  return html;
+}
+
+function renderCostCharts(costs) {
+  Chart.defaults.color = '#7a8faa';
+  Chart.defaults.borderColor = 'rgba(30,48,72,0.5)';
+  Chart.defaults.font.family = "'Instrument Sans', sans-serif";
+  Chart.defaults.font.size = 11;
+
+  const labels = ['Core FA', ...costs.serviceBreakdown.map(s => s.name)];
+  const values = [costs.coreCost, ...costs.serviceBreakdown.map(s => s.cost)];
+  const colors = ['rgba(45,140,240,0.75)', 'rgba(26,199,199,0.7)', 'rgba(15,200,130,0.7)',
+    'rgba(232,163,23,0.7)', 'rgba(138,99,242,0.7)', 'rgba(240,70,60,0.6)',
+    'rgba(45,140,240,0.5)', 'rgba(100,120,150,0.5)'];
+
+  new Chart(document.getElementById('costDonut'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth: 0, hoverOffset: 5 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '58%',
+      plugins: { legend: { position: 'right', labels: { boxWidth: 8, padding: 6, font: { size: 10 } } } } }
+  });
+
+  new Chart(document.getElementById('costBar'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Annual Cost ($)', data: values, backgroundColor: colors.slice(0, labels.length), borderRadius: 5, barPercentage: 0.55 }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: 'rgba(30,48,72,0.3)' }, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' } }, y: { grid: { display: false } } } }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════
+function fmtK(val) {
+  if (Math.abs(val) >= 1_000_000) return '$' + (val / 1_000_000).toFixed(1) + 'M';
+  if (Math.abs(val) >= 1_000) return '$' + (val / 1_000).toFixed(0) + 'K';
+  return '$' + val.toFixed(0);
+}
+
+function resetForm() {
+  document.getElementById('dealName').value = 'Prospective Fund Co.';
+  document.getElementById('fundType').value = 'ucits';
+  document.getElementById('domicile').value = 'ireland';
+  document.getElementById('strategy').value = 'equity';
+  document.getElementById('complexity').value = 'standard';
+  document.getElementById('aum').value = 2000;
+  document.getElementById('aumDisplay').textContent = '2,000';
+  document.getElementById('shareClasses').value = 5;
+  document.getElementById('subFunds').value = 1;
+  document.getElementById('navFreq').value = 'daily';
+  document.getElementById('txnVolume').value = 500;
+  document.getElementById('targetMargin').value = 25;
+  document.getElementById('marginDisplay').textContent = '25%';
+  document.getElementById('competitive').value = 'competitive';
+  document.getElementById('winProb').value = 40;
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('resultsContent').style.display = 'none';
+}
+
+function exportDealSheet() {
+  const content = document.getElementById('resultsContent');
+  if (content.style.display === 'none') { alert('Calculate pricing first'); return; }
+
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`<!DOCTYPE html><html><head><title>Deal Sheet - ${document.getElementById('dealName').value}</title>
+    <style>body{font-family:sans-serif;padding:40px;max-width:900px;margin:0 auto}
+    table{width:100%;border-collapse:collapse}th,td{padding:8px 12px;border:1px solid #ddd;text-align:left;font-size:12px}
+    th{background:#f5f5f5}h1{font-size:20px;margin-bottom:4px}h2{font-size:14px;margin:20px 0 8px;color:#333}
+    .meta{color:#666;font-size:12px;margin-bottom:20px}</style></head><body>`);
+  printWin.document.write(`<h1>Deal Pricing Sheet — ${document.getElementById('dealName').value}</h1>`);
+  printWin.document.write(`<div class="meta">Generated: ${new Date().toISOString().substring(0,19)} UTC · FA Deal Pricing Engine v1.0</div>`);
+  printWin.document.write(content.innerHTML.replace(/style="[^"]*"/g, '').replace(/<canvas[^>]*><\/canvas>/g, '[Chart]'));
+  printWin.document.write('</body></html>');
+  printWin.document.close();
+  printWin.print();
+}
+</script>
+</body>
+</html>
