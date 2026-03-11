@@ -1,0 +1,82 @@
+import pandas as pd
+import numpy as np
+
+def calculate_bps_fee(market_value, rate_card_df, min_annual_fee):
+    """
+    Calculates fee based on tiered bps and applies the minimum floor.
+    Assumes rate_card_df has: 'From', 'To', 'BPS'
+    """
+    total_fee = 0
+    remaining_value = market_value
+
+    for _, row in rate_card_df.iterrows():
+        if remaining_value <= 0:
+            break
+        
+        # Determine how much of the MV falls into this tier
+        tier_limit = row['To'] - row['From']
+        value_in_tier = min(remaining_value, tier_limit)
+        
+        # Fee = (Value in tier * bps) / 10000
+        total_fee += (value_in_tier * row['BPS']) / 10000
+        remaining_value -= value_in_tier
+
+    return max(total_fee, min_annual_fee)
+
+# 1. LOAD DATA
+# Load the main fund data
+df_funds = pd.read_excel('fund_data.xlsx')
+
+# Handle duplicate 'Fund Type' by keeping the first occurrence
+df_funds = df_funds.loc[:, ~df_funds.columns.duplicated(keep='first')]
+
+# Load Cost to Serve
+df_costs = pd.read_excel('cost_to_serve.xlsx') # Expected: Fund Type, FTE, Rate
+
+# 2. CALCULATE COSTS
+# Merge funds with costs based on Fund Type
+df_master = df_funds.merge(df_costs, on='Fund Type', how='left')
+df_master['Total_Cost'] = df_master['FTE'] * df_master['Rate']
+
+# 3. CALCULATE REVENUE (Iterating through Rate Card Tabs)
+rate_cards = pd.read_excel('rate_cards.xlsx', sheet_name=None)
+df_master['Revenue'] = 0.0
+
+for client_name, card_df in rate_cards.items():
+    # Filter master data for this specific client
+    client_mask = df_master['Client Name'] == client_name
+    
+    # We assume the last row of the rate card sheet contains the 'Minimum Fee'
+    # or it's stored in a specific named cell. Adjust as per your sheet layout.
+    min_fee = card_df['Minimum'].iloc[0] 
+    tier_data = card_df[['From', 'To', 'BPS']].dropna()
+
+    df_master.loc[client_mask, 'Revenue'] = df_master.loc[client_mask].apply(
+        lambda x: calculate_bps_fee(x['USD Market Value of Assets under Administration'], 
+                                   tier_data, min_fee), axis=1
+    )
+
+# 4. FINAL AGGREGATION
+df_master['Net Revenue'] = df_master['Revenue'] - df_master['Total_Cost']
+
+report = df_master.groupby(
+    ['Client Name', 'Fund Type', 'Client Sub Group (if applicable)', 'Fund Category']
+).agg({
+    'Revenue': 'sum',
+    'Total_Cost': 'sum',
+    'Net Revenue': 'sum'
+}).reset_index()
+
+# Sort by Top Net Revenue
+report = report.sort_values(by='Net Revenue', ascending=False)
+
+# 5. EXPORT TO MULTI-TAB EXCEL
+with pd.ExcelWriter('Client_Profitability_Report.xlsx') as writer:
+    report.to_excel(writer, sheet_name='Summary Report', index=False)
+    
+    # Create individual tabs for Top 5 Clients for deep dives
+    for client in report['Client Name'].unique()[:5]:
+        client_detail = df_master[df_master['Client Name'] == client]
+        client_detail.to_excel(writer, sheet_name=f'Detail_{str(client)[:20]}', index=False)
+
+print("Report Generated: Client_Profitability_Report.xlsx")
