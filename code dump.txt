@@ -4,552 +4,577 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agentic ERP Architecture — Fund Administration</title>
+<title>Agentic ERP — The Complete Platform Story</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+--navy:#0A1628;--navy-light:#101E36;--navy-mid:#162544;--teal:#00897B;--teal-bright:#26A69A;
+--sage:#40916C;--sage-light:#52B788;--cream:#FAFBF8;--white:#fff;--gold:#FFB300;
+--text-primary:#E8EAF0;--text-secondary:#8892A4;--text-muted:#5A6478;
+--border:#1E3050;--card-bg:rgba(16,30,54,0.7);--glass:rgba(255,255,255,0.04);
+--font-serif:Georgia,'Times New Roman',serif;
+--font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--navy);color:var(--text-primary);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-:root {
-–navy: #0A1628;
-–navy-mid: #132240;
-–navy-light: #1A2D50;
-–teal: #00897B;
-–teal-bright: #26A69A;
-–teal-glow: rgba(0,137,123,0.25);
-–cyan: #00BCD4;
-–red-warn: #EF5350;
-–red-bg: rgba(239,83,80,0.08);
-–amber: #FFB74D;
-–green: #66BB6A;
-–green-bg: rgba(102,187,106,0.08);
-–purple: #AB47BC;
-–blue-accent: #42A5F5;
-–text-primary: #E8EAF0;
-–text-secondary: #90A4AE;
-–text-muted: #607080;
-–surface: #0F1D35;
-–surface-raised: #152442;
-–border: rgba(255,255,255,0.06);
-–border-teal: rgba(0,137,123,0.3);
-}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;background:rgba(10,22,40,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(–border)}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(–teal),var(–sage));display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:700}
+.nav-title{font-family:var(–font-serif);font-size:18px;color:var(–text-primary)}
+.nav-links{display:flex;gap:6px}
+.nav-links a{color:var(–text-secondary);text-decoration:none;font-size:12px;padding:6px 12px;border-radius:6px;transition:all 0.2s;font-weight:500;letter-spacing:0.3px}
+.nav-links a:hover,.nav-links a.active{color:var(–teal-bright);background:rgba(0,137,123,0.1)}
 
-- { margin:0; padding:0; box-sizing:border-box; }
+/* SECTIONS */
+section{min-height:100vh;padding:100px 0 60px;position:relative}
+.container{max-width:1100px;margin:0 auto;padding:0 32px}
+.section-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(–teal);font-weight:600;margin-bottom:8px}
+.section-title{font-family:var(–font-serif);font-size:clamp(32px,4.5vw,52px);line-height:1.1;margin-bottom:16px;color:var(–text-primary)}
+.section-subtitle{font-size:17px;line-height:1.6;color:var(–text-secondary);max-width:680px;margin-bottom:40px}
 
-body {
-font-family: ‘DM Sans’, sans-serif;
-background: var(–navy);
-color: var(–text-primary);
-min-height: 100vh;
-overflow-x: hidden;
-}
+/* REVEAL ANIMATION */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity 0.7s ease,transform 0.7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
 
-.bg-grid {
-position: fixed; inset:0; z-index:0;
-background-image:
-linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-background-size: 60px 60px;
-pointer-events: none;
-}
+/* HERO */
+#hero{min-height:100vh;display:flex;align-items:center;background:radial-gradient(ellipse at 20% 50%,rgba(0,137,123,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 30%,rgba(64,145,108,0.05) 0%,transparent 50%),var(–navy)}
+.hero-content{text-align:center;max-width:800px;margin:0 auto}
+.hero-content h1{font-family:var(–font-serif);font-size:clamp(40px,6vw,72px);line-height:1.05;margin-bottom:20px;background:linear-gradient(135deg,var(–text-primary) 0%,var(–teal-bright) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-content p{font-size:19px;line-height:1.6;color:var(–text-secondary);max-width:600px;margin:0 auto 36px}
+.hero-scroll{display:inline-flex;align-items:center;gap:8px;color:var(–teal);font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.3s}
+.hero-scroll:hover{color:var(–teal-bright);transform:translateY(2px)}
+.scroll-dot{width:24px;height:40px;border:2px solid var(–teal);border-radius:12px;position:relative}
+.scroll-dot::after{content:’’;width:4px;height:8px;background:var(–teal);border-radius:2px;position:absolute;top:6px;left:50%;transform:translateX(-50%);animation:scrollPulse 1.8s infinite}
+@keyframes scrollPulse{0%{top:6px;opacity:1}100%{top:22px;opacity:0}}
 
-.bg-glow {
-position: fixed; z-index:0; pointer-events:none;
-width: 600px; height: 600px; border-radius:50%;
-filter: blur(120px); opacity:0.12;
-}
-.bg-glow-1 { top:-200px; left:-100px; background: var(–teal); }
-.bg-glow-2 { bottom:-200px; right:-100px; background: var(–cyan); }
+/* PIPELINE SCHEMATIC */
+.pipeline-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:32px 0;position:relative}
+.pipeline-grid::before{content:’’;position:absolute;top:50%;left:5%;right:5%;height:3px;background:linear-gradient(90deg,var(–teal),var(–sage-light),var(–gold));z-index:0;opacity:0.3}
+.pipe-step{position:relative;z-index:1;text-align:center;padding:16px 8px}
+.pipe-node{width:64px;height:64px;border-radius:16px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid var(–border);background:var(–navy-light);transition:all 0.3s;cursor:default}
+.pipe-step:hover .pipe-node{border-color:var(–teal);background:rgba(0,137,123,0.1);transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,137,123,0.2)}
+.pipe-label{font-size:13px;font-weight:600;color:var(–text-primary);margin-bottom:4px}
+.pipe-type{font-size:10px;color:var(–teal);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.pipe-desc{font-size:11px;color:var(–text-muted);line-height:1.4}
 
-.container {
-position: relative; z-index:1;
-max-width: 1400px; margin:0 auto;
-padding: 48px 32px 80px;
-}
+/* DEFENCE LAYERS */
+.defence-row{display:flex;gap:10px;margin:24px 0;flex-wrap:wrap;justify-content:center}
+.def-badge{padding:8px 16px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:0.5px;border:1px solid var(–border);background:var(–card-bg);color:var(–text-secondary);display:flex;align-items:center;gap:6px;transition:all 0.3s}
+.def-badge:hover{border-color:var(–teal);color:var(–teal-bright);background:rgba(0,137,123,0.08)}
 
-/* Header */
-.header {
-text-align: center;
-margin-bottom: 56px;
-}
-.header-label {
-display: inline-block;
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-color: var(–teal-bright);
-background: rgba(0,137,123,0.1);
-border: 1px solid var(–border-teal);
-padding: 6px 16px; border-radius: 4px;
-margin-bottom: 20px;
-}
-.header h1 {
-font-size: clamp(28px, 4vw, 44px);
-font-weight: 700; line-height: 1.15;
-color: var(–text-primary);
-margin-bottom: 12px;
-}
-.header h1 span { color: var(–teal-bright); }
-.header p {
-font-size: 16px; color: var(–text-secondary);
-max-width: 680px; margin: 0 auto; line-height: 1.6;
-}
+/* TOOL LIBRARY */
+.tl-visual{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:32px 0;align-items:center}
+.tl-chart{position:relative;height:300px;background:var(–card-bg);border:1px solid var(–border);border-radius:16px;padding:24px;overflow:hidden}
+.tl-explanation{padding:8px 0}
+.tl-explanation h3{font-family:var(–font-serif);font-size:24px;margin-bottom:12px;color:var(–text-primary)}
+.tl-explanation p{font-size:14px;line-height:1.7;color:var(–text-secondary);margin-bottom:12px}
 
-/* Main Flow */
-.flow-section {
-position: relative;
-margin-bottom: 40px;
-}
+/* JOURNEY MAP */
+.journey{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin:32px 0}
+.journey-card{background:var(–card-bg);border:1px solid var(–border);border-radius:16px;padding:28px 24px;position:relative;overflow:hidden;transition:all 0.3s}
+.journey-card:hover{border-color:var(–teal);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,137,123,0.12)}
+.journey-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:3px}
+.journey-card.poc::before{background:linear-gradient(90deg,var(–teal),var(–sage))}
+.journey-card.pov::before{background:linear-gradient(90deg,var(–gold),#FF8F00)}
+.journey-card.mvp::before{background:linear-gradient(90deg,var(–sage-light),#2E7D32)}
+.journey-phase{font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+.journey-card.poc .journey-phase{color:var(–teal)}
+.journey-card.pov .journey-phase{color:var(–gold)}
+.journey-card.mvp .journey-phase{color:var(–sage-light)}
+.journey-name{font-family:var(–font-serif);font-size:22px;margin-bottom:12px}
+.journey-detail{font-size:13px;color:var(–text-secondary);line-height:1.5;margin-bottom:16px}
+.journey-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.jstat{background:var(–glass);border-radius:8px;padding:10px;text-align:center}
+.jstat-val{font-size:18px;font-weight:700;color:var(–text-primary)}
+.jstat-label{font-size:10px;color:var(–text-muted);letter-spacing:0.5px;text-transform:uppercase}
 
-.flow-spine {
-position: absolute;
-left: 50%; top: 0; bottom: 0;
-width: 2px;
-background: linear-gradient(to bottom, var(–teal), var(–cyan), var(–teal));
-opacity: 0.3;
-transform: translateX(-50%);
-}
+/* MARKET POSITION */
+.market-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin:32px 0}
+.market-col{text-align:center;padding:24px 16px;border-radius:12px}
+.market-col.stage1{background:rgba(255,255,255,0.02)}
+.market-col.stage2{background:rgba(255,183,0,0.05);border:1px solid rgba(255,183,0,0.15)}
+.market-col.stage3{background:rgba(0,137,123,0.08);border:1px solid rgba(0,137,123,0.25)}
+.stage-num{font-size:48px;font-family:var(–font-serif);margin-bottom:4px}
+.market-col.stage1 .stage-num{color:var(–text-muted)}
+.market-col.stage2 .stage-num{color:var(–gold)}
+.market-col.stage3 .stage-num{color:var(–teal-bright)}
+.stage-name{font-size:14px;font-weight:600;margin-bottom:8px}
+.stage-who{font-size:12px;color:var(–text-muted);line-height:1.5;margin-bottom:12px}
+.stage-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px}
 
-.step {
-position: relative;
-display: grid;
-grid-template-columns: 1fr 80px 1fr;
-align-items: start;
-margin-bottom: 32px;
-animation: fadeUp 0.6s ease-out both;
-}
-.step:nth-child(1) { animation-delay: 0.1s; }
-.step:nth-child(2) { animation-delay: 0.2s; }
-.step:nth-child(3) { animation-delay: 0.3s; }
-.step:nth-child(4) { animation-delay: 0.4s; }
-.step:nth-child(5) { animation-delay: 0.5s; }
+/* COMMERCIAL */
+.commercial-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:32px 0}
+.comm-card{background:var(–card-bg);border:1px solid var(–border);border-radius:16px;padding:24px;transition:all 0.3s}
+.comm-card:hover{border-color:var(–teal)}
+.comm-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(–border)}
+.comm-year{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(–teal);font-weight:700}
+.comm-big{font-family:var(–font-serif);font-size:28px}
+.comm-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+.comm-row .label{color:var(–text-muted)}
+.comm-row .value{color:var(–text-primary);font-weight:600}
+.comm-row.green .value{color:var(–sage-light)}
+.comm-row.gold .value{color:var(–gold)}
+.comm-row.red .value{color:#EF5350}
 
-@keyframes fadeUp {
-from { opacity:0; transform: translateY(20px); }
-to { opacity:1; transform: translateY(0); }
-}
+/* WORKFORCE */
+.workforce-visual{display:grid;grid-template-columns:1fr 40px 1fr;gap:16px;align-items:center;margin:32px 0}
+.wf-box{background:var(–card-bg);border:1px solid var(–border);border-radius:16px;padding:28px;text-align:center}
+.wf-number{font-family:var(–font-serif);font-size:64px;line-height:1}
+.wf-label{font-size:13px;color:var(–text-muted);margin-top:4px}
+.wf-arrow{font-size:28px;color:var(–teal);text-align:center}
+.wf-bar-container{margin:32px 0}
+.wf-bar-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.wf-bar-label{width:200px;font-size:12px;color:var(–text-secondary);text-align:right;flex-shrink:0}
+.wf-bar{height:28px;border-radius:6px;position:relative;transition:width 1s ease}
+.wf-bar-val{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:white}
 
-.step-node {
-display: flex; align-items: center; justify-content: center;
-grid-column: 2;
-width: 56px; height: 56px;
-border-radius: 50%;
-font-family: ‘JetBrains Mono’, monospace;
-font-weight: 700; font-size: 18px;
-color: var(–navy);
-z-index: 2;
-position: relative;
-justify-self: center;
-}
-.step-node::after {
-content: ‘’;
-position: absolute; inset: -4px;
-border-radius: 50%;
-border: 2px solid;
-opacity: 0.3;
-animation: pulse 3s ease-in-out infinite;
-}
-@keyframes pulse {
-0%,100% { transform: scale(1); opacity:0.3; }
-50% { transform: scale(1.15); opacity:0.1; }
-}
+/* HITL */
+.hitl-types{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
+.hitl-card{background:var(–card-bg);border:1px solid var(–border);border-radius:14px;padding:20px;transition:all 0.3s}
+.hitl-card:hover{border-color:var(–teal)}
+.hitl-role{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(–teal);font-weight:700;margin-bottom:6px}
+.hitl-title{font-family:var(–font-serif);font-size:18px;margin-bottom:8px}
+.hitl-detail{font-size:12px;color:var(–text-secondary);line-height:1.5;margin-bottom:10px}
+.hitl-req{font-size:11px;color:var(–text-muted);line-height:1.5}
+.hitl-req strong{color:var(–text-secondary)}
 
-.step-node.probabilistic { background: var(–amber); }
-.step-node.probabilistic::after { border-color: var(–amber); }
-.step-node.deterministic { background: var(–green); }
-.step-node.deterministic::after { border-color: var(–green); }
-.step-node.ml { background: var(–purple); }
-.step-node.ml::after { border-color: var(–purple); }
-.step-node.human { background: var(–blue-accent); }
-.step-node.human::after { border-color: var(–blue-accent); }
+/* CLIENT PORTAL PREVIEW */
+.portal-preview{background:var(–cream);border-radius:16px;padding:32px;margin:32px 0;position:relative;overflow:hidden}
+.portal-preview *{color:#1a1a1a !important}
+.portal-mock{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.portal-screen{background:white;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.08);border:1px solid #e8e6e0}
+.portal-screen h4{font-family:var(–font-serif);font-size:20px;margin-bottom:8px}
+.portal-screen p{font-size:13px;color:#666 !important;line-height:1.5;margin-bottom:12px}
+.portal-drop{border:2px dashed #d0d0c8;border-radius:12px;padding:32px;text-align:center;margin-bottom:12px}
+.portal-drop .icon{font-size:28px;opacity:0.3;margin-bottom:6px}
+.portal-drop .text{font-size:13px;color:#999 !important}
+.portal-btn{display:inline-block;padding:10px 28px;background:linear-gradient(135deg,#2D6A4F,#40916C);color:white !important;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none}
+.portal-tracking .track-step{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0ea}
+.portal-tracking .track-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.portal-tracking .track-dot.done{background:#2D6A4F;color:white !important}
+.portal-tracking .track-dot.active{background:white;border:2px solid #2D6A4F}
+.portal-tracking .track-dot.pending{background:#f0f0ea;border:2px solid #ddd}
+.portal-tracking .track-text{font-size:12px}
+.portal-tracking .track-text.active-t{font-weight:600}
+.portal-tracking .track-text.pending-t{color:#bbb !important}
 
-.step-card {
-background: var(–surface-raised);
-border: 1px solid var(–border);
-border-radius: 12px;
-padding: 24px;
-transition: border-color 0.3s, box-shadow 0.3s;
-}
-.step-card:hover {
-border-color: var(–border-teal);
-box-shadow: 0 4px 40px rgba(0,137,123,0.08);
-}
+/* FOOTER */
+footer{padding:40px 0;text-align:center;border-top:1px solid var(–border)}
+footer p{font-size:13px;color:var(–text-muted)}
 
-.step:nth-child(odd) .step-card { grid-column: 1; text-align: right; }
-.step:nth-child(even) .step-card { grid-column: 3; text-align: left; }
-
-.step-card .step-label {
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-margin-bottom: 6px;
-}
-.step-card .step-label.prob { color: var(–amber); }
-.step-card .step-label.det { color: var(–green); }
-.step-card .step-label.ml-label { color: var(–purple); }
-.step-card .step-label.human-label { color: var(–blue-accent); }
-
-.step-card h3 {
-font-size: 20px; font-weight: 700;
-color: var(–text-primary);
-margin-bottom: 8px;
-}
-.step-card p {
-font-size: 14px; line-height: 1.6;
-color: var(–text-secondary);
-}
-.step-card .output-tag {
-display: inline-block;
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 11px;
-padding: 3px 10px;
-border-radius: 4px;
-margin-top: 10px;
-}
-.output-tag.json { background: rgba(255,183,77,0.12); color: var(–amber); border: 1px solid rgba(255,183,77,0.2); }
-.output-tag.code { background: rgba(102,187,106,0.12); color: var(–green); border: 1px solid rgba(102,187,106,0.2); }
-.output-tag.flag { background: rgba(171,71,188,0.12); color: var(–purple); border: 1px solid rgba(171,71,188,0.2); }
-.output-tag.lib { background: rgba(66,165,245,0.12); color: var(–blue-accent); border: 1px solid rgba(66,165,245,0.2); }
-
-/* Fail/retry arrow */
-.retry-indicator {
-position: absolute;
-right: calc(50% + 50px);
-top: 50%;
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 10px; color: var(–red-warn);
-letter-spacing: 1px;
-opacity: 0.7;
-}
-
-/* Defence Layers Section */
-.defence-section {
-margin-top: 64px;
-animation: fadeUp 0.6s ease-out 0.6s both;
-}
-.defence-section h2 {
-font-size: 28px; font-weight: 700;
-color: var(–text-primary);
-margin-bottom: 8px;
-text-align: center;
-}
-.defence-section .subtitle {
-text-align: center;
-color: var(–text-secondary);
-font-size: 14px;
-margin-bottom: 32px;
-}
-
-.defence-grid {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-gap: 16px;
-}
-
-.defence-card {
-background: var(–surface-raised);
-border: 1px solid var(–border);
-border-radius: 10px;
-padding: 20px;
-position: relative;
-overflow: hidden;
-transition: border-color 0.3s, transform 0.2s;
-}
-.defence-card:hover {
-border-color: var(–border-teal);
-transform: translateY(-2px);
-}
-.defence-card::before {
-content: ‘’;
-position: absolute;
-top: 0; left: 0; right: 0;
-height: 3px;
-}
-.defence-card:nth-child(1)::before { background: var(–teal-bright); }
-.defence-card:nth-child(2)::before { background: var(–cyan); }
-.defence-card:nth-child(3)::before { background: var(–purple); }
-.defence-card:nth-child(4)::before { background: var(–amber); }
-.defence-card:nth-child(5)::before { background: var(–green); }
-.defence-card:nth-child(6)::before { background: var(–blue-accent); }
-
-.defence-card .layer-num {
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 11px; letter-spacing: 2px;
-color: var(–text-muted);
-margin-bottom: 8px;
-}
-.defence-card h4 {
-font-size: 15px; font-weight: 700;
-color: var(–text-primary);
-margin-bottom: 6px;
-}
-.defence-card p {
-font-size: 13px; line-height: 1.55;
-color: var(–text-secondary);
-}
-.defence-card .maturity {
-display: inline-block;
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 10px; letter-spacing: 1px;
-padding: 2px 8px; border-radius: 3px;
-margin-top: 10px;
-}
-.maturity.prod { background: rgba(102,187,106,0.12); color: var(–green); }
-.maturity.emerging { background: rgba(171,71,188,0.12); color: var(–purple); }
-
-/* Legend */
-.legend {
-display: flex; justify-content: center; gap: 24px;
-flex-wrap: wrap;
-margin: 40px 0 32px;
-padding: 16px 24px;
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 8px;
-}
-.legend-item {
-display: flex; align-items: center; gap: 8px;
-font-size: 13px; color: var(–text-secondary);
-}
-.legend-dot {
-width: 10px; height: 10px; border-radius: 50%;
-}
-.legend-dot.l-prob { background: var(–amber); }
-.legend-dot.l-det { background: var(–green); }
-.legend-dot.l-ml { background: var(–purple); }
-.legend-dot.l-human { background: var(–blue-accent); }
-
-/* Flywheel */
-.flywheel {
-margin-top: 48px;
-text-align: center;
-padding: 32px;
-background: var(–surface-raised);
-border: 1px solid var(–border-teal);
-border-radius: 12px;
-animation: fadeUp 0.6s ease-out 0.8s both;
-}
-.flywheel h3 {
-font-size: 20px; font-weight: 700;
-color: var(–teal-bright);
-margin-bottom: 12px;
-}
-.flywheel p {
-font-size: 14px; line-height: 1.6;
-color: var(–text-secondary);
-max-width: 700px; margin: 0 auto;
-}
-.flywheel-flow {
-display: flex; align-items: center; justify-content: center;
-gap: 8px; margin-top: 20px; flex-wrap: wrap;
-}
-.flywheel-node {
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 11px;
-padding: 6px 14px;
-border-radius: 6px;
-background: var(–navy-light);
-border: 1px solid var(–border);
-color: var(–text-secondary);
-}
-.flywheel-arrow {
-color: var(–teal-bright); font-size: 18px;
-}
-.flywheel-node.highlight {
-background: rgba(0,137,123,0.15);
-border-color: var(–border-teal);
-color: var(–teal-bright);
-}
-
-/* Footer */
-.footer {
-text-align: center;
-margin-top: 56px;
-padding-top: 24px;
-border-top: 1px solid var(–border);
-font-size: 12px;
-color: var(–text-muted);
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-.step {
-grid-template-columns: 48px 1fr;
-gap: 0 16px;
-}
-.step-node {
-grid-column: 1; grid-row: 1;
-width: 44px; height: 44px; font-size: 15px;
-}
-.step-card {
-grid-column: 2 !important;
-text-align: left !important;
-}
-.flow-spine { left: 22px; }
-.retry-indicator { display: none; }
+/* RESPONSIVE */
+@media(max-width:768px){
+.pipeline-grid{grid-template-columns:1fr;gap:12px}
+.pipeline-grid::before{display:none}
+.tl-visual,.workforce-visual,.portal-mock{grid-template-columns:1fr}
+.journey,.market-grid,.commercial-cards,.hitl-types{grid-template-columns:1fr}
+.nav-links{display:none}
+.wf-arrow{transform:rotate(90deg)}
 }
 </style>
 
 </head>
 <body>
-  <div class="bg-grid"></div>
-  <div class="bg-glow bg-glow-1"></div>
-  <div class="bg-glow bg-glow-2"></div>
 
+<!-- NAV -->
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">E</div>
+    <span class="nav-title">Agentic ERP</span>
+  </div>
+  <div class="nav-links">
+    <a href="#pipeline">Pipeline</a>
+    <a href="#library">Tool Library</a>
+    <a href="#journey">PoC → MVP</a>
+    <a href="#market">Market</a>
+    <a href="#commercial">Commercial</a>
+    <a href="#workforce">Workforce</a>
+    <a href="#hitl">HITL</a>
+    <a href="#portal">Portal</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+
+<section id="hero">
+  <div class="container hero-content">
+    <p class="section-label" style="text-align:center">Agentic ERP for Fund Administration</p>
+    <h1>AI writes the code.<br>Maths proves it correct.</h1>
+    <p>The first fund administration platform where AI generates deterministic, verified calculations — not answers. Every number is mathematically proved, independently checked, and human-approved before it reaches a ledger.</p>
+    <div class="hero-scroll" onclick="document.getElementById('pipeline').scrollIntoView({behavior:'smooth'})">
+      <div class="scroll-dot"></div>
+      <span>Explore the architecture</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 1. PIPELINE SCHEMATIC ═══ -->
+
+<section id="pipeline">
   <div class="container">
+    <div class="reveal">
+      <p class="section-label">The Architecture</p>
+      <h2 class="section-title">Five Steps. Zero Hallucinations.</h2>
+      <p class="section-subtitle">The AI reads documents and writes code. Deterministic systems execute the code, verify the maths, and prove correctness. The AI never touches a number.</p>
+    </div>
 
 ```
-<!-- Header -->
-<div class="header">
-  <div class="header-label">Target-State Architecture</div>
-  <h1>Agentic ERP: <span>Code Generation as Reasoning</span></h1>
-  <p>A five-step pipeline where LLMs produce deterministic code — not answers — governed by six layers of verification. The AI never does the maths.</p>
-</div>
-
-<!-- Legend -->
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot l-prob"></div> Probabilistic (LLM)</div>
-  <div class="legend-item"><div class="legend-dot l-det"></div> Deterministic (Code)</div>
-  <div class="legend-item"><div class="legend-dot l-ml"></div> Traditional ML</div>
-  <div class="legend-item"><div class="legend-dot l-human"></div> Human-in-the-Loop</div>
-</div>
-
-<!-- Five-Step Flow -->
-<div class="flow-section">
-  <div class="flow-spine"></div>
-
-  <!-- Step 1: Reader -->
-  <div class="step">
-    <div class="step-card">
-      <div class="step-label prob">Step 1 · Probabilistic</div>
-      <h3>The Reader</h3>
-      <p>Extraction Agent ingests unstructured documents — PDFs, emails, SWIFT messages, side-letters, prospectuses. Extracts entities, amounts, dates, counterparties, fee structures, and fund-specific override clauses. Outputs strict JSON schema with per-field confidence scores.</p>
-      <span class="output-tag json">OUTPUT → Validated JSON Schema</span>
-    </div>
-    <div class="step-node probabilistic">1</div>
-    <div></div>
+<div class="pipeline-grid reveal">
+  <div class="pipe-step">
+    <div class="pipe-node">📖</div>
+    <div class="pipe-type">Probabilistic</div>
+    <div class="pipe-label">Reader</div>
+    <div class="pipe-desc">Extracts data from PDFs, emails, notices. Outputs strict JSON with per-field confidence scores.</div>
   </div>
-
-  <!-- Step 2: Builder -->
-  <div class="step">
-    <div></div>
-    <div class="step-node probabilistic">2</div>
-    <div class="step-card">
-      <div class="step-label prob">Step 2 · Probabilistic</div>
-      <h3>The Builder</h3>
-      <p>Coding Agent reviews extracted data + fund rules. Instead of computing the answer, it writes a bespoke Python/SQL script for the exact calculation. The LLM's output is code, not numbers. Subject to six layers of defence (see below).</p>
-      <span class="output-tag code">OUTPUT → Deterministic Script</span>
-    </div>
+  <div class="pipe-step">
+    <div class="pipe-node">🔧</div>
+    <div class="pipe-type">Probabilistic</div>
+    <div class="pipe-label">Builder</div>
+    <div class="pipe-desc">Generates Python scripts for calculations. Writes code, never computes answers. Formal annotations embedded.</div>
   </div>
-
-  <!-- Step 3: Constitution -->
-  <div class="step">
-    <div class="step-card">
-      <div class="step-label det">Step 3 · Deterministic</div>
-      <h3>The Constitution</h3>
-      <p>Sandbox executes Builder's code against a dummy ledger. Enforces hard-coded guardrails: double-entry validation (A = L + E), LPA policy limits, ACID compliance, dimensional integrity. Failed code is rejected and returned to Builder for rewrite.</p>
-      <span class="output-tag code">OUTPUT → Verified Result</span>
-    </div>
-    <div class="step-node deterministic">3</div>
-    <div></div>
+  <div class="pipe-step">
+    <div class="pipe-node">🏛️</div>
+    <div class="pipe-type">Deterministic</div>
+    <div class="pipe-label">Constitution</div>
+    <div class="pipe-desc">Executes code in sandbox. Validates: double-entry balance, LPA limits, ACID compliance, dimensions.</div>
   </div>
-
-  <!-- Step 4: Anomaly Agent -->
-  <div class="step">
-    <div></div>
-    <div class="step-node ml">4</div>
-    <div class="step-card">
-      <div class="step-label ml-label">Step 4 · Traditional ML</div>
-      <h3>Anomaly Detection</h3>
-      <p>Gradient-boosted trees, isolation forests, and EWMA/SPC models (not LLMs) evaluate approved outputs. Flags statistical outliers, low-confidence extractions below calibrated threshold, and hard-coded material event triggers.</p>
-      <span class="output-tag flag">OUTPUT → Pass / Flag for Review</span>
-    </div>
+  <div class="pipe-step">
+    <div class="pipe-node">🔍</div>
+    <div class="pipe-type">Traditional ML</div>
+    <div class="pipe-label">Anomaly Agent</div>
+    <div class="pipe-desc">Isolation Forest + EWMA flags outliers. Not an LLM — gradient-boosted trees and statistics.</div>
   </div>
-
-  <!-- Step 5: Human Gate -->
-  <div class="step">
-    <div class="step-card">
-      <div class="step-label human-label">Step 5 · Human-in-the-Loop</div>
-      <h3>The Approval Gate</h3>
-      <p>Accountants review flagged exceptions — both the generated code and the output. Once approved, the Builder's script is saved to the Tool Library for future instant reuse. Novel calculations require mandatory human sign-off before entering the library.</p>
-      <span class="output-tag lib">OUTPUT → Tool Library Entry</span>
-    </div>
-    <div class="step-node human">5</div>
-    <div></div>
-  </div>
-
-</div>
-
-<!-- Six Layers of Defence -->
-<div class="defence-section">
-  <h2>Six Layers of Builder Defence</h2>
-  <p class="subtitle">Eliminating the risk of LLM-generated code producing economically incorrect results</p>
-
-  <div class="defence-grid">
-    <div class="defence-card">
-      <div class="layer-num">LAYER 01</div>
-      <h4>Dual-Builder Consensus</h4>
-      <p>Two independent LLM families generate code for the same calculation. Outputs are compared — divergence triggers human review. N-version programming for accounting.</p>
-      <span class="maturity prod">PRODUCTION-READY</span>
-    </div>
-
-    <div class="defence-card">
-      <div class="layer-num">LAYER 02</div>
-      <h4>Tool Library Regression</h4>
-      <p>New scripts are compared against previously verified calculations. Semantically similar computations must produce matching outputs on identical inputs.</p>
-      <span class="maturity prod">PRODUCTION-READY</span>
-    </div>
-
-    <div class="defence-card">
-      <div class="layer-num">LAYER 03</div>
-      <h4>Formal Verification</h4>
-      <p>Builder generates code + formal annotations. SMT solvers (Z3, Dafny, Lean) mathematically prove the code satisfies its post-conditions. Strongest guarantee available.</p>
-      <span class="maturity emerging">EMERGING</span>
-    </div>
-
-    <div class="defence-card">
-      <div class="layer-num">LAYER 04</div>
-      <h4>Inverse Verification</h4>
-      <p>An Auditor Agent reads the generated code and produces a natural-language explanation. If the explanation doesn't match the intended calculation, the discrepancy is flagged.</p>
-      <span class="maturity prod">PRODUCTION-READY</span>
-    </div>
-
-    <div class="defence-card">
-      <div class="layer-num">LAYER 05</div>
-      <h4>Property-Based Testing</h4>
-      <p>Hypothesis framework generates thousands of randomised inputs. Mathematical invariants must hold: fees ≥ 0, ≤ LPA max, NAV components sum correctly. Any violation rejects.</p>
-      <span class="maturity prod">PRODUCTION-READY</span>
-    </div>
-
-    <div class="defence-card">
-      <div class="layer-num">LAYER 06</div>
-      <h4>Human Gate for Novelty</h4>
-      <p>First-time calculation types always require human review regardless of automated verification. Tool Library is only populated after human validation. Non-negotiable.</p>
-      <span class="maturity prod">PRODUCTION-READY</span>
-    </div>
+  <div class="pipe-step">
+    <div class="pipe-node">👤</div>
+    <div class="pipe-type">Human</div>
+    <div class="pipe-label">Human Gate</div>
+    <div class="pipe-desc">Expert reviews flagged items. Approves → Tool Library. 85%+ auto-posted with zero human touch.</div>
   </div>
 </div>
 
-<!-- Flywheel -->
-<div class="flywheel">
-  <h3>The Tool Library Flywheel</h3>
-  <p>Every human-approved calculation becomes a reusable, verified asset. Over time, novel calculations become rare and the system converges from AI-assisted to AI-native accounting — becoming more reliable with every quarter-end cycle.</p>
-  <div class="flywheel-flow">
-    <div class="flywheel-node">Novel Fund Rule</div>
-    <div class="flywheel-arrow">→</div>
-    <div class="flywheel-node">Builder Generates Code</div>
-    <div class="flywheel-arrow">→</div>
-    <div class="flywheel-node">6-Layer Verification</div>
-    <div class="flywheel-arrow">→</div>
-    <div class="flywheel-node">Human Approves</div>
-    <div class="flywheel-arrow">→</div>
-    <div class="flywheel-node highlight">Tool Library ↻</div>
-    <div class="flywheel-arrow">→</div>
-    <div class="flywheel-node">Instant Reuse</div>
+<div class="reveal">
+  <p style="text-align:center;font-size:13px;color:var(--text-muted);margin:8px 0 20px">6 DEFENCE LAYERS PROTECT THE BUILDER</p>
+  <div class="defence-row">
+    <div class="def-badge"><span>🔄</span> L1: Dual-Builder Consensus</div>
+    <div class="def-badge"><span>📚</span> L2: Tool Library Regression</div>
+    <div class="def-badge"><span>🧮</span> L3: Z3 Formal Verification</div>
+    <div class="def-badge"><span>🔎</span> L4: Inverse Verification</div>
+    <div class="def-badge"><span>🧪</span> L5: Property Testing (1000+)</div>
+    <div class="def-badge"><span>🚪</span> L6: Human Gate for Novelty</div>
   </div>
-</div>
-
-<div class="footer">
-  Innovation Lab · Fund Administration Product Management · March 2026 · Confidential
 </div>
 ```
 
   </div>
+</section>
+
+<!-- ═══ 2. TOOL LIBRARY ═══ -->
+
+<section id="library" style="background:var(--navy-light)">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">The Compounding Asset</p>
+      <h2 class="section-title">The Tool Library</h2>
+      <p class="section-subtitle">Every verified calculation becomes a reusable precedent. Like a law firm's case library — it compounds with every fund and every quarter.</p>
+    </div>
+    <div class="tl-visual reveal">
+      <div class="tl-chart">
+        <canvas id="tlCanvas" width="500" height="260"></canvas>
+      </div>
+      <div class="tl-explanation">
+        <h3>Why competitors can't catch up</h3>
+        <p>Two firms with identical AI technology. <strong style="color:var(--teal-bright)">Firm A</strong> started 18 months ago — 250 verified calculations across 30 fund types. <strong style="color:var(--text-muted)">Firm B</strong> starts today — zero precedents.</p>
+        <p>Firm B cannot buy, download, or shortcut Firm A's library. Each precedent is a <em style="color:var(--gold)">human expert verifying that specific code correctly interprets a specific LPA</em>. That verification is the moat.</p>
+        <p style="color:var(--teal-bright);font-weight:600;font-size:15px;margin-top:16px">Month 1: $38/txn → Month 12: $3/txn → Month 18: &lt;$1/txn</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 3. POC → POV → MVP ═══ -->
+
+<section id="journey">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">The Roadmap</p>
+      <h2 class="section-title">PoC → Proof of Value → MVP</h2>
+      <p class="section-subtitle">Three phases. Each de-risks the next. Zero throwaway work — everything carries forward.</p>
+    </div>
+    <div class="journey reveal">
+      <div class="journey-card poc">
+        <div class="journey-phase">✅ Complete</div>
+        <div class="journey-name">Proof of Concept</div>
+        <div class="journey-detail">Full 5-step pipeline running on synthetic Irish QIAIF ILP (€500M PE fund). 12 LPs, 3 share classes, 3 side-letters. All 6 defence layers passing.</div>
+        <div class="journey-stats">
+          <div class="jstat"><div class="jstat-val">5/5</div><div class="jstat-label">PDFs Extracted</div></div>
+          <div class="jstat"><div class="jstat-val">12/12</div><div class="jstat-label">Guardrails Pass</div></div>
+          <div class="jstat"><div class="jstat-val">18/18</div><div class="jstat-label">Defence Layers</div></div>
+          <div class="jstat"><div class="jstat-val">610+</div><div class="jstat-label">Properties Verified</div></div>
+        </div>
+      </div>
+      <div class="journey-card pov">
+        <div class="journey-phase">Next Step</div>
+        <div class="journey-name">Proof of Value</div>
+        <div class="journey-detail">One real fund, real data, 8 weeks. Parallel-run alongside manual team. Field-by-field accuracy comparison. Go/no-go gate for MVP.</div>
+        <div class="journey-stats">
+          <div class="jstat"><div class="jstat-val">$85-126K</div><div class="jstat-label">Investment</div></div>
+          <div class="jstat"><div class="jstat-val">8 weeks</div><div class="jstat-label">Duration</div></div>
+          <div class="jstat"><div class="jstat-val">≥95%</div><div class="jstat-label">Accuracy Target</div></div>
+          <div class="jstat"><div class="jstat-val">10x</div><div class="jstat-label">Speed Target</div></div>
+        </div>
+      </div>
+      <div class="journey-card mvp">
+        <div class="journey-phase">Year 1-3</div>
+        <div class="journey-name">MVP → Scale</div>
+        <div class="journey-detail">AWS + Databricks. Claude via Model Serving. 10-60 funds over 3 years. Tool Library compounds. Break-even early Year 3.</div>
+        <div class="journey-stats">
+          <div class="jstat"><div class="jstat-val">$3.3-4.4M</div><div class="jstat-label">3-Year Investment</div></div>
+          <div class="jstat"><div class="jstat-val">$3.3-6.5M</div><div class="jstat-label">3-Year Revenue</div></div>
+          <div class="jstat"><div class="jstat-val">70-80%</div><div class="jstat-label">Year 4 Margin</div></div>
+          <div class="jstat"><div class="jstat-val">30-60</div><div class="jstat-label">Funds on Platform</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 4. MARKET POSITION ═══ -->
+
+<section id="market" style="background:var(--navy-light)">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">Competitive Intelligence</p>
+      <h2 class="section-title">Where We Sit in the Market</h2>
+      <p class="section-subtitle">The industry follows a three-stage maturity curve. Most competitors are at Stage 1. The best are at Stage 2. Nobody has reached Stage 3 — except us.</p>
+    </div>
+    <div class="market-grid reveal">
+      <div class="market-col stage1">
+        <div class="stage-num">1</div>
+        <div class="stage-name">RPA Automation</div>
+        <div class="stage-who">Rule-based bots. Data entry, reconciliation, report formatting. The robot follows a script.</div>
+        <div style="margin:12px 0"><span class="stage-dot" style="background:var(--text-muted)"></span><span class="stage-dot" style="background:var(--text-muted)"></span><span class="stage-dot" style="background:var(--text-muted)"></span></div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.5">SS&C (Blue Prism) · Alter Domus (UiPath) · Apex (RPA bots) · Most large admins</div>
+      </div>
+      <div class="market-col stage2">
+        <div class="stage-num">2</div>
+        <div class="stage-name">AI Extraction</div>
+        <div class="stage-who">LLMs read documents. Humans still calculate. Solves the input problem, not the calculation problem.</div>
+        <div style="margin:12px 0"><span class="stage-dot" style="background:var(--gold)"></span></div>
+        <div style="font-size:11px;color:var(--gold);line-height:1.5">Citco (Document Intelligence)<br>Some boutiques experimenting</div>
+      </div>
+      <div class="market-col stage3">
+        <div class="stage-num">3</div>
+        <div class="stage-name">Verified AI Calculations</div>
+        <div class="stage-who">AI generates code. Deterministic systems verify. Formal proof. Tool Library. Dual-model consensus.</div>
+        <div style="margin:12px 0"><span class="stage-dot" style="background:var(--teal-bright);box-shadow:0 0 12px var(--teal)"></span></div>
+        <div style="font-size:13px;color:var(--teal-bright);font-weight:600">Us. Nobody else.</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">12-18 month architectural lead</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 5. COMMERCIAL MODEL ═══ -->
+
+<section id="commercial">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">The Business Case</p>
+      <h2 class="section-title">Commercial Model</h2>
+      <p class="section-subtitle">LLM inference costs &lt;$0.20 per transaction. Client fee: $2.50–$75.00. The safety premium (dual-checking, formal proof) costs $0.08/txn — and it's the feature that wins mandates.</p>
+    </div>
+    <div class="commercial-cards reveal">
+      <div class="comm-card">
+        <div class="comm-header"><span class="comm-year">Year 1</span><span class="comm-big" style="color:var(--gold)">Build</span></div>
+        <div class="comm-row"><span class="label">Investment</span><span class="value">$1.09M–$1.46M</span></div>
+        <div class="comm-row"><span class="label">Revenue</span><span class="value">$0 (internal pilot)</span></div>
+        <div class="comm-row"><span class="label">Funds</span><span class="value">3–5 (internal)</span></div>
+        <div class="comm-row red"><span class="label">Net</span><span class="value">($1.09M–$1.46M)</span></div>
+      </div>
+      <div class="comm-card">
+        <div class="comm-header"><span class="comm-year">Year 2</span><span class="comm-big" style="color:var(--gold)">Launch</span></div>
+        <div class="comm-row"><span class="label">Investment</span><span class="value">$978K–$1.33M</span></div>
+        <div class="comm-row green"><span class="label">Revenue</span><span class="value">$0.80M–$1.50M</span></div>
+        <div class="comm-row"><span class="label">Funds</span><span class="value">10–25 (external)</span></div>
+        <div class="comm-row gold"><span class="label">Net</span><span class="value">Near break-even</span></div>
+      </div>
+      <div class="comm-card" style="border-color:var(--sage)">
+        <div class="comm-header"><span class="comm-year">Year 3</span><span class="comm-big" style="color:var(--sage-light)">Scale</span></div>
+        <div class="comm-row"><span class="label">Investment</span><span class="value">$1.19M–$1.62M</span></div>
+        <div class="comm-row green"><span class="label">Revenue</span><span class="value">$2.50M–$5.00M</span></div>
+        <div class="comm-row"><span class="label">Funds</span><span class="value">30–60+</span></div>
+        <div class="comm-row green"><span class="label">Net</span><span class="value">$1.3M–$3.4M profit</span></div>
+        <div class="comm-row green"><span class="label">Margin</span><span class="value">52%–68%</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 6. WORKFORCE IMPACT ═══ -->
+
+<section id="workforce" style="background:var(--navy-light)">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">Workforce Transformation</p>
+      <h2 class="section-title">100 → 25.5</h2>
+      <p class="section-subtitle">Not a redundancy programme. A capacity multiplier. 25 people manage the same fund book — and have the capacity to scale to 3-4x without adding headcount.</p>
+    </div>
+    <div class="workforce-visual reveal">
+      <div class="wf-box"><div class="wf-number" style="color:var(--text-muted)">100</div><div class="wf-label">People today</div></div>
+      <div class="wf-arrow">→</div>
+      <div class="wf-box" style="border-color:var(--sage)"><div class="wf-number" style="color:var(--sage-light)">25.5</div><div class="wf-label">People at maturity</div></div>
+    </div>
+    <div class="wf-bar-container reveal">
+      <div class="wf-bar-row"><div class="wf-bar-label">Manual calculators</div><div class="wf-bar" style="width:350px;background:var(--text-muted)"><span class="wf-bar-val">35 → 0</span></div></div>
+      <div class="wf-bar-row"><div class="wf-bar-label">Document processors</div><div class="wf-bar" style="width:200px;background:rgba(255,183,0,0.5)"><span class="wf-bar-val">20 → 3</span></div></div>
+      <div class="wf-bar-row"><div class="wf-bar-label">Fund accountants (review)</div><div class="wf-bar" style="width:200px;background:rgba(0,137,123,0.5)"><span class="wf-bar-val">20 → 10</span></div></div>
+      <div class="wf-bar-row"><div class="wf-bar-label">KYC/AML compliance</div><div class="wf-bar" style="width:100px;background:rgba(255,183,0,0.3)"><span class="wf-bar-val">10 → 5</span></div></div>
+      <div class="wf-bar-row"><div class="wf-bar-label">PM & client relationship</div><div class="wf-bar" style="width:80px;background:rgba(82,183,136,0.3)"><span class="wf-bar-val">8 → 4</span></div></div>
+      <div class="wf-bar-row"><div class="wf-bar-label">Process improvement</div><div class="wf-bar" style="width:40px;background:rgba(82,183,136,0.3)"><span class="wf-bar-val">4 → 2</span></div></div>
+      <div class="wf-bar-row"><div class="wf-bar-label">Platform team (NEW)</div><div class="wf-bar" style="width:20px;background:var(--teal)"><span class="wf-bar-val" style="right:-30px;color:var(--teal)">+1</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 7. HITL SKILLS ═══ -->
+
+<section id="hitl">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">Human-in-the-Loop</p>
+      <h2 class="section-title">Who Reviews What</h2>
+      <p class="section-subtitle">Three roles. No coding required. The reviewer validates business logic, not maths. 2 days of training. The role elevates from calculator to expert judge.</p>
+    </div>
+    <div class="hitl-types reveal">
+      <div class="hitl-card">
+        <div class="hitl-role">Reviewer</div>
+        <div class="hitl-title">Fund Accountant</div>
+        <div class="hitl-detail">Handles anomaly flags and extraction checks. 5-15 minutes per review. 2-4 hours/week in steady state.</div>
+        <div class="hitl-req"><strong>2+ years FA experience.</strong> Reads journal entries, verifies extractions against source docs. No code, no ML knowledge. Training: 2 days.</div>
+      </div>
+      <div class="hitl-card" style="border-color:var(--teal)">
+        <div class="hitl-role">Approver</div>
+        <div class="hitl-title">Senior Fund Accountant</div>
+        <div class="hitl-detail">Approves first-time calculations and ontology changes. Reads the AI auditor's plain-English explanation and cross-references against the LPA.</div>
+        <div class="hitl-req"><strong>5+ years FA, LPA interpretation.</strong> The gatekeeper. Every approval has permanent, compounding value — it populates the Tool Library.</div>
+      </div>
+      <div class="hitl-card">
+        <div class="hitl-role">Escalation</div>
+        <div class="hitl-title">FA Manager</div>
+        <div class="hitl-detail">Defence layer failures and uncertain cases. Root cause analysis. Threshold calibration. ~30 min/week in steady state.</div>
+        <div class="hitl-req"><strong>8+ years FA, 3+ in management.</strong> Structured problem-solving. Cross-fund pattern recognition. Stakeholder communication.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 8. CLIENT PORTAL ═══ -->
+
+<section id="portal" style="background:var(--navy-light)">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">The Client Experience</p>
+      <h2 class="section-title">Google-Simple. Courier-Trackable.</h2>
+      <p class="section-subtitle">The asset manager never sees the engine room. They drop files, answer a few questions, hit commit, and track delivery like a premium courier service.</p>
+    </div>
+    <div class="portal-preview reveal">
+      <div class="portal-mock">
+        <div class="portal-screen">
+          <h4>What can we process for you?</h4>
+          <p>Drop files, describe what you need.</p>
+          <div class="portal-drop">
+            <div class="icon">📎</div>
+            <div class="text">Drop prospectus, invoices, notices…</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+            <span style="background:#f5f5f0;padding:6px 12px;border-radius:16px;font-size:11px;color:#555 !important">🏗️ New Fund</span>
+            <span style="background:#f5f5f0;padding:6px 12px;border-radius:16px;font-size:11px;color:#555 !important">📊 Quarterly</span>
+            <span style="background:#f5f5f0;padding:6px 12px;border-radius:16px;font-size:11px;color:#555 !important">🧾 Invoice</span>
+            <span style="background:#f5f5f0;padding:6px 12px;border-radius:16px;font-size:11px;color:#555 !important">💰 Fee Calc</span>
+          </div>
+          <span class="portal-btn">Continue →</span>
+        </div>
+        <div class="portal-screen">
+          <h4 style="margin-bottom:4px">REQ-M3K9X2</h4>
+          <p style="font-size:11px;margin-bottom:16px">New Fund Launch · Est. 1-2 business days</p>
+          <div class="portal-tracking">
+            <div class="track-step"><div class="track-dot done">✓</div><span class="track-text">📨 Request Received</span></div>
+            <div class="track-step"><div class="track-dot done">✓</div><span class="track-text">📖 Reading Documents</span></div>
+            <div class="track-step"><div class="track-dot done">✓</div><span class="track-text">🔧 Building Calculations</span></div>
+            <div class="track-step"><div class="track-dot active"></div><span class="track-text active-t">🏛️ Validating…</span></div>
+            <div class="track-step"><div class="track-dot pending"></div><span class="track-text pending-t">🛡️ Defence Checks</span></div>
+            <div class="track-step"><div class="track-dot pending"></div><span class="track-text pending-t">👤 Human Review</span></div>
+            <div class="track-step"><div class="track-dot pending"></div><span class="track-text pending-t">✅ Complete</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+
+<footer>
+  <div class="container">
+    <p>Agentic ERP · Innovation Lab · Fund Administration Product Management · March 2026 · Confidential</p>
+  </div>
+</footer>
+
+<script>
+// ── SCROLL REVEAL ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── ACTIVE NAV ──
+const sections = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if(window.scrollY >= s.offsetTop - 200) current = s.getAttribute('id'); });
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+
+// ── TOOL LIBRARY CHART ──
+const c = document.getElementById('tlCanvas');
+const ctx = c.getContext('2d');
+const dpr = window.devicePixelRatio || 1;
+c.width = 500 * dpr; c.height = 260 * dpr;
+ctx.scale(dpr, dpr);
+const cW=500, cH=260, pad={t:30,r:20,b:40,l:50};
+const gW=cW-pad.l-pad.r, gH=cH-pad.t-pad.b;
+const months=Array.from({length:24},(_,i)=>i+1);
+const manual=months.map(()=>45);
+const system=months.map(m=>m<=2?38:m<=4?22:m<=6?12:m<=9?6:m<=12?3:m<=18?1.5:0.8);
+function xP(i){return pad.l+(i/(months.length-1))*gW}
+function yP(v){return pad.t+(1-v/50)*gH}
+// Grid
+ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+for(let v=0;v<=50;v+=10){ctx.beginPath();ctx.moveTo(pad.l,yP(v));ctx.lineTo(cW-pad.r,yP(v));ctx.stroke();
+ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='10px Segoe UI';ctx.textAlign='right';ctx.fillText('$'+v,pad.l-8,yP(v)+3)}
+// X
+ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='10px Segoe UI';ctx.textAlign='center';
+[0,5,11,17,23].forEach(i=>ctx.fillText('M'+months[i],xP(i),cH-pad.b+16));
+// Fill
+ctx.beginPath();ctx.fillStyle='rgba(0,137,123,0.08)';
+months.forEach((m,i)=>{i===0?ctx.moveTo(xP(i),yP(manual[i])):ctx.lineTo(xP(i),yP(manual[i]))});
+for(let i=months.length-1;i>=0;i--)ctx.lineTo(xP(i),yP(system[i]));ctx.closePath();ctx.fill();
+// Manual
+ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+months.forEach((m,i)=>{i===0?ctx.moveTo(xP(i),yP(manual[i])):ctx.lineTo(xP(i),yP(manual[i]))});ctx.stroke();ctx.setLineDash([]);
+// System
+ctx.beginPath();ctx.strokeStyle='#26A69A';ctx.lineWidth=3;
+months.forEach((m,i)=>{i===0?ctx.moveTo(xP(i),yP(system[i])):ctx.lineTo(xP(i),yP(system[i]))});ctx.stroke();
+// Labels
+ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold 11px Segoe UI';ctx.fillText('Manual: same cost forever →',pad.l+gW*0.6,yP(45)-8);
+ctx.fillStyle='#26A69A';ctx.fillText('With Tool Library ↘',pad.l+gW*0.25,yP(18)+16);
+ctx.fillStyle='rgba(0,137,123,0.4)';ctx.font='bold 12px Segoe UI';ctx.textAlign='center';ctx.fillText('SAVING',xP(18),yP(25));
+</script>
+
 </body>
 </html>
