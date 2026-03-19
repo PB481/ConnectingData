@@ -1,23 +1,555 @@
-Here is a draft you can use. It is structured to show that you have reviewed their data but need these specific "depth" markers to provide a precise and competitive proposal.
-Subject: Clarifying Questions: RFP for Fund Accounting Services – [Client Name / Fund Name] CCF
-Dear [Contact Name],
-Thank you for providing the initial details regarding the fund holdings, share classes, and investor counts for the upcoming CCF mandate. This data provides a helpful baseline for our initial assessment.
-To ensure we provide the most accurate and comprehensive proposal—particularly given the unique tax-transparent nature of a Common Contractual Fund (CCF)—we would appreciate your insights on the following clarifying points:
-1. Tax Transparency & Reporting
- * Tax Jurisdictions: In which specific jurisdictions are the underlying investors tax-resident? This will help us confirm the tax treaty applications required for the "look-through" process.
- * Reporting Frequency: What is the required frequency for investor-level tax reporting (e.g., daily, monthly, or annual)?
- * Withholding Tax (WHT): Do you expect the Fund Accountant to manage the WHT reclaim process directly, or will you be utilizing an external tax advisor for these filings?
- * Income Equalization: Does the fund require income equalization accounting for subscriptions and redemptions?
-2. Portfolio & Transactional Complexity
- * Trade Volume: What is the estimated average monthly trade volume (number of tickets) for the portfolio?
- * Asset Types: Beyond standard equities/bonds, does the portfolio include OTC derivatives, private credit, or complex bank debts that require specialized valuation?
- * Corporate Actions: Are there any specific emerging market exposures that may require high-touch monitoring for complex corporate actions?
-3. Investor & NAV Operations
- * NAV Timeline: What is the required delivery window for the Net Asset Value (e.g., T+0, T+1, etc.)?
- * Bespoke Reporting: Do any specific investors require "look-through" transparency for regulatory reporting, such as Solvency II or specific ESG disclosures?
- * Connectivity: Are there specific custodians or third-party platforms that we would be required to build automated data feeds for?
-We would be happy to jump on a brief 15-minute call to discuss these points if that is more convenient for your team. Alternatively, feel free to provide the responses via email at your earliest convenience.
-Best regards,
-[Your Name] [Your Title]
-[Your Company]
-Would you like me to also draft a "Data Request Checklist" in Excel format that you can attach to this email for them to fill out?
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic ERP Architecture — Fund Administration</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+–navy: #0A1628;
+–navy-mid: #132240;
+–navy-light: #1A2D50;
+–teal: #00897B;
+–teal-bright: #26A69A;
+–teal-glow: rgba(0,137,123,0.25);
+–cyan: #00BCD4;
+–red-warn: #EF5350;
+–red-bg: rgba(239,83,80,0.08);
+–amber: #FFB74D;
+–green: #66BB6A;
+–green-bg: rgba(102,187,106,0.08);
+–purple: #AB47BC;
+–blue-accent: #42A5F5;
+–text-primary: #E8EAF0;
+–text-secondary: #90A4AE;
+–text-muted: #607080;
+–surface: #0F1D35;
+–surface-raised: #152442;
+–border: rgba(255,255,255,0.06);
+–border-teal: rgba(0,137,123,0.3);
+}
+
+- { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+font-family: ‘DM Sans’, sans-serif;
+background: var(–navy);
+color: var(–text-primary);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+.bg-grid {
+position: fixed; inset:0; z-index:0;
+background-image:
+linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+background-size: 60px 60px;
+pointer-events: none;
+}
+
+.bg-glow {
+position: fixed; z-index:0; pointer-events:none;
+width: 600px; height: 600px; border-radius:50%;
+filter: blur(120px); opacity:0.12;
+}
+.bg-glow-1 { top:-200px; left:-100px; background: var(–teal); }
+.bg-glow-2 { bottom:-200px; right:-100px; background: var(–cyan); }
+
+.container {
+position: relative; z-index:1;
+max-width: 1400px; margin:0 auto;
+padding: 48px 32px 80px;
+}
+
+/* Header */
+.header {
+text-align: center;
+margin-bottom: 56px;
+}
+.header-label {
+display: inline-block;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+color: var(–teal-bright);
+background: rgba(0,137,123,0.1);
+border: 1px solid var(–border-teal);
+padding: 6px 16px; border-radius: 4px;
+margin-bottom: 20px;
+}
+.header h1 {
+font-size: clamp(28px, 4vw, 44px);
+font-weight: 700; line-height: 1.15;
+color: var(–text-primary);
+margin-bottom: 12px;
+}
+.header h1 span { color: var(–teal-bright); }
+.header p {
+font-size: 16px; color: var(–text-secondary);
+max-width: 680px; margin: 0 auto; line-height: 1.6;
+}
+
+/* Main Flow */
+.flow-section {
+position: relative;
+margin-bottom: 40px;
+}
+
+.flow-spine {
+position: absolute;
+left: 50%; top: 0; bottom: 0;
+width: 2px;
+background: linear-gradient(to bottom, var(–teal), var(–cyan), var(–teal));
+opacity: 0.3;
+transform: translateX(-50%);
+}
+
+.step {
+position: relative;
+display: grid;
+grid-template-columns: 1fr 80px 1fr;
+align-items: start;
+margin-bottom: 32px;
+animation: fadeUp 0.6s ease-out both;
+}
+.step:nth-child(1) { animation-delay: 0.1s; }
+.step:nth-child(2) { animation-delay: 0.2s; }
+.step:nth-child(3) { animation-delay: 0.3s; }
+.step:nth-child(4) { animation-delay: 0.4s; }
+.step:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeUp {
+from { opacity:0; transform: translateY(20px); }
+to { opacity:1; transform: translateY(0); }
+}
+
+.step-node {
+display: flex; align-items: center; justify-content: center;
+grid-column: 2;
+width: 56px; height: 56px;
+border-radius: 50%;
+font-family: ‘JetBrains Mono’, monospace;
+font-weight: 700; font-size: 18px;
+color: var(–navy);
+z-index: 2;
+position: relative;
+justify-self: center;
+}
+.step-node::after {
+content: ‘’;
+position: absolute; inset: -4px;
+border-radius: 50%;
+border: 2px solid;
+opacity: 0.3;
+animation: pulse 3s ease-in-out infinite;
+}
+@keyframes pulse {
+0%,100% { transform: scale(1); opacity:0.3; }
+50% { transform: scale(1.15); opacity:0.1; }
+}
+
+.step-node.probabilistic { background: var(–amber); }
+.step-node.probabilistic::after { border-color: var(–amber); }
+.step-node.deterministic { background: var(–green); }
+.step-node.deterministic::after { border-color: var(–green); }
+.step-node.ml { background: var(–purple); }
+.step-node.ml::after { border-color: var(–purple); }
+.step-node.human { background: var(–blue-accent); }
+.step-node.human::after { border-color: var(–blue-accent); }
+
+.step-card {
+background: var(–surface-raised);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 24px;
+transition: border-color 0.3s, box-shadow 0.3s;
+}
+.step-card:hover {
+border-color: var(–border-teal);
+box-shadow: 0 4px 40px rgba(0,137,123,0.08);
+}
+
+.step:nth-child(odd) .step-card { grid-column: 1; text-align: right; }
+.step:nth-child(even) .step-card { grid-column: 3; text-align: left; }
+
+.step-card .step-label {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+margin-bottom: 6px;
+}
+.step-card .step-label.prob { color: var(–amber); }
+.step-card .step-label.det { color: var(–green); }
+.step-card .step-label.ml-label { color: var(–purple); }
+.step-card .step-label.human-label { color: var(–blue-accent); }
+
+.step-card h3 {
+font-size: 20px; font-weight: 700;
+color: var(–text-primary);
+margin-bottom: 8px;
+}
+.step-card p {
+font-size: 14px; line-height: 1.6;
+color: var(–text-secondary);
+}
+.step-card .output-tag {
+display: inline-block;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px;
+padding: 3px 10px;
+border-radius: 4px;
+margin-top: 10px;
+}
+.output-tag.json { background: rgba(255,183,77,0.12); color: var(–amber); border: 1px solid rgba(255,183,77,0.2); }
+.output-tag.code { background: rgba(102,187,106,0.12); color: var(–green); border: 1px solid rgba(102,187,106,0.2); }
+.output-tag.flag { background: rgba(171,71,188,0.12); color: var(–purple); border: 1px solid rgba(171,71,188,0.2); }
+.output-tag.lib { background: rgba(66,165,245,0.12); color: var(–blue-accent); border: 1px solid rgba(66,165,245,0.2); }
+
+/* Fail/retry arrow */
+.retry-indicator {
+position: absolute;
+right: calc(50% + 50px);
+top: 50%;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px; color: var(–red-warn);
+letter-spacing: 1px;
+opacity: 0.7;
+}
+
+/* Defence Layers Section */
+.defence-section {
+margin-top: 64px;
+animation: fadeUp 0.6s ease-out 0.6s both;
+}
+.defence-section h2 {
+font-size: 28px; font-weight: 700;
+color: var(–text-primary);
+margin-bottom: 8px;
+text-align: center;
+}
+.defence-section .subtitle {
+text-align: center;
+color: var(–text-secondary);
+font-size: 14px;
+margin-bottom: 32px;
+}
+
+.defence-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+gap: 16px;
+}
+
+.defence-card {
+background: var(–surface-raised);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 20px;
+position: relative;
+overflow: hidden;
+transition: border-color 0.3s, transform 0.2s;
+}
+.defence-card:hover {
+border-color: var(–border-teal);
+transform: translateY(-2px);
+}
+.defence-card::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 3px;
+}
+.defence-card:nth-child(1)::before { background: var(–teal-bright); }
+.defence-card:nth-child(2)::before { background: var(–cyan); }
+.defence-card:nth-child(3)::before { background: var(–purple); }
+.defence-card:nth-child(4)::before { background: var(–amber); }
+.defence-card:nth-child(5)::before { background: var(–green); }
+.defence-card:nth-child(6)::before { background: var(–blue-accent); }
+
+.defence-card .layer-num {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px; letter-spacing: 2px;
+color: var(–text-muted);
+margin-bottom: 8px;
+}
+.defence-card h4 {
+font-size: 15px; font-weight: 700;
+color: var(–text-primary);
+margin-bottom: 6px;
+}
+.defence-card p {
+font-size: 13px; line-height: 1.55;
+color: var(–text-secondary);
+}
+.defence-card .maturity {
+display: inline-block;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 10px; letter-spacing: 1px;
+padding: 2px 8px; border-radius: 3px;
+margin-top: 10px;
+}
+.maturity.prod { background: rgba(102,187,106,0.12); color: var(–green); }
+.maturity.emerging { background: rgba(171,71,188,0.12); color: var(–purple); }
+
+/* Legend */
+.legend {
+display: flex; justify-content: center; gap: 24px;
+flex-wrap: wrap;
+margin: 40px 0 32px;
+padding: 16px 24px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 8px;
+}
+.legend-item {
+display: flex; align-items: center; gap: 8px;
+font-size: 13px; color: var(–text-secondary);
+}
+.legend-dot {
+width: 10px; height: 10px; border-radius: 50%;
+}
+.legend-dot.l-prob { background: var(–amber); }
+.legend-dot.l-det { background: var(–green); }
+.legend-dot.l-ml { background: var(–purple); }
+.legend-dot.l-human { background: var(–blue-accent); }
+
+/* Flywheel */
+.flywheel {
+margin-top: 48px;
+text-align: center;
+padding: 32px;
+background: var(–surface-raised);
+border: 1px solid var(–border-teal);
+border-radius: 12px;
+animation: fadeUp 0.6s ease-out 0.8s both;
+}
+.flywheel h3 {
+font-size: 20px; font-weight: 700;
+color: var(–teal-bright);
+margin-bottom: 12px;
+}
+.flywheel p {
+font-size: 14px; line-height: 1.6;
+color: var(–text-secondary);
+max-width: 700px; margin: 0 auto;
+}
+.flywheel-flow {
+display: flex; align-items: center; justify-content: center;
+gap: 8px; margin-top: 20px; flex-wrap: wrap;
+}
+.flywheel-node {
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px;
+padding: 6px 14px;
+border-radius: 6px;
+background: var(–navy-light);
+border: 1px solid var(–border);
+color: var(–text-secondary);
+}
+.flywheel-arrow {
+color: var(–teal-bright); font-size: 18px;
+}
+.flywheel-node.highlight {
+background: rgba(0,137,123,0.15);
+border-color: var(–border-teal);
+color: var(–teal-bright);
+}
+
+/* Footer */
+.footer {
+text-align: center;
+margin-top: 56px;
+padding-top: 24px;
+border-top: 1px solid var(–border);
+font-size: 12px;
+color: var(–text-muted);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+.step {
+grid-template-columns: 48px 1fr;
+gap: 0 16px;
+}
+.step-node {
+grid-column: 1; grid-row: 1;
+width: 44px; height: 44px; font-size: 15px;
+}
+.step-card {
+grid-column: 2 !important;
+text-align: left !important;
+}
+.flow-spine { left: 22px; }
+.retry-indicator { display: none; }
+}
+</style>
+
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="container">
+
+```
+<!-- Header -->
+<div class="header">
+  <div class="header-label">Target-State Architecture</div>
+  <h1>Agentic ERP: <span>Code Generation as Reasoning</span></h1>
+  <p>A five-step pipeline where LLMs produce deterministic code — not answers — governed by six layers of verification. The AI never does the maths.</p>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot l-prob"></div> Probabilistic (LLM)</div>
+  <div class="legend-item"><div class="legend-dot l-det"></div> Deterministic (Code)</div>
+  <div class="legend-item"><div class="legend-dot l-ml"></div> Traditional ML</div>
+  <div class="legend-item"><div class="legend-dot l-human"></div> Human-in-the-Loop</div>
+</div>
+
+<!-- Five-Step Flow -->
+<div class="flow-section">
+  <div class="flow-spine"></div>
+
+  <!-- Step 1: Reader -->
+  <div class="step">
+    <div class="step-card">
+      <div class="step-label prob">Step 1 · Probabilistic</div>
+      <h3>The Reader</h3>
+      <p>Extraction Agent ingests unstructured documents — PDFs, emails, SWIFT messages, side-letters, prospectuses. Extracts entities, amounts, dates, counterparties, fee structures, and fund-specific override clauses. Outputs strict JSON schema with per-field confidence scores.</p>
+      <span class="output-tag json">OUTPUT → Validated JSON Schema</span>
+    </div>
+    <div class="step-node probabilistic">1</div>
+    <div></div>
+  </div>
+
+  <!-- Step 2: Builder -->
+  <div class="step">
+    <div></div>
+    <div class="step-node probabilistic">2</div>
+    <div class="step-card">
+      <div class="step-label prob">Step 2 · Probabilistic</div>
+      <h3>The Builder</h3>
+      <p>Coding Agent reviews extracted data + fund rules. Instead of computing the answer, it writes a bespoke Python/SQL script for the exact calculation. The LLM's output is code, not numbers. Subject to six layers of defence (see below).</p>
+      <span class="output-tag code">OUTPUT → Deterministic Script</span>
+    </div>
+  </div>
+
+  <!-- Step 3: Constitution -->
+  <div class="step">
+    <div class="step-card">
+      <div class="step-label det">Step 3 · Deterministic</div>
+      <h3>The Constitution</h3>
+      <p>Sandbox executes Builder's code against a dummy ledger. Enforces hard-coded guardrails: double-entry validation (A = L + E), LPA policy limits, ACID compliance, dimensional integrity. Failed code is rejected and returned to Builder for rewrite.</p>
+      <span class="output-tag code">OUTPUT → Verified Result</span>
+    </div>
+    <div class="step-node deterministic">3</div>
+    <div></div>
+  </div>
+
+  <!-- Step 4: Anomaly Agent -->
+  <div class="step">
+    <div></div>
+    <div class="step-node ml">4</div>
+    <div class="step-card">
+      <div class="step-label ml-label">Step 4 · Traditional ML</div>
+      <h3>Anomaly Detection</h3>
+      <p>Gradient-boosted trees, isolation forests, and EWMA/SPC models (not LLMs) evaluate approved outputs. Flags statistical outliers, low-confidence extractions below calibrated threshold, and hard-coded material event triggers.</p>
+      <span class="output-tag flag">OUTPUT → Pass / Flag for Review</span>
+    </div>
+  </div>
+
+  <!-- Step 5: Human Gate -->
+  <div class="step">
+    <div class="step-card">
+      <div class="step-label human-label">Step 5 · Human-in-the-Loop</div>
+      <h3>The Approval Gate</h3>
+      <p>Accountants review flagged exceptions — both the generated code and the output. Once approved, the Builder's script is saved to the Tool Library for future instant reuse. Novel calculations require mandatory human sign-off before entering the library.</p>
+      <span class="output-tag lib">OUTPUT → Tool Library Entry</span>
+    </div>
+    <div class="step-node human">5</div>
+    <div></div>
+  </div>
+
+</div>
+
+<!-- Six Layers of Defence -->
+<div class="defence-section">
+  <h2>Six Layers of Builder Defence</h2>
+  <p class="subtitle">Eliminating the risk of LLM-generated code producing economically incorrect results</p>
+
+  <div class="defence-grid">
+    <div class="defence-card">
+      <div class="layer-num">LAYER 01</div>
+      <h4>Dual-Builder Consensus</h4>
+      <p>Two independent LLM families generate code for the same calculation. Outputs are compared — divergence triggers human review. N-version programming for accounting.</p>
+      <span class="maturity prod">PRODUCTION-READY</span>
+    </div>
+
+    <div class="defence-card">
+      <div class="layer-num">LAYER 02</div>
+      <h4>Tool Library Regression</h4>
+      <p>New scripts are compared against previously verified calculations. Semantically similar computations must produce matching outputs on identical inputs.</p>
+      <span class="maturity prod">PRODUCTION-READY</span>
+    </div>
+
+    <div class="defence-card">
+      <div class="layer-num">LAYER 03</div>
+      <h4>Formal Verification</h4>
+      <p>Builder generates code + formal annotations. SMT solvers (Z3, Dafny, Lean) mathematically prove the code satisfies its post-conditions. Strongest guarantee available.</p>
+      <span class="maturity emerging">EMERGING</span>
+    </div>
+
+    <div class="defence-card">
+      <div class="layer-num">LAYER 04</div>
+      <h4>Inverse Verification</h4>
+      <p>An Auditor Agent reads the generated code and produces a natural-language explanation. If the explanation doesn't match the intended calculation, the discrepancy is flagged.</p>
+      <span class="maturity prod">PRODUCTION-READY</span>
+    </div>
+
+    <div class="defence-card">
+      <div class="layer-num">LAYER 05</div>
+      <h4>Property-Based Testing</h4>
+      <p>Hypothesis framework generates thousands of randomised inputs. Mathematical invariants must hold: fees ≥ 0, ≤ LPA max, NAV components sum correctly. Any violation rejects.</p>
+      <span class="maturity prod">PRODUCTION-READY</span>
+    </div>
+
+    <div class="defence-card">
+      <div class="layer-num">LAYER 06</div>
+      <h4>Human Gate for Novelty</h4>
+      <p>First-time calculation types always require human review regardless of automated verification. Tool Library is only populated after human validation. Non-negotiable.</p>
+      <span class="maturity prod">PRODUCTION-READY</span>
+    </div>
+  </div>
+</div>
+
+<!-- Flywheel -->
+<div class="flywheel">
+  <h3>The Tool Library Flywheel</h3>
+  <p>Every human-approved calculation becomes a reusable, verified asset. Over time, novel calculations become rare and the system converges from AI-assisted to AI-native accounting — becoming more reliable with every quarter-end cycle.</p>
+  <div class="flywheel-flow">
+    <div class="flywheel-node">Novel Fund Rule</div>
+    <div class="flywheel-arrow">→</div>
+    <div class="flywheel-node">Builder Generates Code</div>
+    <div class="flywheel-arrow">→</div>
+    <div class="flywheel-node">6-Layer Verification</div>
+    <div class="flywheel-arrow">→</div>
+    <div class="flywheel-node">Human Approves</div>
+    <div class="flywheel-arrow">→</div>
+    <div class="flywheel-node highlight">Tool Library ↻</div>
+    <div class="flywheel-arrow">→</div>
+    <div class="flywheel-node">Instant Reuse</div>
+  </div>
+</div>
+
+<div class="footer">
+  Innovation Lab · Fund Administration Product Management · March 2026 · Confidential
+</div>
+```
+
+  </div>
+</body>
+</html>
