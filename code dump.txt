@@ -1,60 +1,782 @@
-1. The Core Setup: The TB Architecture
-Forget sub-funds and Net Asset Value (NAV). The Section 110 DAC operates on a single corporate ledger where the investor’s capital is treated as Debt, not Equity.
-	•	The Bucket: The DAC is a single legal shell.
-	•	The Assets: The European syndicated loans sit on the balance sheet as Assets.
-	•	The Liability (The "Capstock"): The Australian Trust’s investment is recorded as the PPN Principal (a Liability).
-	•	The Equity: Almost non-existent. Usually just €100 of initial share capital held by an orphan trust, plus the statutory €1,000/year retained profit.
-2. The Operational Flow: Capital & Cash
-Unlike a UCITS fund that processes daily subscriptions and redemptions (Trade Date accounting), this structure moves strictly on KKR’s instructions and Settlement Date accounting.
-	•	The Drawdown (Subscription): KKR issues a "Drawdown Notice" to the Australian Trust. Your team does not touch the ledger yet.
-	•	Cash Lands: Only when the cash hits the DAC’s bank account do you book the entry: Debit Cash / Credit PPN Principal.
-	•	Funding the Loan: KKR trades a loan. Your Treasury team wires the cash to the seller. You book: Debit Loan Asset / Credit Cash.
-	•	Cost Relief: When loans pay down or are sold, you must mirror KKR's system—typically using Specific Lot Identification or Weighted Average Cost (never LIFO, rarely FIFO).
-3. The Month-End Flow: The "Profit Sweep"
-This replaces your UCITS NAV strike. The goal of the DAC is to be tax-neutral, meaning it must legally sweep all excess profit out of the P&L and into the PPN Liability account.
-The Workflow:
-	1	Gather Data: Pull vendor prices (Mid/Bid), reconcile to KKR’s Loan Tape (for PIK and paydowns), and get the IFRS 9 Impairment (ECL) figures from KKR.
-	2	Accrue Expenses: Book the Administrator, Audit, and KKR Management fees.
-	3	Calculate the Sweep: * (Gross Income + Gains) - (Expenses + Impairments) - €83.33 (Monthly Tax Retention) = Available Profit.
-	4	The "Zero Floor": If loans crash and the Available Profit is negative, the Sweep is exactly €0.00. You cannot book negative interest.
-4. The Trial Balance (TB) Transformation
-Here is exactly how your TB moves at month-end when you execute the flow above.
-Step A: Pre-Sweep TB (Mid-Month) Your loans generated €500k in interest. Your expenses are €50k. Your P&L currently shows a massive €450k net profit. If left here, the DAC faces a huge tax bill.
-Step B: The Sweep Journal Entry Your team calculates the sweep (€450,000 - €83 retained = €449,917). You manually book:
-	•	Debit: PPN Interest Expense (P&L) for €449,917
-	•	Credit: PPN Interest Payable (Liability) for €449,917
-Step C: Post-Sweep TB (Month-End Final) The profit has been successfully "swept" onto the balance sheet.
-TB Category
-Account
-Pre-Sweep Status
-Post-Sweep Final
-Asset
-European Loans & Cash
-Holds the value
-Holds the value
-Liability
-PPN Principal
-€100,000,000
-€100,000,000
-Liability
-PPN Interest Payable
-€0
-€449,917 (Waiting to be wired to Australia)
-Income (P&L)
-Gross Loan Income
-€500,000
-€500,000
-Expense (P&L)
-Operating Expenses
-€50,000
-€50,000
-Expense (P&L)
-PPN Interest Exp.
-€0
-€449,917
+<!DOCTYPE html>
 
-Net Profit (P&L)
-€450,000
-€83 (Irish Tax safe)
-Once KKR approves this final TB, your Treasury team waits for the official Quarterly Payment Date, and wires that €449,917 cash to the Australian Trust, clearing the Payable liability back to zero.
-This framework gives your team exactly what they need to bridge their UCITS knowledge to this KKR Private Credit mandate.
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic ERP — Client Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sage-900: #1B4332;
+    --sage-800: #2D6A4F;
+    --sage-700: #40916C;
+    --sage-600: #52B788;
+    --sage-100: #f0f7f0;
+    --sage-50: #f8faf8;
+    --cream: #FAFBF8;
+    --warm-white: #fff;
+    --border: #e8e6e0;
+    --text: #1a1a1a;
+    --text-secondary: #666;
+    --text-muted: #999;
+    --text-faint: #bbb;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+font-family: ‘Newsreader’, Georgia, serif;
+background: var(–cream);
+color: var(–text);
+min-height: 100vh;
+-webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ── */
+.nav {
+display: flex; align-items: center; justify-content: space-between;
+padding: 16px 32px; border-bottom: 1px solid var(–border);
+position: sticky; top: 0; background: var(–cream); z-index: 100;
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+.nav-logo {
+width: 32px; height: 32px; border-radius: 8px;
+background: linear-gradient(135deg, var(–sage-800), var(–sage-700));
+display: flex; align-items: center; justify-content: center;
+color: white; font-size: 14px; font-weight: 700; font-family: system-ui;
+}
+.nav-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+.btn-ghost {
+font-size: 13px; color: var(–text-secondary); background: none;
+border: 1px solid #ddd; border-radius: 6px; padding: 6px 14px;
+cursor: pointer; font-family: system-ui; transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(–sage-700); color: var(–sage-800); }
+
+/* ── CONTAINER ── */
+.container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+/* ── PHASE TRANSITIONS ── */
+.phase { animation: fadeUp 0.4s ease-out; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+/* ── LANDING ── */
+.landing { padding-top: 12vh; text-align: center; }
+.landing h1 {
+font-size: clamp(32px, 5vw, 46px); font-weight: 400;
+line-height: 1.15; margin-bottom: 12px; letter-spacing: -1px;
+}
+.landing .subtitle {
+font-size: 16px; color: var(–text-muted); margin-bottom: 40px;
+font-family: system-ui; font-weight: 400;
+}
+
+/* ── DROP ZONE ── */
+.dropzone {
+border: 2px dashed #d0d0c8; border-radius: 16px;
+padding: 48px 24px; background: var(–warm-white);
+cursor: pointer; transition: all 0.3s; margin-bottom: 20px;
+display: flex; flex-direction: column; align-items: center; justify-content: center;
+min-height: 120px;
+}
+.dropzone.active { border-color: var(–sage-700); background: var(–sage-100); }
+.dropzone.has-files { padding: 20px 24px; }
+.dropzone-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+.dropzone-text { font-size: 15px; color: var(–text-muted); font-family: system-ui; }
+.dropzone-hint { font-size: 12px; color: var(–text-faint); font-family: system-ui; margin-top: 4px; }
+
+.file-chips { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.file-chip {
+display: flex; align-items: center; gap: 6px;
+background: #f5f5f0; border-radius: 8px; padding: 6px 12px;
+font-size: 13px; font-family: system-ui; color: #444;
+}
+.file-chip .remove {
+background: none; border: none; cursor: pointer;
+font-size: 16px; color: #aaa; padding: 0; line-height: 1;
+}
+.file-chip .remove:hover { color: #e53935; }
+
+/* ── TEXTAREA ── */
+.instruction-input {
+width: 100%; padding: 16px 18px; font-size: 16px;
+border: 1px solid #ddd; border-radius: 12px; resize: none;
+font-family: ‘Newsreader’, Georgia, serif; background: var(–warm-white);
+color: var(–text); line-height: 1.5; outline: none; transition: border-color 0.2s;
+}
+.instruction-input:focus { border-color: var(–sage-700); }
+.instruction-input::placeholder { color: var(–text-faint); }
+
+/* ── PRIMARY BUTTON ── */
+.btn-primary {
+margin-top: 16px; padding: 14px 40px;
+background: linear-gradient(135deg, var(–sage-800), var(–sage-700));
+color: white; border: none; border-radius: 10px; font-size: 16px;
+font-family: system-ui; font-weight: 600; cursor: pointer;
+transition: all 0.2s; letter-spacing: 0.3px;
+box-shadow: 0 4px 20px rgba(45,106,79,0.2);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(45,106,79,0.3); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { background: #ddd; color: #999; cursor: default; box-shadow: none; transform: none; }
+
+/* ── QUICK ACTIONS ── */
+.quick-actions { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chip {
+display: flex; align-items: center; gap: 6px; padding: 8px 14px;
+background: var(–warm-white); border: 1px solid var(–border);
+border-radius: 20px; font-size: 13px; font-family: system-ui;
+color: #555; cursor: pointer; transition: all 0.2s;
+}
+.chip:hover { border-color: var(–sage-700); background: var(–sage-50); }
+
+/* ── INTERVIEW ── */
+.interview { padding-top: 6vh; }
+.interview-header { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.interview-header h2 { font-size: 22px; font-weight: 500; }
+.est-badge {
+font-size: 12px; color: var(–text-muted); font-family: system-ui;
+background: #f0f0ea; padding: 3px 10px; border-radius: 12px;
+}
+.files-summary { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.file-tag {
+font-size: 12px; font-family: system-ui; background: var(–sage-100);
+color: var(–sage-800); padding: 4px 10px; border-radius: 6px;
+}
+.chat { display: flex; flex-direction: column; gap: 16px; }
+.msg-user {
+display: flex; justify-content: flex-end;
+}
+.msg-user-bubble {
+max-width: 80%; background: var(–sage-800); color: white;
+padding: 12px 16px; border-radius: 16px 16px 4px 16px;
+font-size: 15px; line-height: 1.5;
+}
+.msg-ai { display: flex; gap: 10px; margin-bottom: 2px; }
+.ai-avatar {
+width: 28px; height: 28px; border-radius: 8px;
+background: linear-gradient(135deg, var(–sage-800), var(–sage-600));
+display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
+color: white; font-size: 12px; font-weight: 700; font-family: system-ui;
+}
+.msg-ai-bubble {
+background: var(–warm-white); border: 1px solid var(–border);
+padding: 12px 16px; border-radius: 4px 16px 16px 16px;
+font-size: 15px; line-height: 1.5; color: #333;
+}
+.answer-row { display: flex; gap: 8px; align-items: flex-end; margin-left: 38px; }
+.answer-input {
+flex: 1; padding: 10px 14px; font-size: 14px;
+border: 1px solid #ddd; border-radius: 10px;
+font-family: system-ui; outline: none; background: var(–warm-white);
+transition: border-color 0.2s;
+}
+.answer-input:focus { border-color: var(–sage-700); }
+.answer-input::placeholder { color: var(–text-faint); }
+.btn-send {
+padding: 10px 16px; background: #ddd; color: white;
+border: none; border-radius: 10px; font-size: 14px;
+font-family: system-ui; cursor: default; transition: background 0.2s;
+}
+.btn-send.active { background: var(–sage-800); cursor: pointer; }
+.progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 24px; }
+.dot {
+width: 8px; height: 8px; border-radius: 50%;
+background: #ddd; transition: background 0.3s;
+}
+.dot.filled { background: var(–sage-800); }
+
+/* ── CONFIRM ── */
+.confirm { padding-top: 8vh; }
+.confirm-header { text-align: center; margin-bottom: 32px; }
+.confirm-icon { font-size: 40px; margin-bottom: 8px; }
+.confirm-header h2 { font-size: 26px; font-weight: 400; margin-bottom: 6px; }
+.confirm-sub { font-size: 14px; color: var(–text-muted); font-family: system-ui; }
+.summary-card {
+background: var(–warm-white); border: 1px solid var(–border);
+border-radius: 16px; padding: 24px; margin-bottom: 20px;
+}
+.summary-top {
+display: flex; justify-content: space-between; align-items: center;
+margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0ea;
+}
+.summary-label {
+font-size: 11px; color: var(–text-muted); font-family: system-ui;
+text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;
+}
+.summary-value { font-size: 14px; font-family: system-ui; color: #333; margin-bottom: 10px; }
+.commit-area { text-align: center; }
+.btn-commit {
+padding: 16px 48px;
+background: linear-gradient(135deg, var(–sage-800), var(–sage-700));
+color: white; border: none; border-radius: 12px; font-size: 17px;
+font-family: system-ui; font-weight: 600; cursor: pointer;
+letter-spacing: 0.3px; transition: all 0.2s;
+box-shadow: 0 4px 24px rgba(45,106,79,0.25);
+}
+.btn-commit:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(45,106,79,0.35); }
+.btn-commit:active { transform: scale(0.97); }
+.commit-hint { font-size: 12px; color: #aaa; font-family: system-ui; margin-top: 10px; }
+
+/* ── TRACKING ── */
+.tracking { padding-top: 6vh; padding-bottom: 60px; }
+.received-banner {
+background: linear-gradient(135deg, var(–sage-100), #e8f5e9);
+border: 1px solid #c8e6c9; border-radius: 16px;
+padding: 20px 24px; margin-bottom: 28px; text-align: center;
+}
+.received-label {
+font-size: 13px; font-family: system-ui; color: var(–sage-800);
+font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;
+}
+.received-id { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+.received-detail { font-size: 13px; font-family: system-ui; color: var(–text-secondary); }
+
+.tracker { position: relative; padding-left: 36px; }
+.tracker-line {
+position: absolute; left: 13px; top: 8px; bottom: 8px; width: 2px;
+background: var(–border);
+}
+.tracker-progress {
+position: absolute; left: 13px; top: 8px; width: 2px;
+background: linear-gradient(to bottom, var(–sage-800), var(–sage-600));
+transition: height 1s ease-out; height: 0;
+}
+.track-step { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; position: relative; transition: opacity 0.5s; }
+.track-step.pending { opacity: 0.3; }
+.track-node {
+position: absolute; left: -30px; width: 24px; height: 24px;
+border-radius: 50%; display: flex; align-items: center; justify-content: center;
+transition: all 0.5s; z-index: 2;
+}
+.track-node.complete { background: var(–sage-800); border: none; }
+.track-node.active { background: white; border: 2px solid var(–sage-800); }
+.track-node.waiting { background: #f5f5f0; border: 2px solid #ddd; }
+.track-node .check { color: white; font-size: 12px; }
+.track-node .pulse-dot {
+width: 8px; height: 8px; border-radius: 50%;
+background: var(–sage-800); animation: pulse 1.5s ease-in-out infinite;
+}
+.track-label { font-size: 15px; font-family: system-ui; color: #555; }
+.track-label.active-label { font-weight: 600; color: var(–text); }
+.track-badge {
+font-size: 11px; font-family: monospace; color: var(–sage-700);
+background: var(–sage-100); padding: 2px 8px; border-radius: 4px;
+margin-left: 8px; animation: fadeUp 0.5s;
+}
+.track-badge-done { font-size: 11px; font-family: monospace; color: var(–text-muted); margin-left: 8px; }
+.track-detail { font-size: 13px; font-family: system-ui; color: var(–text-muted); line-height: 1.4; }
+
+.complete-card {
+text-align: center; margin-top: 20px; padding: 24px;
+background: var(–warm-white); border: 1px solid var(–border);
+border-radius: 16px; animation: fadeUp 0.5s;
+}
+.complete-icon { font-size: 32px; margin-bottom: 8px; }
+.complete-title { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+.complete-sub { font-size: 14px; font-family: system-ui; color: var(–text-secondary); margin-bottom: 16px; }
+.btn-results {
+padding: 12px 32px;
+background: linear-gradient(135deg, var(–sage-800), var(–sage-700));
+color: white; border: none; border-radius: 10px; font-size: 15px;
+font-family: system-ui; font-weight: 600; cursor: pointer;
+}
+
+.hidden { display: none !important; }
+
+/* ── NOTIFICATION TOAST ── */
+.toast {
+position: fixed; top: 20px; right: 20px;
+background: var(–warm-white); border: 1px solid var(–border);
+border-left: 4px solid var(–sage-700); border-radius: 10px;
+padding: 14px 18px; box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+font-family: system-ui; font-size: 13px; z-index: 200;
+animation: slideIn 0.4s ease-out; max-width: 340px;
+transition: opacity 0.4s, transform 0.4s;
+}
+.toast.out { opacity: 0; transform: translateX(20px); }
+.toast-title { font-weight: 600; color: var(–sage-800); margin-bottom: 2px; }
+.toast-msg { color: var(–text-secondary); line-height: 1.4; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+</style>
+
+</head>
+<body>
+
+<!-- NAV -->
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">E</div>
+    <span class="nav-title">Agentic ERP</span>
+  </div>
+  <button class="btn-ghost hidden" id="btnNewRequest" onclick="resetAll()">New Request</button>
+</nav>
+
+<div class="container">
+
+  <!-- ═══ LANDING ═══ -->
+
+  <div id="phaseLanding" class="phase landing">
+    <h1>What can we process<br>for you today?</h1>
+    <p class="subtitle">Drop your files, describe what you need, and we'll handle the rest.</p>
+
+```
+<!-- Drop zone -->
+<div class="dropzone" id="dropzone"
+  ondragover="event.preventDefault(); this.classList.add('active');"
+  ondragleave="this.classList.remove('active');"
+  ondrop="handleDrop(event)"
+  onclick="document.getElementById('fileInput').click();">
+  <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(event)">
+  <div id="dropzoneEmpty">
+    <div class="dropzone-icon">📎</div>
+    <div class="dropzone-text">Drop files here — prospectus, invoices, notices, anything</div>
+    <div class="dropzone-hint">PDF, Word, Excel, images, or email attachments</div>
+  </div>
+  <div id="dropzoneFiles" class="file-chips hidden"></div>
+</div>
+
+<!-- Instruction -->
+<textarea class="instruction-input" id="instructionInput" rows="3"
+  placeholder="Tell us what you need — e.g., 'Set up this new fund', 'Process these invoices', 'Generate Q3 investor reports'..."
+  oninput="updateContinueBtn()"></textarea>
+
+<button class="btn-primary" id="btnContinue" disabled onclick="startInterview()">Continue →</button>
+
+<!-- Quick actions -->
+<div class="quick-actions">
+  <button class="chip" onclick="quickAction('fund_launch','Onboard a new fund from prospectus/LPA')">🏗️ New Fund Launch</button>
+  <button class="chip" onclick="quickAction('quarterly_reporting','Generate quarterly investor statements and regulatory filings')">📊 Quarterly Reporting</button>
+  <button class="chip" onclick="quickAction('invoice','Process vendor invoice to journal entries')">🧾 Invoice Processing</button>
+  <button class="chip" onclick="quickAction('fee_calculation','Calculate management fees and performance fees')">💰 Fee Calculation</button>
+  <button class="chip" onclick="quickAction('fair_value','Process fair value pricing instruction with valuation methodology')">💎 Fair Value</button>
+  <button class="chip" onclick="quickAction('general','Custom request')">✨ Something Else</button>
+</div>
+```
+
+  </div>
+
+  <!-- ═══ INTERVIEW ═══ -->
+
+  <div id="phaseInterview" class="phase interview hidden">
+    <div class="interview-header">
+      <span id="interviewIcon" style="font-size:24px"></span>
+      <h2 id="interviewTitle"></h2>
+      <span class="est-badge" id="interviewEst"></span>
+    </div>
+    <div id="filesSummary" class="files-summary hidden"></div>
+    <div class="chat" id="chatArea"></div>
+    <div class="progress-dots" id="progressDots"></div>
+  </div>
+
+  <!-- ═══ CONFIRM ═══ -->
+
+  <div id="phaseConfirm" class="phase confirm hidden">
+    <div class="confirm-header">
+      <div class="confirm-icon" id="confirmIcon"></div>
+      <h2>Ready to process</h2>
+      <p class="confirm-sub">Please confirm the details below</p>
+    </div>
+    <div class="summary-card" id="summaryCard"></div>
+    <div class="commit-area">
+      <button class="btn-commit" onclick="commitRequest()">Commit Instruction ✓</button>
+      <p class="commit-hint">You'll receive a confirmation and can track progress in real-time</p>
+    </div>
+  </div>
+
+  <!-- ═══ TRACKING ═══ -->
+
+  <div id="phaseTracking" class="phase tracking hidden">
+    <div class="received-banner">
+      <div class="received-label">Instruction Received</div>
+      <div class="received-id" id="requestIdDisplay"></div>
+      <div class="received-detail" id="trackingDetail"></div>
+    </div>
+    <div class="tracker" id="trackerArea">
+      <div class="tracker-line"></div>
+      <div class="tracker-progress" id="trackerProgress"></div>
+    </div>
+    <div id="completeCard" class="hidden"></div>
+  </div>
+
+</div>
+
+<!-- TOAST CONTAINER -->
+
+<div id="toastContainer"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let files = [];
+let instruction = '';
+let requestType = null;
+let answers = {};
+let currentQ = 0;
+let trackingStage = 0;
+
+const REQUEST_TYPES = {
+  fund_launch:        { label: "New Fund Launch",     icon: "🏗️", est: "1–2 business days" },
+  quarterly_reporting:{ label: "Quarterly Reporting",  icon: "📊", est: "20–45 minutes" },
+  invoice:            { label: "Invoice Processing",   icon: "🧾", est: "Under 1 minute" },
+  fee_calculation:    { label: "Fee Calculation",      icon: "💰", est: "2–5 minutes" },
+  fair_value:         { label: "Fair Value Instruction",icon: "💎", est: "15–30 minutes" },
+  general:            { label: "Something Else",       icon: "✨", est: "Varies" },
+};
+
+const AI_QUESTIONS = {
+  fund_launch: [
+    { q: "I can see this looks like a fund setup request. Can you confirm the fund name and legal structure?", field: "fund_name", ph: "e.g., Emerald Capital Partners I — Irish QIAIF ILP" },
+    { q: "What's the target fund size and base currency?", field: "fund_size", ph: "e.g., EUR 500M" },
+    { q: "Does this fund have performance fees or carried interest? If so, what's the waterfall structure?", field: "waterfall", ph: "e.g., European-style, 8% hurdle, 20% carry, GP catch-up" },
+    { q: "Are there any side-letter agreements that modify standard terms for specific investors?", field: "side_letters", ph: "e.g., 3 LPs with reduced management fees" },
+    { q: "When do you need this operational? Any specific reporting deadlines?", field: "deadline", ph: "e.g., First NAV by end of Q2 2026" },
+  ],
+  quarterly_reporting: [
+    { q: "Which fund and reporting period is this for?", field: "fund_period", ph: "e.g., Emerald Capital Partners I — Q3 2026" },
+    { q: "Are there any new investments, exits, or material events this quarter?", field: "events", ph: "e.g., Exit of NordicLogistics, write-off of DataFabric" },
+    { q: "Any specific regulatory reports needed alongside the investor statements?", field: "reg_reports", ph: "e.g., AIFMD Annex IV, SFDR PAI disclosure" },
+  ],
+  invoice: [
+    { q: "I can see this is a vendor invoice. Which fund should this be charged to?", field: "fund", ph: "e.g., Emerald Capital Partners I" },
+    { q: "Is this a recurring fee or a one-off charge?", field: "frequency", ph: "e.g., Quarterly administration fee" },
+  ],
+  fee_calculation: [
+    { q: "Which fund and fee period is this for?", field: "fund_period", ph: "e.g., Emerald Capital Partners I — Q3 2026" },
+    { q: "Are there any side-letter overrides or fee modifications to apply?", field: "overrides", ph: "e.g., LP-003 at 1.75%, LP-007 at 1.5%" },
+    { q: "Should this include performance fees / carried interest, or management fees only?", field: "fee_types", ph: "e.g., Management fees only" },
+  ],
+  fair_value: [
+    { q: "Which portfolio company is this fair value instruction for?", field: "company", ph: "e.g., FinEdge Payments BV" },
+    { q: "What is the proposed new fair value and what methodology was used?", field: "methodology", ph: "e.g., EUR 28M, EV/Revenue multiple at 2.0x" },
+    { q: "Has this been approved by the investment committee? Who signed off?", field: "approver", ph: "e.g., Sarah Chen, CIO" },
+  ],
+  general: [
+    { q: "Tell me more about what you need. What's the end goal?", field: "goal", ph: "Describe what you're trying to achieve..." },
+    { q: "Is there a specific fund this relates to?", field: "fund", ph: "e.g., Emerald Capital Partners I" },
+    { q: "When do you need this completed?", field: "deadline", ph: "e.g., End of this week" },
+  ],
+};
+
+const TRACKING_STAGES = [
+  { id:"received",   label:"Request Received",     icon:"📨", detail:"Your instruction has been logged and queued" },
+  { id:"reading",    label:"Reading Documents",     icon:"📖", detail:"AI is extracting data from your files" },
+  { id:"building",   label:"Building Calculations", icon:"🔧", detail:"Generating deterministic scripts for your fund rules" },
+  { id:"validating", label:"Validating",            icon:"🏛️", detail:"Running guardrails: double-entry, limits, ACID, dimensions" },
+  { id:"verifying",  label:"Defence Checks",        icon:"🛡️", detail:"6-layer verification: consensus, regression, formal proof, audit" },
+  { id:"review",     label:"Human Review",          icon:"👤", detail:"Your fund accountant is reviewing the output" },
+  { id:"complete",   label:"Complete",              icon:"✅", detail:"Ready for your review" },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function showPhase(id) {
+  ['phaseLanding','phaseInterview','phaseConfirm','phaseTracking'].forEach(p => {
+    document.getElementById(p).classList.add('hidden');
+  });
+  document.getElementById(id).classList.remove('hidden');
+  document.getElementById('btnNewRequest').classList.toggle('hidden', id === 'phaseLanding');
+}
+
+function resetAll() {
+  files = []; instruction = ''; requestType = null; answers = {}; currentQ = 0; trackingStage = 0;
+  document.getElementById('instructionInput').value = '';
+  renderFiles();
+  updateContinueBtn();
+  showPhase('phaseLanding');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LANDING
+// ═══════════════════════════════════════════════════════════════
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('active');
+  const dropped = Array.from(e.dataTransfer.files);
+  files = files.concat(dropped);
+  renderFiles();
+  updateContinueBtn();
+}
+
+function handleFileSelect(e) {
+  files = files.concat(Array.from(e.target.files));
+  renderFiles();
+  updateContinueBtn();
+  e.target.value = '';
+}
+
+function removeFile(idx) {
+  files.splice(idx, 1);
+  renderFiles();
+  updateContinueBtn();
+}
+
+function renderFiles() {
+  const dz = document.getElementById('dropzone');
+  const empty = document.getElementById('dropzoneEmpty');
+  const chips = document.getElementById('dropzoneFiles');
+  if (files.length === 0) {
+    empty.classList.remove('hidden');
+    chips.classList.add('hidden');
+    dz.classList.remove('has-files');
+  } else {
+    empty.classList.add('hidden');
+    chips.classList.remove('hidden');
+    dz.classList.add('has-files');
+    chips.innerHTML = files.map((f,i) =>
+      `<div class="file-chip">📄 ${f.name} <button class="remove" onclick="event.stopPropagation();removeFile(${i})">×</button></div>`
+    ).join('') + '<div style="font-size:12px;color:#aaa;font-family:system-ui;padding:8px 0">+ drop more files</div>';
+  }
+}
+
+function updateContinueBtn() {
+  instruction = document.getElementById('instructionInput').value;
+  document.getElementById('btnContinue').disabled = !(instruction.trim() || files.length);
+}
+
+function quickAction(type, text) {
+  document.getElementById('instructionInput').value = text;
+  instruction = text;
+  requestType = type;
+  updateContinueBtn();
+  startInterview();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INTERVIEW
+// ═══════════════════════════════════════════════════════════════
+function detectType() {
+  const txt = (instruction + ' ' + files.map(f=>f.name).join(' ')).toLowerCase();
+  if (txt.includes('prospectus')||txt.includes('lpa')||txt.includes('new fund')||txt.includes('launch')||txt.includes('onboard')) return 'fund_launch';
+  if (txt.includes('quarterly')||txt.includes('reporting')||txt.includes('investor statement')) return 'quarterly_reporting';
+  if (txt.includes('invoice')||txt.includes('bill')) return 'invoice';
+  if (txt.includes('fee')||txt.includes('management fee')) return 'fee_calculation';
+  if (txt.includes('fair value')||txt.includes('valuation')||txt.includes('pricing instruction')) return 'fair_value';
+  return 'general';
+}
+
+function startInterview() {
+  if (!requestType) requestType = detectType();
+  const rt = REQUEST_TYPES[requestType];
+  answers = {};
+  currentQ = 0;
+
+  document.getElementById('interviewIcon').textContent = rt.icon;
+  document.getElementById('interviewTitle').textContent = rt.label;
+  document.getElementById('interviewEst').textContent = 'Est. ' + rt.est;
+
+  // Files summary
+  const fs = document.getElementById('filesSummary');
+  if (files.length) {
+    fs.classList.remove('hidden');
+    fs.innerHTML = files.map(f => `<span class="file-tag">📄 ${f.name}</span>`).join('');
+  } else { fs.classList.add('hidden'); }
+
+  showPhase('phaseInterview');
+  renderChat();
+}
+
+function renderChat() {
+  const qs = AI_QUESTIONS[requestType] || AI_QUESTIONS['general'];
+  const chat = document.getElementById('chatArea');
+  let html = '';
+
+  // User's original instruction
+  if (instruction) {
+    html += `<div class="msg-user"><div class="msg-user-bubble">${esc(instruction)}</div></div>`;
+  }
+
+  // Q&A pairs
+  for (let i = 0; i <= currentQ && i < qs.length; i++) {
+    const q = qs[i];
+    // AI question
+    html += `<div class="msg-ai"><div class="ai-avatar">E</div><div class="msg-ai-bubble">${esc(q.q)}</div></div>`;
+    // User answer (if exists)
+    if (answers[q.field]) {
+      html += `<div class="msg-user"><div class="msg-user-bubble">${esc(answers[q.field])}</div></div>`;
+    }
+    // Input for current unanswered question
+    if (i === currentQ && !answers[q.field]) {
+      html += `<div class="answer-row">
+        <input class="answer-input" id="answerInput" placeholder="${esc(q.ph)}" onkeydown="if(event.key==='Enter')submitAnswer()" autofocus>
+        <button class="btn-send" id="btnSend" onclick="submitAnswer()">→</button>
+      </div>`;
+    }
+  }
+
+  chat.innerHTML = html;
+
+  // Progress dots
+  const dots = document.getElementById('progressDots');
+  dots.innerHTML = qs.map((_,i) => `<div class="dot${i <= currentQ ? ' filled' : ''}"></div>`).join('');
+
+  // Focus input
+  setTimeout(() => {
+    const inp = document.getElementById('answerInput');
+    if (inp) {
+      inp.focus();
+      inp.addEventListener('input', () => {
+        document.getElementById('btnSend').classList.toggle('active', inp.value.trim().length > 0);
+      });
+    }
+  }, 50);
+
+  // Scroll
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function submitAnswer() {
+  const inp = document.getElementById('answerInput');
+  if (!inp || !inp.value.trim()) return;
+  const qs = AI_QUESTIONS[requestType] || AI_QUESTIONS['general'];
+  answers[qs[currentQ].field] = inp.value.trim();
+
+  if (currentQ < qs.length - 1) {
+    currentQ++;
+    renderChat();
+  } else {
+    showConfirm();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONFIRM
+// ═══════════════════════════════════════════════════════════════
+function showConfirm() {
+  const rt = REQUEST_TYPES[requestType];
+  document.getElementById('confirmIcon').textContent = rt.icon;
+
+  let html = `<div class="summary-top">
+    <span style="font-size:15px;font-weight:600;font-family:system-ui">${rt.label}</span>
+    <span style="font-size:13px;color:var(--sage-700);font-family:system-ui;background:var(--sage-100);padding:4px 12px;border-radius:8px">Est. ${rt.est}</span>
+  </div>`;
+
+  if (files.length) {
+    html += `<div class="summary-label">Files</div>`;
+    files.forEach(f => { html += `<div class="summary-value">📄 ${esc(f.name)}</div>`; });
+  }
+
+  if (instruction) {
+    html += `<div class="summary-label">Instruction</div><div class="summary-value">${esc(instruction)}</div>`;
+  }
+
+  Object.entries(answers).forEach(([k,v]) => {
+    html += `<div class="summary-label">${k.replace(/_/g,' ')}</div><div class="summary-value">${esc(v)}</div>`;
+  });
+
+  document.getElementById('summaryCard').innerHTML = html;
+  showPhase('phaseConfirm');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRACKING
+// ═══════════════════════════════════════════════════════════════
+function commitRequest() {
+  const id = 'REQ-' + Date.now().toString(36).toUpperCase();
+  const rt = REQUEST_TYPES[requestType];
+
+  document.getElementById('requestIdDisplay').textContent = id;
+  document.getElementById('trackingDetail').textContent = `${rt.label} — Estimated completion: ${rt.est}`;
+
+  trackingStage = 0;
+  renderTracker();
+  showPhase('phaseTracking');
+
+  // Show confirmation toast
+  showToast('Instruction Committed', `Your request ${id} is now being processed.`);
+
+  // Simulate progression
+  const timings = [0, 2200, 4500, 7000, 10000, 13500, 17000];
+  const stageToasts = [
+    null,
+    ['Reading Documents', 'AI is extracting data from your uploaded files...'],
+    ['Building Calculations', 'Generating deterministic scripts for your fund rules...'],
+    ['Validating', 'Running double-entry, LPA limits, and ACID guardrails...'],
+    ['Defence Checks', 'Dual-builder consensus, Z3 formal verification, property testing...'],
+    ['Human Review', 'Your fund accountant has been notified for final review.'],
+    ['Processing Complete', 'Your results are ready — click View Results to download.'],
+  ];
+
+  timings.forEach((t, i) => {
+    if (i === 0) return;
+    setTimeout(() => {
+      trackingStage = i;
+      renderTracker();
+      if (stageToasts[i]) showToast(stageToasts[i][0], stageToasts[i][1]);
+    }, t);
+  });
+}
+
+function renderTracker() {
+  const area = document.getElementById('trackerArea');
+  let html = '<div class="tracker-line"></div>';
+  const pct = Math.min(100, (trackingStage / (TRACKING_STAGES.length - 1)) * 100);
+  html += `<div class="tracker-progress" style="height:${pct}%"></div>`;
+
+  TRACKING_STAGES.forEach((s, i) => {
+    const isComplete = i < trackingStage;
+    const isActive = i === trackingStage;
+    const isPending = i > trackingStage;
+    const cls = isPending ? 'track-step pending' : 'track-step';
+    const nodeCls = isComplete ? 'complete' : isActive ? 'active' : 'waiting';
+
+    html += `<div class="${cls}">
+      <div class="track-node ${nodeCls}">
+        ${isComplete ? '<span class="check">✓</span>' : isActive ? '<div class="pulse-dot"></div>' : ''}
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;flex-wrap:wrap">
+          <span style="font-size:16px;margin-right:6px">${s.icon}</span>
+          <span class="track-label${isActive?' active-label':''}">${s.label}</span>
+          ${isActive ? '<span class="track-badge">IN PROGRESS</span>' : ''}
+          ${isComplete ? '<span class="track-badge-done">✓ done</span>' : ''}
+        </div>
+        <div class="track-detail">${s.detail}</div>
+      </div>
+    </div>`;
+  });
+
+  area.innerHTML = html;
+
+  // Show complete card
+  const cc = document.getElementById('completeCard');
+  if (trackingStage >= TRACKING_STAGES.length - 1) {
+    cc.classList.remove('hidden');
+    cc.innerHTML = `<div class="complete-card">
+      <div class="complete-icon">🎉</div>
+      <div class="complete-title">Processing Complete</div>
+      <div class="complete-sub">Your results are ready for review</div>
+      <button class="btn-results">View Results →</button>
+    </div>`;
+  } else {
+    cc.classList.add('hidden');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+function showToast(title, msg) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<div class="toast-title">${esc(title)}</div><div class="toast-msg">${esc(msg)}</div>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.add('out'); }, 3500);
+  setTimeout(() => { toast.remove(); }, 4000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+</script>
+
+</body>
+</html>
