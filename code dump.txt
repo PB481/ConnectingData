@@ -1,179 +1,160 @@
-# Prompt: Build a Streamlit Section Updater App + Restructured HTML Site
+I need a Streamlit application that acts as a lightweight CMS for an internal HTML site. The site is already built and deployed. The problem is efficiently updating specific sections when new data is available — without manually editing raw HTML.
 
-Use this prompt with your internal LLM. Copy the entire block below.
+## What the App Should Do
 
----
+Build a Streamlit app (`site_editor.py`) that implements this workflow:
 
-## PROMPT START
+1. **Load** — User uploads or selects an existing HTML file
+2. **Parse** — App auto-detects editable sections within the HTML
+3. **Edit** — User edits individual sections using Markdown in text areas
+4. **Preview** — User sees a full-page preview with edits applied (rendered in an iframe)
+5. **Save** — User clicks a save button which creates a timestamped versioned copy AND updates the main file
 
-You are helping me build two things:
+## Technical Requirements
 
-1. **A Streamlit application** that allows me to upload a Word document (.docx), select a target section of my existing HTML site, and have the app parse the Word content and inject it into that specific section of the HTML file.
+### Dependencies
+- `streamlit` — UI framework
+- `beautifulsoup4` — HTML parsing and reconstruction
+- `markdown` — converting Markdown back to HTML (with `tables`, `fenced_code`, `nl2br` extensions)
+- Python standard library only beyond these (no database, no external services)
 
-2. **A restructured HTML template** for my site that uses clearly marked, machine-readable section boundaries so the Streamlit app can reliably find and replace content.
-
-### REQUIREMENTS
-
-#### Part 1: The HTML Site Template
-
-Restructure my HTML site so that every updateable section is wrapped in semantic marker comments and a container div. Use this exact pattern:
-
-```html
-<!-- SECTION:section_id -->
-<div class="updatable-section" id="section_id">
-  <!-- Content goes here -->
-</div>
-<!-- END:section_id -->
+### File Structure
+```
+$SITE_DIR/                     # configurable via env var, default ~/site_files
+├── my_site.html               # the main working file
+└── versions/
+    ├── my_site_v20260327_143022.html
+    ├── my_site_v20260326_180000.html
+    └── ...
 ```
 
-Create a complete, clean, professional HTML template with the following sections (I will customise the section names later, but use these as defaults):
+### Section Detection (Critical Logic)
 
-| Section ID              | Purpose                          |
-|-------------------------|----------------------------------|
-| `executive_summary`     | High-level overview / headlines  |
-| `market_update`         | Market data, commentary          |
-| `fund_performance`      | Fund performance tables / stats  |
-| `regulatory_update`     | Regulatory changes / alerts      |
-| `operational_update`    | Ops metrics, SLA, pipeline       |
-| `team_announcements`    | People, org, team news           |
-| `key_dates`             | Upcoming dates and deadlines     |
+The app must detect editable sections from arbitrary HTML using three strategies, tried in priority order:
 
-The HTML template must:
-- Be a single self-contained HTML file (all CSS inline or in a `<style>` block)
-- Use a clean, professional design suitable for internal stakeholders (dark navy header, white content area, light grey background)
-- Include a header with a page title and a "Last Updated" timestamp per section
-- Be responsive and readable on screen
-- Use a sidebar navigation that links to each section via anchor tags
-- Include placeholder content in each section so I can see the layout immediately
+**Strategy 1 — `<section>` tags:**
+Find all `<section>` elements. Use the `id` attribute as the section identifier. Look for the first heading (h1-h6) inside each section to derive a display title. If no heading, derive the title from the id (replace underscores/hyphens with spaces, title case).
 
-#### Part 2: The Streamlit App (`section_updater.py`)
+**Strategy 2 — `<div>` tags with `id` attributes:**
+Only used if no `<section>` tags found. Find all `<div id="...">` elements. Skip generic wrapper IDs like "wrapper", "container", "app", "root", "main". Same heading/title logic as above.
 
-Build a Streamlit app with the following functionality:
+**Strategy 3 — Heading-based splitting (fallback):**
+Only used if neither of the above finds anything. Split the body content at `<h1>`, `<h2>`, or `<h3>` boundaries. Each heading starts a new section; content before the first heading becomes an "Introduction" section. The section ID is derived from the heading text (lowercase, non-alphanumeric replaced with underscores).
 
-**Configuration (at the top of the script):**
+**Final fallback:** If nothing is detected at all, treat the entire body as a single editable section called "Full Page Content".
+
+Each detected section should be stored as a dict:
 ```python
-# Path to the HTML file to update
-HTML_FILE_PATH = "site/index.html"
-
-# Section registry — maps display names to section IDs in the HTML
-SECTIONS = {
-    "Executive Summary": "executive_summary",
-    "Market Update": "market_update",
-    "Fund Performance": "fund_performance",
-    "Regulatory Update": "regulatory_update",
-    "Operational Update": "operational_update",
-    "Team Announcements": "team_announcements",
-    "Key Dates": "key_dates",
+{
+    "id": str,         # unique section identifier
+    "title": str,      # human-readable display name
+    "html": str,       # the inner HTML content of that section
+    "tag_type": str,   # "section" | "div" | "heading_group" | "full"
+    "tag_attrs": dict, # original tag attributes (for reconstruction)
 }
 ```
 
-**App Flow:**
+### HTML-to-Markdown Conversion
 
-1. **Sidebar** with:
-   - Dropdown to select which section to update (from `SECTIONS`)
-   - File uploader accepting `.docx` files
-   - A "Preview" button and an "Update Site" button
+When a section is opened for editing, convert its inner HTML to approximate Markdown so the user can edit comfortably. Handle at minimum:
+- Headings (h1-h6) → `#` syntax
+- Bold/strong → `**text**`
+- Italic/em → `*text*`
+- Links → `[text](url)`
+- Unordered lists → `- item`
+- Ordered lists → `1. item`
+- Tables → pipe-delimited Markdown tables with header separator row
+- Images → `![alt](src)`
+- Paragraphs → separated by blank lines
+- Line breaks → newlines
 
-2. **Word Document Parsing** (use `mammoth` library as primary, fall back to `python-docx` if needed):
-   - Convert the uploaded .docx content to clean HTML
-   - Preserve: headings (h1-h4), paragraphs, bold/italic, bullet lists, numbered lists, tables
-   - Strip out: images (or optionally extract them to a subfolder), headers/footers, page breaks
-   - Clean up any messy markup (empty paragraphs, excessive spans)
+This does NOT need to be perfectly round-trippable. It's a convenience — users can always switch to raw HTML editing.
 
-3. **Section Replacement Logic:**
-   - Read the existing HTML file
-   - Use regex to find the content between `<!-- SECTION:section_id -->` and `<!-- END:section_id -->`
-   - Replace ONLY the inner content of the `<div class="updatable-section">` — preserve the markers and the div wrapper
-   - Automatically update a "Last Updated" timestamp within that section
-   - Write the updated HTML file back to disk
+### HTML Reconstruction
 
-4. **Preview Panel** (main area):
-   - Show the current content of the selected section (rendered HTML)
-   - After uploading a .docx, show a side-by-side or tabbed preview: "Current" vs "New"
-   - Use `st.components.v1.html()` to render the HTML preview
+When saving, the app must:
+1. Convert each edited Markdown section back to HTML using `markdown.markdown()` with `tables`, `fenced_code`, and `nl2br` extensions
+2. Replace ONLY the inner content of each detected section in the original HTML, preserving:
+   - The `<head>` (styles, scripts, meta tags)
+   - The overall document structure
+   - Any sections that were NOT edited
+   - All original tag attributes (classes, ids, data attributes)
 
-5. **Safety Features:**
-   - Create a backup of the HTML file before any update (e.g., `index.html.bak` with timestamp)
-   - Show a confirmation dialog before writing
-   - Display a success/error message after update
-   - Log all updates with timestamp, section, and filename to a simple `update_log.csv`
+For `<section>` and `<div>` tag types: find the tag in the parsed soup, clear its contents, and insert the new HTML.
+For heading-based sections: use string replacement on the raw HTML (replacing the old inner HTML with the new).
 
-**Key Python Code Patterns to Use:**
+### UI Layout
 
-For section replacement:
-```python
-import re
-from datetime import datetime
+**Page config:** Wide layout, title "Site Section Editor"
 
-def replace_section(html_content: str, section_id: str, new_inner_html: str) -> str:
-    """Replace the inner content of a section while preserving markers."""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    
-    # Add timestamp to the new content
-    timestamped_content = f'<div class="updatable-section" id="{section_id}">\n'
-    timestamped_content += f'  <p class="last-updated">Last updated: {timestamp}</p>\n'
-    timestamped_content += f'  {new_inner_html}\n'
-    timestamped_content += f'</div>'
-    
-    pattern = rf'(<!-- SECTION:{section_id} -->)\s*<div class="updatable-section" id="{section_id}">.*?</div>\s*(<!-- END:{section_id} -->)'
-    
-    replacement = rf'\1\n{timestamped_content}\n\2'
-    
-    updated = re.sub(pattern, replacement, html_content, flags=re.DOTALL)
-    return updated
+**Sidebar:**
+- File uploader (accepts .html, .htm)
+- Dropdown to select from previously loaded files in SITE_DIR
+- Version history list (most recent 10, sorted descending by timestamp)
+
+**Main area — three tabs:**
+
+1. **Edit Sections tab:**
+   - One `st.expander` per detected section, showing the title and ID
+   - Inside each expander: a `st.text_area` with the Markdown content (height ~300px)
+   - Below the text area: two columns showing the raw Markdown and a rendered preview side by side
+
+2. **Preview tab:**
+   - Full rebuilt HTML rendered inside `st.components.v1.html()` with scrolling enabled and ~800px height
+   - This gives full-fidelity preview including the original CSS
+
+3. **Raw HTML tab:**
+   - A large `st.text_area` with the fully rebuilt HTML
+   - If the user manually edits here, those changes take priority when saving
+
+**Save controls (below tabs):**
+- A primary "Save New Version" button
+- Caption explaining versioning behaviour
+- On save: create timestamped file in versions/, update main file, show success + balloons
+- Update session state so continued editing works on the new version
+
+### Session State Management
+
+Use `st.session_state` for:
+- `current_file` — path to the active HTML file
+- `original_html` — the full HTML content currently loaded
+- `section_edits` — dict mapping section ID → current Markdown content
+- `manual_raw_edit` — stores raw HTML if user edits in the Raw HTML tab (takes priority on save)
+
+### Edge Cases to Handle
+- HTML files with no clear section structure (use the fallback)
+- Sections with no headings (derive title from ID)
+- Unicode content
+- Large files (don't crash, but no need for pagination)
+- Empty sections (still show them as editable)
+- User edits raw HTML directly — those edits should override Markdown-based edits on save
+
+## Example HTML Structure the App Should Handle Well
+
+```html
+<section id="key_metrics">
+    <h2>Key Metrics</h2>
+    <table>
+        <tr><th>Metric</th><th>Value</th><th>Status</th></tr>
+        <tr><td>AUM</td><td>€42.3bn</td><td>On Track</td></tr>
+    </table>
+</section>
+
+<section id="regulatory_updates">
+    <h2>Regulatory Updates</h2>
+    <ul>
+        <li><strong>AIFMD II:</strong> Implementation timeline confirmed.</li>
+        <li><strong>T+1:</strong> Readiness assessment underway.</li>
+    </ul>
+</section>
 ```
 
-For Word-to-HTML conversion:
-```python
-import mammoth
+## What NOT to Include
+- No authentication/login (this is internal, single-user)
+- No database (file-system only)
+- No deployment config (user runs locally with `streamlit run`)
+- No external API calls
+- No JavaScript frameworks (pure Streamlit + Python)
 
-def convert_docx_to_html(uploaded_file) -> str:
-    """Convert uploaded .docx to clean HTML."""
-    result = mammoth.convert_to_html(uploaded_file)
-    html = result.value
-    messages = result.messages  # warnings
-    return html, messages
-```
-
-**Dependencies** (include a `requirements.txt`):
-```
-streamlit
-mammoth
-python-docx
-beautifulsoup4
-```
-
-#### Part 3: Word Document Authoring Guide
-
-Also produce a short markdown guide (`AUTHORING_GUIDE.md`) that explains to content authors how to structure their Word documents for best results. Include:
-
-- Use Heading 1 for section titles (these will become `<h1>` tags)
-- Use Heading 2/3 for sub-sections
-- Use bullet lists and numbered lists normally
-- Use simple tables (no merged cells — they convert poorly)
-- Avoid text boxes, SmartArt, and embedded objects
-- Avoid manual formatting (e.g., manually bolding text to look like a heading instead of using a heading style)
-- Keep images simple or omit them (the app will strip them by default)
-- One document per section update — don't put multiple sections in one doc
-
-### OUTPUT FORMAT
-
-Please provide:
-
-1. `site/index.html` — the full HTML template with all sections
-2. `section_updater.py` — the complete Streamlit app
-3. `requirements.txt` — Python dependencies
-4. `AUTHORING_GUIDE.md` — the content authoring guide
-5. A brief `README.md` explaining how to set up and run the whole thing
-
-## PROMPT END
-
----
-
-## Usage Notes
-
-- Copy everything between `PROMPT START` and `PROMPT END` into your internal LLM
-- After getting the output, you can customise the section names in both the HTML and the `SECTIONS` dict in the Streamlit app
-- The HTML template sections are just defaults — add/remove as needed for your actual site
-- If `mammoth` isn't available internally, the prompt already includes a `python-docx` fallback path
-- The regex-based section replacement is deliberately simple and robust — it doesn't require any HTML parsing library for the replacement logic itself
+## Output
+Produce a single Python file `site_editor.py` that is complete, runnable, and well-commented. Include a brief docstring at the top with install instructions (`pip install streamlit markdown beautifulsoup4`).
