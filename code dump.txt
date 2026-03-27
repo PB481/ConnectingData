@@ -1,160 +1,16 @@
-I need a Streamlit application that acts as a lightweight CMS for an internal HTML site. The site is already built and deployed. The problem is efficiently updating specific sections when new data is available — without manually editing raw HTML.
+The global fund administration and accounting sector is experiencing robust expansion, with recent market analysis projecting the industry to grow from approximately $9.8 billion in 2025 to nearly $19.6 billion by 2034 at an 8.1% compound annual growth rate (CAGR). This acceleration is heavily driven by a structural shift toward alternative investments—such as private equity, private credit, and real assets—which require complex accounting, multi-currency share classes, waterfall calculations, and intensive investor reporting. As global assets under management (AUM) have surpassed the $120 trillion mark, asset managers face tighter operating margins alongside mounting regulatory pressures from directives like AIFMD II and the Digital Operational Resilience Act (DORA). Consequently, outsourcing back-office operations to mega-scale administrators has evolved from a simple cost-saving measure into a strategic necessity, allowing managers to handle multi-jurisdictional compliance and the rising "retailization" of private markets through semi-liquid fund structures.Within Europe, Luxembourg and Ireland remain the undisputed heavyweights of the fund administration ecosystem. According to recent data from J.P. Morgan and the Association of the Luxembourg Fund Industry (ALFI), these two jurisdictions collectively capture 91% of the global market share for cross-border fund distribution and account for 58% of the €15.7 trillion European UCITS market. Luxembourg, the second-largest fund domicile globally, manages over €5.6 trillion in supervised assets and is leaning heavily into the private asset boom. Flexible, unregulated structures like the Reserved Alternative Investment Fund (RAIF) and European Long-Term Investment Funds (ELTIFs) have fueled massive double-digit growth in its alternatives sector. Meanwhile, Ireland stands as Europe’s fastest-growing major fund domicile. Boosted by its 2021 Irish Limited Partnership (ILP) reform and its status as the EU’s primary native English-speaking hub, Ireland has become the launchpad of choice for US-based asset managers. Data from the Irish Funds Association indicates that alternative fund assets in Ireland have seen annual growth rates exceeding 20% in recent years, making it a fierce competitor to Luxembourg in the private markets space.While Luxembourg and Ireland dominate EU domiciliation, the United Kingdom remains a massive center for investment management but is actively recalibrating its fund administration strategy in a post-Brexit landscape. According to The Investment Association, North American groups now oversee 54% of UK-managed AUM, while the UK industry has worked to counteract a historical loss of fund domiciliation market share to its European neighbors. To compete, the UK is leveraging regulatory agility. The Financial Conduct Authority (FCA) has championed Long-Term Asset Funds (LTAFs) to attract private capital and is spearheading initiatives in digital assets, with several UK managers successfully launching tokenized funds throughout 2025. Furthermore, the introduction and maturation of the Qualifying Asset Holding Company (QAHC) regime is a direct, strategic move to make the UK a more competitive and tax-efficient location for alternative asset structuring relative to Ireland and Luxembourg.Across all three jurisdictions, the day-to-day dynamics of fund accounting are being fundamentally reshaped by technology and Environmental, Social, and Governance (ESG) mandates. Market concentration is rising—EFAMA recently noted that UCITS with more than €10 billion in assets now account for a quarter of the market—favoring top-tier administrators like State Street, J.P. Morgan, and CACEIS, who possess the massive infrastructure required to scale. To maintain profitability, service providers are heavily investing in artificial intelligence, cloud-based platforms, and automated data pipelines to streamline Net Asset Value (NAV) production and exception management. Additionally, the continuous enforcement of the Sustainable Finance Disclosure Regulation (SFDR) means administrators in London, Dublin, and Luxembourg are now tasked with the complex validation of ESG data for thousands of Article 8 and Article 9 funds, making technological sophistication the primary competitive differentiator in the industry today.
 
-## What the App Should Do
 
-Build a Streamlit app (`site_editor.py`) that implements this workflow:
+I'll research the current state of the fund administration and fund accounting industry, focusing on Ireland, UK, and Luxembourg.Now I have comprehensive data. Let me write the overview paragraphs.
 
-1. **Load** — User uploads or selects an existing HTML file
-2. **Parse** — App auto-detects editable sections within the HTML
-3. **Edit** — User edits individual sections using Markdown in text areas
-4. **Preview** — User sees a full-page preview with edits applied (rendered in an iframe)
-5. **Save** — User clicks a save button which creates a timestamped versioned copy AND updates the main file
+Here are three to four paragraphs providing an industry overview:
 
-## Technical Requirements
+---
 
-### Dependencies
-- `streamlit` — UI framework
-- `beautifulsoup4` — HTML parsing and reconstruction
-- `markdown` — converting Markdown back to HTML (with `tables`, `fenced_code`, `nl2br` extensions)
-- Python standard library only beyond these (no database, no external services)
+The global fund administration and fund accounting industry is undergoing a period of significant structural transformation, driven by rising asset volumes, regulatory complexity, and rapid technological adoption. The alternative investment fund administration market is expected to grow at a CAGR of 7.2% from 2023 to 2030, fuelled by the expansion of private equity, private credit, and real assets into the mainstream. The fund administration landscape has seen significant consolidation, with over 30 lift-out and M&A transactions since 2022, as the largest administrators — State Street, BNY, Northern Trust, J.P. Morgan, and Citigroup — pursue scale, broader service capabilities, and technology-led differentiation. Outsourcing models are evolving beyond pure cost reduction; managers are forming long-term partnerships with administrators offering deep domain expertise and innovation roadmaps, and co-sourcing is gaining traction. At the same time, AI and automation have moved from experimentation to core infrastructure, with AI-driven anomaly detection and exception reporting at one fund administrator boosting productivity and cutting operational labour costs by nearly 50%. RPA bots now handle daily NAV calculations and reconciliations, while agentic AI is beginning to shift the fund accountant's role from preparer to reviewer.
 
-### File Structure
-```
-$SITE_DIR/                     # configurable via env var, default ~/site_files
-├── my_site.html               # the main working file
-└── versions/
-    ├── my_site_v20260327_143022.html
-    ├── my_site_v20260326_180000.html
-    └── ...
-```
+Ireland has cemented its position as a dominant European fund hub. Irish-domiciled funds hold $6.5 trillion in net assets and represent over 20% of all European fund assets, supported by a deep ecosystem of over 20,000 fund professionals. Net asset values of Irish-resident investment and money market funds grew to €5.309 trillion in Q3 2025, almost four times the value recorded in 2014. More than 1,000 fund managers from over 50 countries have assets administered in Ireland, including 17 of the top 20 global asset managers. The regulatory landscape is actively evolving, with the transposition of AIFMD II into Irish law and modernisation of the CBI's AIF Rulebook on track for H1 2026, alongside the Funds Sector 2030 Implementation Plan targeting growth in ETFs, private assets, and retail investment. From 1 January 2026, the exit tax rate for Irish resident individuals was reduced from 41% to 38%, signalling the first step in broader reforms designed to encourage domestic retail participation and maintain Ireland's competitiveness against Luxembourg and other European domiciles.
 
-### Section Detection (Critical Logic)
+Luxembourg remains Europe's largest fund domicile and the global leader in cross-border fund distribution. Total assets under management of investment funds domiciled in Luxembourg, including UCITS and AIFs, reached approximately €7,990 billion. Private assets are a particularly strong growth engine: Luxembourg is now the leading domicile for private assets, with €2.6 trillion in alternative funds representing two-thirds of total assets under management. ALFI data indicates a 24.7% increase in AuM for private debt funds in Luxembourg between December 2023 and December 2024. Luxembourg was among the first EU member states to transpose AIFMD II and UCITS VI into national law in February 2026, and the adoption of a reformed carried interest tax regime in January 2026 further strengthens its attractiveness for alternative fund managers. The ELTIF 2.0 framework is also gaining traction, with 137 out of 236 European ELTIFs domiciled in Luxembourg as of September 2025, positioning the jurisdiction at the centre of the retailisation trend in private markets.
 
-The app must detect editable sections from arbitrary HTML using three strategies, tried in priority order:
-
-**Strategy 1 — `<section>` tags:**
-Find all `<section>` elements. Use the `id` attribute as the section identifier. Look for the first heading (h1-h6) inside each section to derive a display title. If no heading, derive the title from the id (replace underscores/hyphens with spaces, title case).
-
-**Strategy 2 — `<div>` tags with `id` attributes:**
-Only used if no `<section>` tags found. Find all `<div id="...">` elements. Skip generic wrapper IDs like "wrapper", "container", "app", "root", "main". Same heading/title logic as above.
-
-**Strategy 3 — Heading-based splitting (fallback):**
-Only used if neither of the above finds anything. Split the body content at `<h1>`, `<h2>`, or `<h3>` boundaries. Each heading starts a new section; content before the first heading becomes an "Introduction" section. The section ID is derived from the heading text (lowercase, non-alphanumeric replaced with underscores).
-
-**Final fallback:** If nothing is detected at all, treat the entire body as a single editable section called "Full Page Content".
-
-Each detected section should be stored as a dict:
-```python
-{
-    "id": str,         # unique section identifier
-    "title": str,      # human-readable display name
-    "html": str,       # the inner HTML content of that section
-    "tag_type": str,   # "section" | "div" | "heading_group" | "full"
-    "tag_attrs": dict, # original tag attributes (for reconstruction)
-}
-```
-
-### HTML-to-Markdown Conversion
-
-When a section is opened for editing, convert its inner HTML to approximate Markdown so the user can edit comfortably. Handle at minimum:
-- Headings (h1-h6) → `#` syntax
-- Bold/strong → `**text**`
-- Italic/em → `*text*`
-- Links → `[text](url)`
-- Unordered lists → `- item`
-- Ordered lists → `1. item`
-- Tables → pipe-delimited Markdown tables with header separator row
-- Images → `![alt](src)`
-- Paragraphs → separated by blank lines
-- Line breaks → newlines
-
-This does NOT need to be perfectly round-trippable. It's a convenience — users can always switch to raw HTML editing.
-
-### HTML Reconstruction
-
-When saving, the app must:
-1. Convert each edited Markdown section back to HTML using `markdown.markdown()` with `tables`, `fenced_code`, and `nl2br` extensions
-2. Replace ONLY the inner content of each detected section in the original HTML, preserving:
-   - The `<head>` (styles, scripts, meta tags)
-   - The overall document structure
-   - Any sections that were NOT edited
-   - All original tag attributes (classes, ids, data attributes)
-
-For `<section>` and `<div>` tag types: find the tag in the parsed soup, clear its contents, and insert the new HTML.
-For heading-based sections: use string replacement on the raw HTML (replacing the old inner HTML with the new).
-
-### UI Layout
-
-**Page config:** Wide layout, title "Site Section Editor"
-
-**Sidebar:**
-- File uploader (accepts .html, .htm)
-- Dropdown to select from previously loaded files in SITE_DIR
-- Version history list (most recent 10, sorted descending by timestamp)
-
-**Main area — three tabs:**
-
-1. **Edit Sections tab:**
-   - One `st.expander` per detected section, showing the title and ID
-   - Inside each expander: a `st.text_area` with the Markdown content (height ~300px)
-   - Below the text area: two columns showing the raw Markdown and a rendered preview side by side
-
-2. **Preview tab:**
-   - Full rebuilt HTML rendered inside `st.components.v1.html()` with scrolling enabled and ~800px height
-   - This gives full-fidelity preview including the original CSS
-
-3. **Raw HTML tab:**
-   - A large `st.text_area` with the fully rebuilt HTML
-   - If the user manually edits here, those changes take priority when saving
-
-**Save controls (below tabs):**
-- A primary "Save New Version" button
-- Caption explaining versioning behaviour
-- On save: create timestamped file in versions/, update main file, show success + balloons
-- Update session state so continued editing works on the new version
-
-### Session State Management
-
-Use `st.session_state` for:
-- `current_file` — path to the active HTML file
-- `original_html` — the full HTML content currently loaded
-- `section_edits` — dict mapping section ID → current Markdown content
-- `manual_raw_edit` — stores raw HTML if user edits in the Raw HTML tab (takes priority on save)
-
-### Edge Cases to Handle
-- HTML files with no clear section structure (use the fallback)
-- Sections with no headings (derive title from ID)
-- Unicode content
-- Large files (don't crash, but no need for pagination)
-- Empty sections (still show them as editable)
-- User edits raw HTML directly — those edits should override Markdown-based edits on save
-
-## Example HTML Structure the App Should Handle Well
-
-```html
-<section id="key_metrics">
-    <h2>Key Metrics</h2>
-    <table>
-        <tr><th>Metric</th><th>Value</th><th>Status</th></tr>
-        <tr><td>AUM</td><td>€42.3bn</td><td>On Track</td></tr>
-    </table>
-</section>
-
-<section id="regulatory_updates">
-    <h2>Regulatory Updates</h2>
-    <ul>
-        <li><strong>AIFMD II:</strong> Implementation timeline confirmed.</li>
-        <li><strong>T+1:</strong> Readiness assessment underway.</li>
-    </ul>
-</section>
-```
-
-## What NOT to Include
-- No authentication/login (this is internal, single-user)
-- No database (file-system only)
-- No deployment config (user runs locally with `streamlit run`)
-- No external API calls
-- No JavaScript frameworks (pure Streamlit + Python)
-
-## Output
-Produce a single Python file `site_editor.py` that is complete, runnable, and well-commented. Include a brief docstring at the top with install instructions (`pip install streamlit markdown beautifulsoup4`).
+The United Kingdom continues to serve as Europe's largest centre for portfolio management, though its role in the fund administration value chain is distinct from Ireland and Luxembourg's domiciliation strengths. UK assets under management grew by 10% in 2024 to £10.0 trillion — the highest level on record, with overseas clients surpassing domestic clients for the first time at 51% of total AUM. Most of 2024's investment fund growth came via funds domiciled in Ireland, which now make up over half of overseas fund assets managed from the UK, underscoring the symbiotic relationship between UK-based investment management and Irish fund servicing. The FCA is actively promoting the UK as an alternative funds hub through initiatives such as Long-Term Asset Funds (LTAFs) and a growing embrace of tokenisation and digital assets. UK investment managers launched tokenised funds in 2025, and the FCA has published papers exploring how increased transparency and efficiency in trade processing could drive growth. Across all three jurisdictions, the convergence of ESG regulatory frameworks (SFDR, SDR), private market democratisation, and AI-powered operating models is reshaping the competitive dynamics of fund administration, placing a premium on scale, technology investment, and regulatory agility.
