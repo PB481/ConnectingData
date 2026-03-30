@@ -1,4 +1,1384 @@
-Let’s be clear about one thing: the fund administration and accounting hubs in Ireland, the United Kingdom, and Luxembourg are the engine room of global capital markets. Right now, what we are seeing across all three jurisdictions is an unprecedented demand for scale and resilience. The regulatory environment is getting tougher, not easier. Whether it is the post-Brexit divergence we are navigating in the UK or the incredibly dense regulatory frameworks coming out of the EU for Ireland and Luxembourg, the baseline cost of doing business is going up. If administrators do not have the technology and the robust balance sheets to absorb these compliance costs, they are going to be squeezed out. We are currently watching a massive wave of consolidation; it is a game of scale, and only the most efficient, well-capitalized players are going to survive to service our clients the way they need to be serviced.
-Each of these markets plays a critical, distinct role. Luxembourg remains the undisputed leader for complex alternatives and cross-border distribution, while Ireland is the premier destination for ETFs and regulated UCITS. The UK, meanwhile, is aggressively adjusting its regulatory stance to attract private capital and remain highly competitive globally. But the common denominator across all three right now is data and automation. We are seeing massive, necessary deployments of capital into cloud infrastructure, artificial intelligence, and machine learning. You simply cannot run a modern, multi-billion-dollar fund accounting operation on legacy systems anymore. We are ruthlessly automating routine reconciliation because our clients demand real-time data to make fast, accurate investment decisions, not historical ledgers that are three days late.
-Looking to the future, the structural shift toward private markets and alternative assets—private credit, infrastructure, real estate—is going to define the next decade of fund administration in these regions. These assets are highly illiquid and incredibly complex to value and report on. Add to that the heavy ESG reporting mandates, particularly the SFDR in Europe, which are forcing administrators to capture and verify data that simply didn't exist five years ago. Furthermore, make no mistake: distributed ledger technology and tokenization are coming. We aren't talking about crypto speculation here; we are talking about using blockchain to fundamentally rewire how collateral is managed, how assets are unitized, and how funds are settled across London, Dublin, and Luxembourg. It will strip out the friction, reduce counterparty risk, and free up trapped capital.
-Ultimately, though, execution is everything. You can have the most advanced AI and blockchain technology in the world, but if you do not have the right talent operating it, you will fail. The biggest future constraint across the UK, Ireland, and Luxembourg isn't software; it is human capital. The industry desperately needs professionals who understand deep financial engineering, complex European regulatory law, and advanced data analytics all at once. The future of fund accounting is about providing strategic insights and risk management, not just keeping the books. The firms that invest heavily in their people and their tech stacks will capture the growth, while the laggards will be acquired or made obsolete. It’s that simple.
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fund Administration Innovation Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & BASE ─────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --black: #000000;
+  --off-black: #0a0a0a;
+  --charcoal: #141414;
+  --dark-grey: #1a1a1a;
+  --mid-dark: #222222;
+  --mid-grey: #333333;
+  --grey: #555555;
+  --light-grey: #888888;
+  --silver: #aaaaaa;
+  --pale: #cccccc;
+  --near-white: #e8e8e8;
+  --white: #ffffff;
+  --accent: #ffffff;
+  --font-display: 'Outfit', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--off-black);
+  color: var(--near-white);
+  font-family: var(--font-display);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+/* ─── GRAIN OVERLAY ────────────────────────────────────────── */
+body::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.85’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+pointer-events: none;
+z-index: 9999;
+}
+
+/* ─── NAVIGATION ───────────────────────────────────────────── */
+nav {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+z-index: 100;
+padding: 20px 40px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+background: rgba(10,10,10,0.85);
+backdrop-filter: blur(20px);
+border-bottom: 1px solid rgba(255,255,255,0.05);
+transition: all 0.3s ease;
+}
+nav.scrolled { padding: 14px 40px; background: rgba(10,10,10,0.95); }
+.nav-logo {
+font-family: var(–font-mono);
+font-size: 0.85rem;
+font-weight: 700;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(–white);
+}
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a {
+font-size: 0.78rem;
+font-weight: 500;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+color: var(–silver);
+transition: color 0.3s;
+position: relative;
+}
+.nav-links a::after {
+content: ‘’;
+position: absolute;
+bottom: -4px;
+left: 0;
+width: 0;
+height: 1px;
+background: var(–white);
+transition: width 0.3s;
+}
+.nav-links a:hover { color: var(–white); }
+.nav-links a:hover::after { width: 100%; }
+
+/* ─── HERO ─────────────────────────────────────────────────── */
+.hero {
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+text-align: center;
+padding: 120px 40px 80px;
+position: relative;
+overflow: hidden;
+}
+.hero-grid {
+position: absolute;
+inset: 0;
+background-image:
+linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+background-size: 80px 80px;
+mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 70%);
+animation: gridPulse 8s ease-in-out infinite;
+}
+@keyframes gridPulse {
+0%, 100% { opacity: 0.5; }
+50% { opacity: 1; }
+}
+.hero-radial {
+position: absolute;
+width: 800px;
+height: 800px;
+border-radius: 50%;
+background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+animation: radialBreath 12s ease-in-out infinite;
+}
+@keyframes radialBreath {
+0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+}
+.hero-eyebrow {
+font-family: var(–font-mono);
+font-size: 0.72rem;
+letter-spacing: 5px;
+text-transform: uppercase;
+color: var(–light-grey);
+margin-bottom: 24px;
+position: relative;
+z-index: 2;
+opacity: 0;
+animation: fadeUp 1s 0.3s forwards;
+}
+.hero h1 {
+font-size: clamp(2.8rem, 7vw, 6rem);
+font-weight: 900;
+line-height: 1.05;
+color: var(–white);
+letter-spacing: -2px;
+max-width: 900px;
+position: relative;
+z-index: 2;
+opacity: 0;
+animation: fadeUp 1s 0.5s forwards;
+}
+.hero-sub {
+font-size: 1.15rem;
+font-weight: 300;
+color: var(–silver);
+max-width: 620px;
+margin-top: 28px;
+line-height: 1.7;
+position: relative;
+z-index: 2;
+opacity: 0;
+animation: fadeUp 1s 0.7s forwards;
+}
+.hero-stats {
+display: flex;
+gap: 60px;
+margin-top: 56px;
+position: relative;
+z-index: 2;
+opacity: 0;
+animation: fadeUp 1s 0.9s forwards;
+}
+.hero-stat { text-align: center; }
+.hero-stat-num {
+font-family: var(–font-mono);
+font-size: 2.2rem;
+font-weight: 700;
+color: var(–white);
+}
+.hero-stat-label {
+font-size: 0.72rem;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–light-grey);
+margin-top: 6px;
+}
+.scroll-indicator {
+position: absolute;
+bottom: 40px;
+left: 50%;
+transform: translateX(-50%);
+opacity: 0;
+animation: fadeUp 1s 1.2s forwards;
+z-index: 2;
+}
+.scroll-line {
+width: 1px;
+height: 48px;
+background: linear-gradient(to bottom, var(–light-grey), transparent);
+margin: 0 auto;
+animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+0%, 100% { opacity: 0.3; transform: scaleY(1); }
+50% { opacity: 1; transform: scaleY(1.2); }
+}
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(30px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── SECTION COMMON ───────────────────────────────────────── */
+section { padding: 120px 40px; position: relative; }
+.container { max-width: 1200px; margin: 0 auto; }
+.section-eyebrow {
+font-family: var(–font-mono);
+font-size: 0.68rem;
+letter-spacing: 4px;
+text-transform: uppercase;
+color: var(–grey);
+margin-bottom: 16px;
+}
+.section-title {
+font-size: clamp(2rem, 4vw, 3rem);
+font-weight: 800;
+color: var(–white);
+letter-spacing: -1px;
+line-height: 1.15;
+}
+.section-desc {
+font-size: 1.05rem;
+color: var(–silver);
+max-width: 640px;
+margin-top: 16px;
+line-height: 1.7;
+font-weight: 300;
+}
+.divider {
+width: 60px;
+height: 1px;
+background: var(–mid-grey);
+margin: 48px 0;
+}
+
+/* ─── PIPELINE SECTION ─────────────────────────────────────── */
+.pipeline-flow {
+display: flex;
+gap: 0;
+margin-top: 56px;
+position: relative;
+}
+.pipeline-step {
+flex: 1;
+padding: 32px 24px;
+position: relative;
+border: 1px solid var(–mid-dark);
+background: var(–charcoal);
+transition: all 0.4s ease;
+}
+.pipeline-step:first-child { border-radius: 12px 0 0 12px; }
+.pipeline-step:last-child { border-radius: 0 12px 12px 0; }
+.pipeline-step:hover {
+background: var(–dark-grey);
+border-color: var(–mid-grey);
+transform: translateY(-4px);
+z-index: 2;
+}
+.pipeline-step::after {
+content: ‘→’;
+position: absolute;
+right: -12px;
+top: 50%;
+transform: translateY(-50%);
+font-size: 1.1rem;
+color: var(–grey);
+z-index: 3;
+}
+.pipeline-step:last-child::after { display: none; }
+.pipe-num {
+font-family: var(–font-mono);
+font-size: 0.65rem;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–grey);
+margin-bottom: 12px;
+}
+.pipe-type {
+display: inline-block;
+font-family: var(–font-mono);
+font-size: 0.58rem;
+letter-spacing: 1px;
+text-transform: uppercase;
+padding: 3px 8px;
+border-radius: 3px;
+margin-bottom: 12px;
+}
+.type-prob { background: rgba(255,255,255,0.08); color: var(–silver); }
+.type-det { background: rgba(255,255,255,0.15); color: var(–white); }
+.type-ml { background: rgba(255,255,255,0.06); color: var(–light-grey); }
+.type-human { background: rgba(255,255,255,0.1); color: var(–pale); }
+.pipe-title {
+font-size: 1.1rem;
+font-weight: 700;
+color: var(–white);
+margin-bottom: 8px;
+}
+.pipe-desc {
+font-size: 0.82rem;
+color: var(–silver);
+line-height: 1.6;
+}
+
+/* ─── DEFENCE LAYERS ───────────────────────────────────────── */
+.defence-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 16px;
+margin-top: 40px;
+}
+.defence-card {
+padding: 24px;
+background: var(–charcoal);
+border: 1px solid var(–mid-dark);
+border-radius: 8px;
+transition: all 0.3s ease;
+}
+.defence-card:hover {
+border-color: var(–mid-grey);
+background: var(–dark-grey);
+transform: translateY(-2px);
+}
+.defence-num {
+font-family: var(–font-mono);
+font-size: 0.62rem;
+letter-spacing: 2px;
+color: var(–grey);
+margin-bottom: 10px;
+}
+.defence-title {
+font-size: 0.95rem;
+font-weight: 700;
+color: var(–white);
+margin-bottom: 8px;
+}
+.defence-desc {
+font-size: 0.8rem;
+color: var(–silver);
+line-height: 1.6;
+}
+
+/* ─── PRODUCT CARDS ────────────────────────────────────────── */
+.products-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 24px;
+margin-top: 56px;
+}
+.product-card {
+padding: 40px;
+background: var(–charcoal);
+border: 1px solid var(–mid-dark);
+border-radius: 12px;
+transition: all 0.4s ease;
+position: relative;
+overflow: hidden;
+}
+.product-card::before {
+content: ‘’;
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+height: 2px;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+opacity: 0;
+transition: opacity 0.4s;
+}
+.product-card:hover {
+border-color: var(–mid-grey);
+transform: translateY(-4px);
+box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.product-card:hover::before { opacity: 1; }
+.product-icon {
+font-size: 1.8rem;
+margin-bottom: 20px;
+display: block;
+}
+.product-tag {
+font-family: var(–font-mono);
+font-size: 0.62rem;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–grey);
+margin-bottom: 12px;
+}
+.product-title {
+font-size: 1.35rem;
+font-weight: 700;
+color: var(–white);
+margin-bottom: 12px;
+}
+.product-desc {
+font-size: 0.88rem;
+color: var(–silver);
+line-height: 1.7;
+margin-bottom: 20px;
+}
+.product-features {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+}
+.feature-tag {
+font-family: var(–font-mono);
+font-size: 0.62rem;
+letter-spacing: 1px;
+text-transform: uppercase;
+padding: 4px 10px;
+border: 1px solid var(–mid-grey);
+border-radius: 4px;
+color: var(–light-grey);
+}
+
+/* ─── TECH STACK ───────────────────────────────────────────── */
+.tech-columns {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 24px;
+margin-top: 48px;
+}
+.tech-col h4 {
+font-family: var(–font-mono);
+font-size: 0.68rem;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–grey);
+margin-bottom: 16px;
+padding-bottom: 12px;
+border-bottom: 1px solid var(–mid-dark);
+}
+.tech-item {
+padding: 10px 0;
+font-size: 0.88rem;
+color: var(–silver);
+border-bottom: 1px solid rgba(255,255,255,0.03);
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.tech-item:last-child { border-bottom: none; }
+.tech-role {
+font-size: 0.65rem;
+color: var(–grey);
+font-family: var(–font-mono);
+}
+
+/* ─── COMPETITIVE LANDSCAPE ────────────────────────────────── */
+.comp-table {
+width: 100%;
+margin-top: 40px;
+border-collapse: collapse;
+}
+.comp-table th {
+font-family: var(–font-mono);
+font-size: 0.65rem;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–grey);
+text-align: left;
+padding: 16px 20px;
+border-bottom: 1px solid var(–mid-dark);
+}
+.comp-table td {
+padding: 16px 20px;
+font-size: 0.85rem;
+color: var(–silver);
+border-bottom: 1px solid rgba(255,255,255,0.03);
+vertical-align: top;
+}
+.comp-table tr:hover td { background: rgba(255,255,255,0.02); }
+.comp-table .firm-name {
+font-weight: 700;
+color: var(–white);
+}
+.indicator {
+display: inline-block;
+width: 8px;
+height: 8px;
+border-radius: 50%;
+margin-right: 6px;
+}
+.ind-strong { background: var(–white); }
+.ind-moderate { background: var(–light-grey); }
+.ind-weak { background: var(–mid-grey); }
+
+/* ─── PRINCIPLES ───────────────────────────────────────────── */
+.principles-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 24px;
+margin-top: 48px;
+}
+.principle-card {
+padding: 32px;
+border-left: 2px solid var(–mid-grey);
+transition: border-color 0.3s;
+}
+.principle-card:hover { border-color: var(–white); }
+.principle-num {
+font-family: var(–font-mono);
+font-size: 2rem;
+font-weight: 700;
+color: var(–mid-dark);
+margin-bottom: 12px;
+}
+.principle-title {
+font-size: 1.05rem;
+font-weight: 700;
+color: var(–white);
+margin-bottom: 8px;
+}
+.principle-desc {
+font-size: 0.85rem;
+color: var(–silver);
+line-height: 1.6;
+}
+
+/* ─── FLYWHEEL ─────────────────────────────────────────────── */
+.flywheel-visual {
+margin-top: 48px;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0;
+padding: 40px 0;
+}
+.fly-node {
+padding: 16px 24px;
+background: var(–charcoal);
+border: 1px solid var(–mid-dark);
+border-radius: 8px;
+font-size: 0.82rem;
+font-weight: 600;
+color: var(–white);
+text-align: center;
+min-width: 140px;
+transition: all 0.3s;
+}
+.fly-node:hover { border-color: var(–mid-grey); background: var(–dark-grey); }
+.fly-node.highlight {
+border-color: var(–white);
+background: var(–mid-dark);
+}
+.fly-arrow {
+font-family: var(–font-mono);
+font-size: 1.2rem;
+color: var(–grey);
+padding: 0 8px;
+}
+
+/* ─── POC RESULTS ──────────────────────────────────────────── */
+.poc-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 16px;
+margin-top: 40px;
+}
+.poc-metric {
+padding: 24px;
+background: var(–charcoal);
+border: 1px solid var(–mid-dark);
+border-radius: 8px;
+text-align: center;
+}
+.poc-value {
+font-family: var(–font-mono);
+font-size: 1.6rem;
+font-weight: 700;
+color: var(–white);
+}
+.poc-label {
+font-size: 0.72rem;
+color: var(–light-grey);
+margin-top: 6px;
+letter-spacing: 1px;
+text-transform: uppercase;
+}
+
+/* ─── TIMELINE ─────────────────────────────────────────────── */
+.timeline {
+margin-top: 48px;
+position: relative;
+}
+.timeline::before {
+content: ‘’;
+position: absolute;
+left: 20px;
+top: 0;
+bottom: 0;
+width: 1px;
+background: var(–mid-dark);
+}
+.timeline-item {
+padding: 0 0 40px 56px;
+position: relative;
+}
+.timeline-item::before {
+content: ‘’;
+position: absolute;
+left: 15px;
+top: 6px;
+width: 11px;
+height: 11px;
+border-radius: 50%;
+border: 2px solid var(–mid-grey);
+background: var(–off-black);
+}
+.timeline-item.active::before {
+border-color: var(–white);
+background: var(–white);
+box-shadow: 0 0 12px rgba(255,255,255,0.3);
+}
+.timeline-phase {
+font-family: var(–font-mono);
+font-size: 0.62rem;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–grey);
+}
+.timeline-title {
+font-size: 1.1rem;
+font-weight: 700;
+color: var(–white);
+margin: 4px 0 6px;
+}
+.timeline-desc {
+font-size: 0.85rem;
+color: var(–silver);
+line-height: 1.6;
+}
+
+/* ─── FOOTER ───────────────────────────────────────────────── */
+footer {
+padding: 60px 40px;
+border-top: 1px solid var(–mid-dark);
+text-align: center;
+}
+.footer-line {
+font-family: var(–font-mono);
+font-size: 0.68rem;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(–grey);
+}
+.footer-sub {
+font-size: 0.78rem;
+color: var(–light-grey);
+margin-top: 12px;
+}
+
+/* ─── REVEAL ANIMATIONS ───────────────────────────────────── */
+.reveal {
+opacity: 0;
+transform: translateY(40px);
+transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+opacity: 1;
+transform: translateY(0);
+}
+
+/* ─── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+section { padding: 80px 24px; }
+.pipeline-flow { flex-direction: column; }
+.pipeline-step { border-radius: 8px !important; }
+.pipeline-step::after { display: none; }
+.products-grid, .defence-grid, .principles-grid { grid-template-columns: 1fr; }
+.tech-columns { grid-template-columns: repeat(2, 1fr); }
+.poc-grid { grid-template-columns: repeat(2, 1fr); }
+.hero-stats { flex-wrap: wrap; gap: 32px; }
+.flywheel-visual { flex-wrap: wrap; gap: 12px; }
+.fly-arrow { display: none; }
+.nav-links { display: none; }
+.comp-table { font-size: 0.75rem; }
+.comp-table td, .comp-table th { padding: 10px 12px; }
+}
+</style>
+
+</head>
+<body>
+
+<!-- ═══ NAVIGATION ═══ -->
+
+<nav id="mainNav">
+  <div class="nav-logo">FA Innovation Lab</div>
+  <div class="nav-links">
+    <a href="#architecture">Architecture</a>
+    <a href="#products">Products</a>
+    <a href="#landscape">Landscape</a>
+    <a href="#tech">Stack</a>
+    <a href="#principles">Principles</a>
+    <a href="#roadmap">Roadmap</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-radial"></div>
+  <div class="hero-eyebrow">Fund Administration &middot; Product Innovation</div>
+  <h1>AI-Native Fund Accounting</h1>
+  <p class="hero-sub">An integrated platform for agentic fund administration — where LLMs generate code, deterministic systems verify the maths, and humans approve what matters.</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">5</div>
+      <div class="hero-stat-label">Pipeline Steps</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">6</div>
+      <div class="hero-stat-label">Defence Layers</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">610+</div>
+      <div class="hero-stat-label">Properties Verified</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">&lt;5s</div>
+      <div class="hero-stat-label">Execution Time</div>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ═══ ARCHITECTURE: PIPELINE ═══ -->
+
+<section id="architecture">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">01 — Agentic ERP Architecture</div>
+      <div class="section-title">Five Steps. Zero Hallucinations.</div>
+      <div class="section-desc">The AI reads documents and writes code. Deterministic systems execute the code, verify the maths, and prove correctness. The AI never touches a number.</div>
+    </div>
+
+```
+<div class="pipeline-flow reveal">
+  <div class="pipeline-step">
+    <div class="pipe-num">Step 01</div>
+    <div class="pipe-type type-prob">Probabilistic</div>
+    <div class="pipe-title">Reader</div>
+    <div class="pipe-desc">Extracts data from PDFs, emails, and notices. Outputs strict JSON with per-field confidence scores. No manual data entry.</div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipe-num">Step 02</div>
+    <div class="pipe-type type-prob">Probabilistic</div>
+    <div class="pipe-title">Builder</div>
+    <div class="pipe-desc">Generates Python scripts for calculations. Writes code, never computes answers. Formal annotations embedded for verification.</div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipe-num">Step 03</div>
+    <div class="pipe-type type-det">Deterministic</div>
+    <div class="pipe-title">Constitution</div>
+    <div class="pipe-desc">Executes code in sandbox. Validates: double-entry balance, LPA limits, ACID compliance, dimensional consistency.</div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipe-num">Step 04</div>
+    <div class="pipe-type type-ml">Traditional ML</div>
+    <div class="pipe-title">Anomaly Agent</div>
+    <div class="pipe-desc">Isolation Forest + EWMA flags statistical outliers. Gradient-boosted trees and statistics — not an LLM.</div>
+  </div>
+  <div class="pipeline-step">
+    <div class="pipe-num">Step 05</div>
+    <div class="pipe-type type-human">Human</div>
+    <div class="pipe-title">Human Gate</div>
+    <div class="pipe-desc">Expert reviews flagged items. Approved scripts enter Tool Library. 85%+ auto-posted with zero human touch.</div>
+  </div>
+</div>
+
+<!-- Defence Layers -->
+<div class="divider reveal"></div>
+<div class="reveal">
+  <div class="section-eyebrow">Builder Protection</div>
+  <div class="section-title">Six Layers of Defence</div>
+  <div class="section-desc">Tiered fail-fast verification. Cheapest checks run first; expensive ones only if everything else passes.</div>
+</div>
+
+<div class="defence-grid reveal">
+  <div class="defence-card">
+    <div class="defence-num">Layer 01</div>
+    <div class="defence-title">Dual-Builder Consensus</div>
+    <div class="defence-desc">N-version programming. Two independent LLMs generate code separately; outputs must agree before proceeding.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">Layer 02</div>
+    <div class="defence-title">Tool Library Regression</div>
+    <div class="defence-desc">Compare against verified precedents. Known calculation types are matched to previously-approved scripts in the library.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">Layer 03</div>
+    <div class="defence-title">Z3 Formal Verification</div>
+    <div class="defence-desc">SMT solver mathematically proves code properties. Pre-conditions, post-conditions, and invariants verified formally.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">Layer 04</div>
+    <div class="defence-title">Inverse Verification</div>
+    <div class="defence-desc">An Auditor Agent reads generated code back and explains what it does. Explanation must match the original intent.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">Layer 05</div>
+    <div class="defence-title">Property-Based Testing</div>
+    <div class="defence-desc">Hypothesis generates 1,000+ randomised inputs. Mathematical invariants must hold: fees &ge; 0, NAV components sum correctly.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">Layer 06</div>
+    <div class="defence-title">Human Gate for Novelty</div>
+    <div class="defence-desc">First-time calculation types always require human review. Tool Library is only populated after human validation. Non-negotiable.</div>
+  </div>
+</div>
+
+<!-- Flywheel -->
+<div class="divider reveal"></div>
+<div class="reveal">
+  <div class="section-eyebrow">Economics</div>
+  <div class="section-title">The Tool Library Flywheel</div>
+  <div class="section-desc">Every approved script becomes a reusable asset. Novel calculations decrease exponentially. Month 1: ~$40/fund. Month 18: &lt;$0.50/fund.</div>
+</div>
+
+<div class="flywheel-visual reveal">
+  <div class="fly-node">Novel Fund Rule</div>
+  <div class="fly-arrow">→</div>
+  <div class="fly-node">Builder Generates Code</div>
+  <div class="fly-arrow">→</div>
+  <div class="fly-node">6-Layer Verification</div>
+  <div class="fly-arrow">→</div>
+  <div class="fly-node">Human Approves</div>
+  <div class="fly-arrow">→</div>
+  <div class="fly-node highlight">Tool Library ↻</div>
+  <div class="fly-arrow">→</div>
+  <div class="fly-node">Instant Reuse</div>
+</div>
+
+<!-- PoC Results -->
+<div class="poc-grid reveal">
+  <div class="poc-metric">
+    <div class="poc-value">5/5</div>
+    <div class="poc-label">Documents Extracted</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">0.92</div>
+    <div class="poc-label">Avg Confidence</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">12/12</div>
+    <div class="poc-label">Guardrails Passed</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">18/18</div>
+    <div class="poc-label">Defence Checks Passed</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">610+</div>
+    <div class="poc-label">Properties Verified</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">10/10</div>
+    <div class="poc-label">Z3 Formal Proofs</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">~5s</div>
+    <div class="poc-label">Total Execution</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">$0.00</div>
+    <div class="poc-label">API Cost (Mock)</div>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ═══ PRODUCTS ═══ -->
+
+<section id="products" style="background: var(--black);">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">02 — Platform Suite</div>
+      <div class="section-title">Operational Intelligence Tools</div>
+      <div class="section-desc">Each tool solves a specific problem while contributing to a unified intelligence layer. Self-contained, multi-format, zero-dependency.</div>
+    </div>
+
+```
+<div class="products-grid">
+  <div class="product-card reveal">
+    <span class="product-icon">◈</span>
+    <div class="product-tag">Live &middot; Multi-format</div>
+    <div class="product-title">P&L Intelligence Platform</div>
+    <div class="product-desc">Error cost analysis, revenue erosion tracking, churn risk scoring, and P&L forecasting. Template-driven CSV ingestion with upload validation and AI-generated insights computed dynamically from uploaded data.</div>
+    <div class="product-features">
+      <span class="feature-tag">Streamlit</span>
+      <span class="feature-tag">Python CLI</span>
+      <span class="feature-tag">HTML</span>
+      <span class="feature-tag">Error Payouts</span>
+      <span class="feature-tag">Client Repricing</span>
+    </div>
+  </div>
+
+  <div class="product-card reveal">
+    <span class="product-icon">◇</span>
+    <div class="product-tag">Live &middot; Multi-format</div>
+    <div class="product-title">Deal Pricing Engine</div>
+    <div class="product-desc">Parametric cost-to-serve model covering fund type, complexity, domicile, services, and volume. Three negotiation scenarios, margin sensitivity matrix, and walk-away thresholds for live client discussions.</div>
+    <div class="product-features">
+      <span class="feature-tag">React</span>
+      <span class="feature-tag">Streamlit</span>
+      <span class="feature-tag">Rust API</span>
+      <span class="feature-tag">Swift/iOS</span>
+      <span class="feature-tag">Python CLI</span>
+    </div>
+  </div>
+
+  <div class="product-card reveal">
+    <span class="product-icon">△</span>
+    <div class="product-tag">Live &middot; Dual Phase</div>
+    <div class="product-title">Operational Risk Monitoring</div>
+    <div class="product-desc">Phase 1: Reactive anomaly detection (EWMA/SPC, Isolation Forest, PELT changepoint). Phase 2: Predictive engine using HistGradientBoosting with leading indicators and per-region forecast cards.</div>
+    <div class="product-features">
+      <span class="feature-tag">Streamlit</span>
+      <span class="feature-tag">Databricks</span>
+      <span class="feature-tag">EWMA</span>
+      <span class="feature-tag">Isolation Forest</span>
+      <span class="feature-tag">XGBoost</span>
+    </div>
+  </div>
+
+  <div class="product-card reveal">
+    <span class="product-icon">○</span>
+    <div class="product-tag">In Progress</div>
+    <div class="product-title">Bento Box Desktop App</div>
+    <div class="product-desc">Local-first, single-user SQLite application for personal fund administration workflows. NiceGUI with native mode, distributed as a double-click executable via PyInstaller.</div>
+    <div class="product-features">
+      <span class="feature-tag">NiceGUI</span>
+      <span class="feature-tag">SQLite</span>
+      <span class="feature-tag">PyInstaller</span>
+      <span class="feature-tag">Local-first</span>
+    </div>
+  </div>
+
+  <div class="product-card reveal">
+    <span class="product-icon">□</span>
+    <div class="product-tag">Horizon &middot; Concept</div>
+    <div class="product-title">Fund Lifecycle Digital Twin</div>
+    <div class="product-desc">Discrete-event simulation engine that creates virtual replicas of fund launches and administrator transitions. Monte Carlo scenario modelling with Rust-Python hybrid architecture for performance.</div>
+    <div class="product-features">
+      <span class="feature-tag">Rust Core</span>
+      <span class="feature-tag">PyO3</span>
+      <span class="feature-tag">SimPy</span>
+      <span class="feature-tag">Streamlit</span>
+      <span class="feature-tag">AWS</span>
+    </div>
+  </div>
+
+  <div class="product-card reveal">
+    <span class="product-icon">⬡</span>
+    <div class="product-tag">Horizon &middot; Concept</div>
+    <div class="product-title">Competitive Intelligence Engine</div>
+    <div class="product-desc">Systematic market research, competitor surveillance, and pricing model development. Firecrawl for web scraping, Polygon for fund flows, SimilarWeb for traffic analysis, Ahrefs for content positioning.</div>
+    <div class="product-features">
+      <span class="feature-tag">Firecrawl</span>
+      <span class="feature-tag">Polygon</span>
+      <span class="feature-tag">SimilarWeb</span>
+      <span class="feature-tag">Ahrefs</span>
+      <span class="feature-tag">Manus</span>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ═══ COMPETITIVE LANDSCAPE ═══ -->
+
+<section id="landscape">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">03 — Competitive Landscape</div>
+      <div class="section-title">Top Fund Administrators</div>
+      <div class="section-desc">Comparative analysis across technology, asset class coverage, and AI readiness. Intelligence sourced from market research, hiring signals, and industry analysis.</div>
+    </div>
+
+```
+<div class="reveal" style="overflow-x: auto;">
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Administrator</th>
+        <th>Proprietary Platform</th>
+        <th>Alternatives</th>
+        <th>AI / Automation</th>
+        <th>ESG / SFDR</th>
+        <th>Digital Assets</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="firm-name">BNY</td>
+        <td>Eagle, Nexen</td>
+        <td><span class="indicator ind-strong"></span>Strong</td>
+        <td>125+ AI solutions in production. Predictive analytics, automation, anomaly detection.</td>
+        <td><span class="indicator ind-strong"></span>Strong</td>
+        <td><span class="indicator ind-moderate"></span>Growing</td>
+      </tr>
+      <tr>
+        <td class="firm-name">State Street</td>
+        <td>Aladdin partnership, Alpha platform</td>
+        <td><span class="indicator ind-strong"></span>Strong</td>
+        <td>Significant investment in data-driven operations and AI-powered insights.</td>
+        <td><span class="indicator ind-strong"></span>Strong</td>
+        <td><span class="indicator ind-moderate"></span>Growing</td>
+      </tr>
+      <tr>
+        <td class="firm-name">J.P. Morgan</td>
+        <td>Fusion, Arcesium stake</td>
+        <td><span class="indicator ind-strong"></span>Strong</td>
+        <td>Major AI investment. Onyx platform for blockchain. Internal LLM initiatives.</td>
+        <td><span class="indicator ind-moderate"></span>Moderate</td>
+        <td><span class="indicator ind-strong"></span>Leading</td>
+      </tr>
+      <tr>
+        <td class="firm-name">Northern Trust</td>
+        <td>Broadridge integration, FMC</td>
+        <td><span class="indicator ind-moderate"></span>Moderate</td>
+        <td>Technology modernisation. Cloud migration. RPA deployment across operations.</td>
+        <td><span class="indicator ind-strong"></span>Strong</td>
+        <td><span class="indicator ind-weak"></span>Early</td>
+      </tr>
+      <tr>
+        <td class="firm-name">BBH</td>
+        <td>Infuse, proprietary custody</td>
+        <td><span class="indicator ind-moderate"></span>Moderate</td>
+        <td>Boutique approach. Selective automation. Client relationship-centric model.</td>
+        <td><span class="indicator ind-moderate"></span>Moderate</td>
+        <td><span class="indicator ind-weak"></span>Early</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="divider reveal"></div>
+<div class="reveal">
+  <div class="section-eyebrow">Intelligence Approach</div>
+  <div class="section-title">Four-Layer CI Stack</div>
+</div>
+<div class="defence-grid reveal">
+  <div class="defence-card">
+    <div class="defence-num">Layer 01</div>
+    <div class="defence-title">Firecrawl — Web Scraping</div>
+    <div class="defence-desc">Systematic crawling of competitor product pages, changelogs, release notes, and job postings. Automated diff detection for new features and technology signals.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">Layer 02</div>
+    <div class="defence-title">Polygon — Fund Flows</div>
+    <div class="defence-desc">Real-time fund flow data, ETF/mutual fund activity, and market structure shifts. Informs product roadmap priorities around emerging asset class demand.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">Layer 03</div>
+    <div class="defence-title">SimilarWeb + Ahrefs</div>
+    <div class="defence-desc">Traffic benchmarking, audience overlap, SEO positioning, and content intelligence. Reveals competitor framing and identifies unmet demand signals.</div>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ═══ TECH STACK ═══ -->
+
+<section id="tech" style="background: var(--black);">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">04 — Technology</div>
+      <div class="section-title">Architecture &amp; Stack</div>
+      <div class="section-desc">Multi-language, multi-platform. Each component chosen for its specific strength. Self-contained artefacts that run anywhere with zero infrastructure.</div>
+    </div>
+
+```
+<div class="tech-columns reveal">
+  <div class="tech-col">
+    <h4>Languages</h4>
+    <div class="tech-item">Python <span class="tech-role">Primary</span></div>
+    <div class="tech-item">Rust <span class="tech-role">Performance</span></div>
+    <div class="tech-item">JavaScript / React <span class="tech-role">Interactive</span></div>
+    <div class="tech-item">Swift / SwiftUI <span class="tech-role">iOS</span></div>
+    <div class="tech-item">HTML / CSS <span class="tech-role">Universal</span></div>
+  </div>
+  <div class="tech-col">
+    <h4>Frameworks</h4>
+    <div class="tech-item">Streamlit <span class="tech-role">Apps</span></div>
+    <div class="tech-item">NiceGUI <span class="tech-role">Desktop</span></div>
+    <div class="tech-item">FastAPI / Axum <span class="tech-role">APIs</span></div>
+    <div class="tech-item">Plotly <span class="tech-role">Charts</span></div>
+    <div class="tech-item">Recharts <span class="tech-role">React</span></div>
+  </div>
+  <div class="tech-col">
+    <h4>Data &amp; ML</h4>
+    <div class="tech-item">SQLite <span class="tech-role">Local</span></div>
+    <div class="tech-item">Databricks <span class="tech-role">Platform</span></div>
+    <div class="tech-item">Pandas <span class="tech-role">Wrangling</span></div>
+    <div class="tech-item">scikit-learn <span class="tech-role">ML</span></div>
+    <div class="tech-item">XGBoost <span class="tech-role">Prediction</span></div>
+  </div>
+  <div class="tech-col">
+    <h4>AI &amp; Cloud</h4>
+    <div class="tech-item">Claude <span class="tech-role">Primary LLM</span></div>
+    <div class="tech-item">AWS Bedrock <span class="tech-role">Managed</span></div>
+    <div class="tech-item">ECS Fargate <span class="tech-role">Compute</span></div>
+    <div class="tech-item">Aurora Serverless <span class="tech-role">DB</span></div>
+    <div class="tech-item">Z3 Solver <span class="tech-role">Proofs</span></div>
+  </div>
+</div>
+
+<div class="divider reveal"></div>
+<div class="reveal">
+  <div class="section-eyebrow">MVP Architecture</div>
+  <div class="section-title">Databricks-Centric Deployment</div>
+  <div class="section-desc">80/20 SLM/LLM routing: ~80% of queries (NAV lookups, standard reporting) to fine-tuned small language models for latency and cost. ~20% of complex queries escalated to larger models.</div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ═══ PRINCIPLES ═══ -->
+
+<section id="principles">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">05 — Design Principles</div>
+      <div class="section-title">Non-Negotiable Foundations</div>
+    </div>
+
+```
+<div class="principles-grid reveal">
+  <div class="principle-card">
+    <div class="principle-num">01</div>
+    <div class="principle-title">Deterministic Validation is Durable</div>
+    <div class="principle-desc">Not a temporary workaround. The asymmetric cost of numerical errors (regulatory, reputational) justifies robust guardrail layers regardless of LLM capability improvements.</div>
+  </div>
+  <div class="principle-card">
+    <div class="principle-num">02</div>
+    <div class="principle-title">Never Compete on Price</div>
+    <div class="principle-desc">The dual-builder safety verification is the competitive moat. LLM cost deflation should flow to strengthening defence layers, not to fee reductions.</div>
+  </div>
+  <div class="principle-card">
+    <div class="principle-num">03</div>
+    <div class="principle-title">Accept Data in Any Format</div>
+    <div class="principle-desc">Never depend on upstream providers to change their systems. Accept any format, on any day. A core design principle for all fund administration tooling.</div>
+  </div>
+  <div class="principle-card">
+    <div class="principle-num">04</div>
+    <div class="principle-title">ESG Must Be Foundational</div>
+    <div class="principle-desc">The financial industry has structural power to shape societal and environmental outcomes. Sustainability metrics should be embedded at the architecture level, not bolted on as compliance afterthought.</div>
+  </div>
+  <div class="principle-card">
+    <div class="principle-num">05</div>
+    <div class="principle-title">Self-Contained Artefacts</div>
+    <div class="principle-desc">Single-file, zero-dependency outputs. Self-contained HTML, standalone Python scripts, local SQLite databases. Share without infrastructure.</div>
+  </div>
+  <div class="principle-card">
+    <div class="principle-num">06</div>
+    <div class="principle-title">Human Cost Visibility</div>
+    <div class="principle-desc">When deal pricing is a fire drill, people work excessive hours. When error remediation requires weekends, that's time from families. Make these human costs visible.</div>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ═══ ESG SECTION ═══ -->
+
+<section style="background: var(--black);">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">06 — ESG &amp; Multi-Capital Accounting</div>
+      <div class="section-title">Sustainability as Architecture</div>
+      <div class="section-desc">SFDR classification embedded at the pricing layer. PAI indicators, EU Taxonomy alignment, and sustainability risk metrics as first-class data entities alongside financial data.</div>
+    </div>
+
+```
+<div class="defence-grid reveal">
+  <div class="defence-card">
+    <div class="defence-num">SFDR Integration</div>
+    <div class="defence-title">Article 6 / 8 / 9 Classification</div>
+    <div class="defence-desc">Each classification carries different reporting obligations, operational complexity, and data requirements — all reflected transparently in the Deal Pricing Engine.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">PAI Reporting</div>
+    <div class="defence-title">Principal Adverse Impacts</div>
+    <div class="defence-desc">Data ingestion supports PAI indicators alongside financial data. Carbon intensity metrics embedded in P&L dashboard and lifecycle schematics.</div>
+  </div>
+  <div class="defence-card">
+    <div class="defence-num">Transition Enabler</div>
+    <div class="defence-title">Lowering the Barrier</div>
+    <div class="defence-desc">Making ESG fund administration efficient and well-understood lowers the barrier to launching sustainable investment products. Technology as enabler, not bottleneck.</div>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ═══ ROADMAP ═══ -->
+
+<section id="roadmap">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow">07 — Roadmap</div>
+      <div class="section-title">Implementation Horizon</div>
+    </div>
+
+```
+<div class="timeline reveal">
+  <div class="timeline-item active">
+    <div class="timeline-phase">Horizon 1 — Weeks 1-12</div>
+    <div class="timeline-title">Prove Value</div>
+    <div class="timeline-desc">P&L Intelligence Platform and Deal Pricing Engine deployed with real data. Operational Risk Monitoring live. Evidence that converts sceptics and unlocks further investment.</div>
+  </div>
+  <div class="timeline-item active">
+    <div class="timeline-phase">Horizon 2 — Months 4-9</div>
+    <div class="timeline-title">Scale &amp; Integrate</div>
+    <div class="timeline-desc">Format-agnostic data ingestion. ESG metrics as first-class entities. Fund Lifecycle Modeller connecting deal pricing to implementation planning. Competitive intelligence automation.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-phase">Horizon 3 — Months 10-18</div>
+    <div class="timeline-title">Autonomous Operations</div>
+    <div class="timeline-desc">Agentic ERP in production. Tool Library flywheel approaching steady-state. Digital Twin platform for fund launch simulation. Cost per fund approaching sub-$1.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-phase">Beyond</div>
+    <div class="timeline-title">AI-Native Fund Administration</div>
+    <div class="timeline-desc">Full replacement of legacy operational model. 150-200+ fund capacity with 25 staff + platform. Capacity ceiling removed. Revenue opportunity unlocked.</div>
+  </div>
+</div>
+
+<div class="divider reveal"></div>
+<div class="reveal">
+  <div class="section-eyebrow">Revenue Opportunity</div>
+  <div class="section-title">The Cost of Inaction</div>
+</div>
+<div class="poc-grid reveal">
+  <div class="poc-metric">
+    <div class="poc-value">40–80</div>
+    <div class="poc-label">Current Capacity (Funds)</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">150–200+</div>
+    <div class="poc-label">Agentic Capacity (Funds)</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">€6M–€15M</div>
+    <div class="poc-label">Annual Revenue Unlocked</div>
+  </div>
+  <div class="poc-metric">
+    <div class="poc-value">€30M–€75M</div>
+    <div class="poc-label">5-Year Opportunity Cost</div>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+
+<footer>
+  <div class="footer-line">Innovation Lab &middot; Fund Administration Product Management &middot; 2026</div>
+  <div class="footer-sub">Confidential — Internal Use Only</div>
+</footer>
+
+<!-- ═══ JAVASCRIPT ═══ -->
+
+<script>
+// ─── NAV SCROLL EFFECT ──────────────────────────
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ─── SMOOTH SCROLL ──────────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// ─── INTERSECTION OBSERVER FOR REVEALS ──────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ─── STAGGER CHILD ANIMATIONS ───────────────────
+const staggerObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const children = entry.target.children;
+      Array.from(children).forEach((child, i) => {
+        child.style.opacity = '0';
+        child.style.transform = 'translateY(20px)';
+        child.style.transition = `all 0.6s ${i * 0.1}s cubic-bezier(0.16, 1, 0.3, 1)`;
+        requestAnimationFrame(() => {
+          child.style.opacity = '1';
+          child.style.transform = 'translateY(0)';
+        });
+      });
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.pipeline-flow, .defence-grid, .products-grid, .tech-columns, .principles-grid, .poc-grid').forEach(el => {
+  staggerObserver.observe(el);
+});
+
+// ─── COUNTER ANIMATION ──────────────────────────
+function animateCounters() {
+  document.querySelectorAll('.hero-stat-num, .poc-value').forEach(el => {
+    const text = el.textContent;
+    if (text.match(/^\d+/)) {
+      const num = parseInt(text);
+      const suffix = text.replace(/[\d,]+/, '');
+      let current = 0;
+      const step = Math.max(1, Math.floor(num / 40));
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= num) {
+          current = num;
+          clearInterval(interval);
+        }
+        el.textContent = current + suffix;
+      }, 30);
+    }
+  });
+}
+
+// Trigger counters when hero is visible
+const heroObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      animateCounters();
+      heroObserver.disconnect();
+    }
+  });
+}, { threshold: 0.3 });
+
+heroObserver.observe(document.querySelector('.hero'));
+</script>
+
+</body>
+</html>
