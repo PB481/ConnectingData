@@ -1,1384 +1,201 @@
-<!DOCTYPE html>
-
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fund Administration Innovation Lab</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-/* ─── RESET & BASE ─────────────────────────────────────────── */
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --black: #000000;
-  --off-black: #0a0a0a;
-  --charcoal: #141414;
-  --dark-grey: #1a1a1a;
-  --mid-dark: #222222;
-  --mid-grey: #333333;
-  --grey: #555555;
-  --light-grey: #888888;
-  --silver: #aaaaaa;
-  --pale: #cccccc;
-  --near-white: #e8e8e8;
-  --white: #ffffff;
-  --accent: #ffffff;
-  --font-display: 'Outfit', sans-serif;
-  --font-mono: 'Space Mono', monospace;
-}
-html { scroll-behavior: smooth; font-size: 16px; }
-body {
-  background: var(--off-black);
-  color: var(--near-white);
-  font-family: var(--font-display);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-a { color: inherit; text-decoration: none; }
-img { max-width: 100%; display: block; }
-
-/* ─── GRAIN OVERLAY ────────────────────────────────────────── */
-body::after {
-content: ‘’;
-position: fixed;
-inset: 0;
-background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.85’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.04’/%3E%3C/svg%3E”);
-pointer-events: none;
-z-index: 9999;
-}
-
-/* ─── NAVIGATION ───────────────────────────────────────────── */
-nav {
-position: fixed;
-top: 0;
-left: 0;
-right: 0;
-z-index: 100;
-padding: 20px 40px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-background: rgba(10,10,10,0.85);
-backdrop-filter: blur(20px);
-border-bottom: 1px solid rgba(255,255,255,0.05);
-transition: all 0.3s ease;
-}
-nav.scrolled { padding: 14px 40px; background: rgba(10,10,10,0.95); }
-.nav-logo {
-font-family: var(–font-mono);
-font-size: 0.85rem;
-font-weight: 700;
-letter-spacing: 3px;
-text-transform: uppercase;
-color: var(–white);
-}
-.nav-links { display: flex; gap: 32px; align-items: center; }
-.nav-links a {
-font-size: 0.78rem;
-font-weight: 500;
-letter-spacing: 1.5px;
-text-transform: uppercase;
-color: var(–silver);
-transition: color 0.3s;
-position: relative;
-}
-.nav-links a::after {
-content: ‘’;
-position: absolute;
-bottom: -4px;
-left: 0;
-width: 0;
-height: 1px;
-background: var(–white);
-transition: width 0.3s;
-}
-.nav-links a:hover { color: var(–white); }
-.nav-links a:hover::after { width: 100%; }
-
-/* ─── HERO ─────────────────────────────────────────────────── */
-.hero {
-min-height: 100vh;
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-text-align: center;
-padding: 120px 40px 80px;
-position: relative;
-overflow: hidden;
-}
-.hero-grid {
-position: absolute;
-inset: 0;
-background-image:
-linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-background-size: 80px 80px;
-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 70%);
-animation: gridPulse 8s ease-in-out infinite;
-}
-@keyframes gridPulse {
-0%, 100% { opacity: 0.5; }
-50% { opacity: 1; }
-}
-.hero-radial {
-position: absolute;
-width: 800px;
-height: 800px;
-border-radius: 50%;
-background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
-animation: radialBreath 12s ease-in-out infinite;
-}
-@keyframes radialBreath {
-0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-}
-.hero-eyebrow {
-font-family: var(–font-mono);
-font-size: 0.72rem;
-letter-spacing: 5px;
-text-transform: uppercase;
-color: var(–light-grey);
-margin-bottom: 24px;
-position: relative;
-z-index: 2;
-opacity: 0;
-animation: fadeUp 1s 0.3s forwards;
-}
-.hero h1 {
-font-size: clamp(2.8rem, 7vw, 6rem);
-font-weight: 900;
-line-height: 1.05;
-color: var(–white);
-letter-spacing: -2px;
-max-width: 900px;
-position: relative;
-z-index: 2;
-opacity: 0;
-animation: fadeUp 1s 0.5s forwards;
-}
-.hero-sub {
-font-size: 1.15rem;
-font-weight: 300;
-color: var(–silver);
-max-width: 620px;
-margin-top: 28px;
-line-height: 1.7;
-position: relative;
-z-index: 2;
-opacity: 0;
-animation: fadeUp 1s 0.7s forwards;
-}
-.hero-stats {
-display: flex;
-gap: 60px;
-margin-top: 56px;
-position: relative;
-z-index: 2;
-opacity: 0;
-animation: fadeUp 1s 0.9s forwards;
-}
-.hero-stat { text-align: center; }
-.hero-stat-num {
-font-family: var(–font-mono);
-font-size: 2.2rem;
-font-weight: 700;
-color: var(–white);
-}
-.hero-stat-label {
-font-size: 0.72rem;
-letter-spacing: 2px;
-text-transform: uppercase;
-color: var(–light-grey);
-margin-top: 6px;
-}
-.scroll-indicator {
-position: absolute;
-bottom: 40px;
-left: 50%;
-transform: translateX(-50%);
-opacity: 0;
-animation: fadeUp 1s 1.2s forwards;
-z-index: 2;
-}
-.scroll-line {
-width: 1px;
-height: 48px;
-background: linear-gradient(to bottom, var(–light-grey), transparent);
-margin: 0 auto;
-animation: scrollPulse 2s ease-in-out infinite;
-}
-@keyframes scrollPulse {
-0%, 100% { opacity: 0.3; transform: scaleY(1); }
-50% { opacity: 1; transform: scaleY(1.2); }
-}
-@keyframes fadeUp {
-from { opacity: 0; transform: translateY(30px); }
-to { opacity: 1; transform: translateY(0); }
-}
-
-/* ─── SECTION COMMON ───────────────────────────────────────── */
-section { padding: 120px 40px; position: relative; }
-.container { max-width: 1200px; margin: 0 auto; }
-.section-eyebrow {
-font-family: var(–font-mono);
-font-size: 0.68rem;
-letter-spacing: 4px;
-text-transform: uppercase;
-color: var(–grey);
-margin-bottom: 16px;
-}
-.section-title {
-font-size: clamp(2rem, 4vw, 3rem);
-font-weight: 800;
-color: var(–white);
-letter-spacing: -1px;
-line-height: 1.15;
-}
-.section-desc {
-font-size: 1.05rem;
-color: var(–silver);
-max-width: 640px;
-margin-top: 16px;
-line-height: 1.7;
-font-weight: 300;
-}
-.divider {
-width: 60px;
-height: 1px;
-background: var(–mid-grey);
-margin: 48px 0;
-}
-
-/* ─── PIPELINE SECTION ─────────────────────────────────────── */
-.pipeline-flow {
-display: flex;
-gap: 0;
-margin-top: 56px;
-position: relative;
-}
-.pipeline-step {
-flex: 1;
-padding: 32px 24px;
-position: relative;
-border: 1px solid var(–mid-dark);
-background: var(–charcoal);
-transition: all 0.4s ease;
-}
-.pipeline-step:first-child { border-radius: 12px 0 0 12px; }
-.pipeline-step:last-child { border-radius: 0 12px 12px 0; }
-.pipeline-step:hover {
-background: var(–dark-grey);
-border-color: var(–mid-grey);
-transform: translateY(-4px);
-z-index: 2;
-}
-.pipeline-step::after {
-content: ‘→’;
-position: absolute;
-right: -12px;
-top: 50%;
-transform: translateY(-50%);
-font-size: 1.1rem;
-color: var(–grey);
-z-index: 3;
-}
-.pipeline-step:last-child::after { display: none; }
-.pipe-num {
-font-family: var(–font-mono);
-font-size: 0.65rem;
-letter-spacing: 2px;
-text-transform: uppercase;
-color: var(–grey);
-margin-bottom: 12px;
-}
-.pipe-type {
-display: inline-block;
-font-family: var(–font-mono);
-font-size: 0.58rem;
-letter-spacing: 1px;
-text-transform: uppercase;
-padding: 3px 8px;
-border-radius: 3px;
-margin-bottom: 12px;
-}
-.type-prob { background: rgba(255,255,255,0.08); color: var(–silver); }
-.type-det { background: rgba(255,255,255,0.15); color: var(–white); }
-.type-ml { background: rgba(255,255,255,0.06); color: var(–light-grey); }
-.type-human { background: rgba(255,255,255,0.1); color: var(–pale); }
-.pipe-title {
-font-size: 1.1rem;
-font-weight: 700;
-color: var(–white);
-margin-bottom: 8px;
-}
-.pipe-desc {
-font-size: 0.82rem;
-color: var(–silver);
-line-height: 1.6;
-}
-
-/* ─── DEFENCE LAYERS ───────────────────────────────────────── */
-.defence-grid {
-display: grid;
-grid-template-columns: repeat(3, 1fr);
-gap: 16px;
-margin-top: 40px;
-}
-.defence-card {
-padding: 24px;
-background: var(–charcoal);
-border: 1px solid var(–mid-dark);
-border-radius: 8px;
-transition: all 0.3s ease;
-}
-.defence-card:hover {
-border-color: var(–mid-grey);
-background: var(–dark-grey);
-transform: translateY(-2px);
-}
-.defence-num {
-font-family: var(–font-mono);
-font-size: 0.62rem;
-letter-spacing: 2px;
-color: var(–grey);
-margin-bottom: 10px;
-}
-.defence-title {
-font-size: 0.95rem;
-font-weight: 700;
-color: var(–white);
-margin-bottom: 8px;
-}
-.defence-desc {
-font-size: 0.8rem;
-color: var(–silver);
-line-height: 1.6;
-}
-
-/* ─── PRODUCT CARDS ────────────────────────────────────────── */
-.products-grid {
-display: grid;
-grid-template-columns: repeat(2, 1fr);
-gap: 24px;
-margin-top: 56px;
-}
-.product-card {
-padding: 40px;
-background: var(–charcoal);
-border: 1px solid var(–mid-dark);
-border-radius: 12px;
-transition: all 0.4s ease;
-position: relative;
-overflow: hidden;
-}
-.product-card::before {
-content: ‘’;
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-height: 2px;
-background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-opacity: 0;
-transition: opacity 0.4s;
-}
-.product-card:hover {
-border-color: var(–mid-grey);
-transform: translateY(-4px);
-box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-}
-.product-card:hover::before { opacity: 1; }
-.product-icon {
-font-size: 1.8rem;
-margin-bottom: 20px;
-display: block;
-}
-.product-tag {
-font-family: var(–font-mono);
-font-size: 0.62rem;
-letter-spacing: 2px;
-text-transform: uppercase;
-color: var(–grey);
-margin-bottom: 12px;
-}
-.product-title {
-font-size: 1.35rem;
-font-weight: 700;
-color: var(–white);
-margin-bottom: 12px;
-}
-.product-desc {
-font-size: 0.88rem;
-color: var(–silver);
-line-height: 1.7;
-margin-bottom: 20px;
-}
-.product-features {
-display: flex;
-flex-wrap: wrap;
-gap: 8px;
-}
-.feature-tag {
-font-family: var(–font-mono);
-font-size: 0.62rem;
-letter-spacing: 1px;
-text-transform: uppercase;
-padding: 4px 10px;
-border: 1px solid var(–mid-grey);
-border-radius: 4px;
-color: var(–light-grey);
-}
-
-/* ─── TECH STACK ───────────────────────────────────────────── */
-.tech-columns {
-display: grid;
-grid-template-columns: repeat(4, 1fr);
-gap: 24px;
-margin-top: 48px;
-}
-.tech-col h4 {
-font-family: var(–font-mono);
-font-size: 0.68rem;
-letter-spacing: 2px;
-text-transform: uppercase;
-color: var(–grey);
-margin-bottom: 16px;
-padding-bottom: 12px;
-border-bottom: 1px solid var(–mid-dark);
-}
-.tech-item {
-padding: 10px 0;
-font-size: 0.88rem;
-color: var(–silver);
-border-bottom: 1px solid rgba(255,255,255,0.03);
-display: flex;
-justify-content: space-between;
-align-items: center;
-}
-.tech-item:last-child { border-bottom: none; }
-.tech-role {
-font-size: 0.65rem;
-color: var(–grey);
-font-family: var(–font-mono);
-}
-
-/* ─── COMPETITIVE LANDSCAPE ────────────────────────────────── */
-.comp-table {
-width: 100%;
-margin-top: 40px;
-border-collapse: collapse;
-}
-.comp-table th {
-font-family: var(–font-mono);
-font-size: 0.65rem;
-letter-spacing: 2px;
-text-transform: uppercase;
-color: var(–grey);
-text-align: left;
-padding: 16px 20px;
-border-bottom: 1px solid var(–mid-dark);
-}
-.comp-table td {
-padding: 16px 20px;
-font-size: 0.85rem;
-color: var(–silver);
-border-bottom: 1px solid rgba(255,255,255,0.03);
-vertical-align: top;
-}
-.comp-table tr:hover td { background: rgba(255,255,255,0.02); }
-.comp-table .firm-name {
-font-weight: 700;
-color: var(–white);
-}
-.indicator {
-display: inline-block;
-width: 8px;
-height: 8px;
-border-radius: 50%;
-margin-right: 6px;
-}
-.ind-strong { background: var(–white); }
-.ind-moderate { background: var(–light-grey); }
-.ind-weak { background: var(–mid-grey); }
-
-/* ─── PRINCIPLES ───────────────────────────────────────────── */
-.principles-grid {
-display: grid;
-grid-template-columns: repeat(3, 1fr);
-gap: 24px;
-margin-top: 48px;
-}
-.principle-card {
-padding: 32px;
-border-left: 2px solid var(–mid-grey);
-transition: border-color 0.3s;
-}
-.principle-card:hover { border-color: var(–white); }
-.principle-num {
-font-family: var(–font-mono);
-font-size: 2rem;
-font-weight: 700;
-color: var(–mid-dark);
-margin-bottom: 12px;
-}
-.principle-title {
-font-size: 1.05rem;
-font-weight: 700;
-color: var(–white);
-margin-bottom: 8px;
-}
-.principle-desc {
-font-size: 0.85rem;
-color: var(–silver);
-line-height: 1.6;
-}
-
-/* ─── FLYWHEEL ─────────────────────────────────────────────── */
-.flywheel-visual {
-margin-top: 48px;
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 0;
-padding: 40px 0;
-}
-.fly-node {
-padding: 16px 24px;
-background: var(–charcoal);
-border: 1px solid var(–mid-dark);
-border-radius: 8px;
-font-size: 0.82rem;
-font-weight: 600;
-color: var(–white);
-text-align: center;
-min-width: 140px;
-transition: all 0.3s;
-}
-.fly-node:hover { border-color: var(–mid-grey); background: var(–dark-grey); }
-.fly-node.highlight {
-border-color: var(–white);
-background: var(–mid-dark);
-}
-.fly-arrow {
-font-family: var(–font-mono);
-font-size: 1.2rem;
-color: var(–grey);
-padding: 0 8px;
-}
-
-/* ─── POC RESULTS ──────────────────────────────────────────── */
-.poc-grid {
-display: grid;
-grid-template-columns: repeat(4, 1fr);
-gap: 16px;
-margin-top: 40px;
-}
-.poc-metric {
-padding: 24px;
-background: var(–charcoal);
-border: 1px solid var(–mid-dark);
-border-radius: 8px;
-text-align: center;
-}
-.poc-value {
-font-family: var(–font-mono);
-font-size: 1.6rem;
-font-weight: 700;
-color: var(–white);
-}
-.poc-label {
-font-size: 0.72rem;
-color: var(–light-grey);
-margin-top: 6px;
-letter-spacing: 1px;
-text-transform: uppercase;
-}
-
-/* ─── TIMELINE ─────────────────────────────────────────────── */
-.timeline {
-margin-top: 48px;
-position: relative;
-}
-.timeline::before {
-content: ‘’;
-position: absolute;
-left: 20px;
-top: 0;
-bottom: 0;
-width: 1px;
-background: var(–mid-dark);
-}
-.timeline-item {
-padding: 0 0 40px 56px;
-position: relative;
-}
-.timeline-item::before {
-content: ‘’;
-position: absolute;
-left: 15px;
-top: 6px;
-width: 11px;
-height: 11px;
-border-radius: 50%;
-border: 2px solid var(–mid-grey);
-background: var(–off-black);
-}
-.timeline-item.active::before {
-border-color: var(–white);
-background: var(–white);
-box-shadow: 0 0 12px rgba(255,255,255,0.3);
-}
-.timeline-phase {
-font-family: var(–font-mono);
-font-size: 0.62rem;
-letter-spacing: 2px;
-text-transform: uppercase;
-color: var(–grey);
-}
-.timeline-title {
-font-size: 1.1rem;
-font-weight: 700;
-color: var(–white);
-margin: 4px 0 6px;
-}
-.timeline-desc {
-font-size: 0.85rem;
-color: var(–silver);
-line-height: 1.6;
-}
-
-/* ─── FOOTER ───────────────────────────────────────────────── */
-footer {
-padding: 60px 40px;
-border-top: 1px solid var(–mid-dark);
-text-align: center;
-}
-.footer-line {
-font-family: var(–font-mono);
-font-size: 0.68rem;
-letter-spacing: 3px;
-text-transform: uppercase;
-color: var(–grey);
-}
-.footer-sub {
-font-size: 0.78rem;
-color: var(–light-grey);
-margin-top: 12px;
-}
-
-/* ─── REVEAL ANIMATIONS ───────────────────────────────────── */
-.reveal {
-opacity: 0;
-transform: translateY(40px);
-transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.reveal.visible {
-opacity: 1;
-transform: translateY(0);
-}
-
-/* ─── RESPONSIVE ───────────────────────────────────────────── */
-@media (max-width: 900px) {
-section { padding: 80px 24px; }
-.pipeline-flow { flex-direction: column; }
-.pipeline-step { border-radius: 8px !important; }
-.pipeline-step::after { display: none; }
-.products-grid, .defence-grid, .principles-grid { grid-template-columns: 1fr; }
-.tech-columns { grid-template-columns: repeat(2, 1fr); }
-.poc-grid { grid-template-columns: repeat(2, 1fr); }
-.hero-stats { flex-wrap: wrap; gap: 32px; }
-.flywheel-visual { flex-wrap: wrap; gap: 12px; }
-.fly-arrow { display: none; }
-.nav-links { display: none; }
-.comp-table { font-size: 0.75rem; }
-.comp-table td, .comp-table th { padding: 10px 12px; }
-}
-</style>
-
-</head>
-<body>
-
-<!-- ═══ NAVIGATION ═══ -->
-
-<nav id="mainNav">
-  <div class="nav-logo">FA Innovation Lab</div>
-  <div class="nav-links">
-    <a href="#architecture">Architecture</a>
-    <a href="#products">Products</a>
-    <a href="#landscape">Landscape</a>
-    <a href="#tech">Stack</a>
-    <a href="#principles">Principles</a>
-    <a href="#roadmap">Roadmap</a>
-  </div>
-</nav>
-
-<!-- ═══ HERO ═══ -->
-
-<section class="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-radial"></div>
-  <div class="hero-eyebrow">Fund Administration &middot; Product Innovation</div>
-  <h1>AI-Native Fund Accounting</h1>
-  <p class="hero-sub">An integrated platform for agentic fund administration — where LLMs generate code, deterministic systems verify the maths, and humans approve what matters.</p>
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hero-stat-num">5</div>
-      <div class="hero-stat-label">Pipeline Steps</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">6</div>
-      <div class="hero-stat-label">Defence Layers</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">610+</div>
-      <div class="hero-stat-label">Properties Verified</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">&lt;5s</div>
-      <div class="hero-stat-label">Execution Time</div>
-    </div>
-  </div>
-  <div class="scroll-indicator">
-    <div class="scroll-line"></div>
-  </div>
-</section>
-
-<!-- ═══ ARCHITECTURE: PIPELINE ═══ -->
-
-<section id="architecture">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-eyebrow">01 — Agentic ERP Architecture</div>
-      <div class="section-title">Five Steps. Zero Hallucinations.</div>
-      <div class="section-desc">The AI reads documents and writes code. Deterministic systems execute the code, verify the maths, and prove correctness. The AI never touches a number.</div>
-    </div>
-
-```
-<div class="pipeline-flow reveal">
-  <div class="pipeline-step">
-    <div class="pipe-num">Step 01</div>
-    <div class="pipe-type type-prob">Probabilistic</div>
-    <div class="pipe-title">Reader</div>
-    <div class="pipe-desc">Extracts data from PDFs, emails, and notices. Outputs strict JSON with per-field confidence scores. No manual data entry.</div>
-  </div>
-  <div class="pipeline-step">
-    <div class="pipe-num">Step 02</div>
-    <div class="pipe-type type-prob">Probabilistic</div>
-    <div class="pipe-title">Builder</div>
-    <div class="pipe-desc">Generates Python scripts for calculations. Writes code, never computes answers. Formal annotations embedded for verification.</div>
-  </div>
-  <div class="pipeline-step">
-    <div class="pipe-num">Step 03</div>
-    <div class="pipe-type type-det">Deterministic</div>
-    <div class="pipe-title">Constitution</div>
-    <div class="pipe-desc">Executes code in sandbox. Validates: double-entry balance, LPA limits, ACID compliance, dimensional consistency.</div>
-  </div>
-  <div class="pipeline-step">
-    <div class="pipe-num">Step 04</div>
-    <div class="pipe-type type-ml">Traditional ML</div>
-    <div class="pipe-title">Anomaly Agent</div>
-    <div class="pipe-desc">Isolation Forest + EWMA flags statistical outliers. Gradient-boosted trees and statistics — not an LLM.</div>
-  </div>
-  <div class="pipeline-step">
-    <div class="pipe-num">Step 05</div>
-    <div class="pipe-type type-human">Human</div>
-    <div class="pipe-title">Human Gate</div>
-    <div class="pipe-desc">Expert reviews flagged items. Approved scripts enter Tool Library. 85%+ auto-posted with zero human touch.</div>
-  </div>
-</div>
-
-<!-- Defence Layers -->
-<div class="divider reveal"></div>
-<div class="reveal">
-  <div class="section-eyebrow">Builder Protection</div>
-  <div class="section-title">Six Layers of Defence</div>
-  <div class="section-desc">Tiered fail-fast verification. Cheapest checks run first; expensive ones only if everything else passes.</div>
-</div>
-
-<div class="defence-grid reveal">
-  <div class="defence-card">
-    <div class="defence-num">Layer 01</div>
-    <div class="defence-title">Dual-Builder Consensus</div>
-    <div class="defence-desc">N-version programming. Two independent LLMs generate code separately; outputs must agree before proceeding.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">Layer 02</div>
-    <div class="defence-title">Tool Library Regression</div>
-    <div class="defence-desc">Compare against verified precedents. Known calculation types are matched to previously-approved scripts in the library.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">Layer 03</div>
-    <div class="defence-title">Z3 Formal Verification</div>
-    <div class="defence-desc">SMT solver mathematically proves code properties. Pre-conditions, post-conditions, and invariants verified formally.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">Layer 04</div>
-    <div class="defence-title">Inverse Verification</div>
-    <div class="defence-desc">An Auditor Agent reads generated code back and explains what it does. Explanation must match the original intent.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">Layer 05</div>
-    <div class="defence-title">Property-Based Testing</div>
-    <div class="defence-desc">Hypothesis generates 1,000+ randomised inputs. Mathematical invariants must hold: fees &ge; 0, NAV components sum correctly.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">Layer 06</div>
-    <div class="defence-title">Human Gate for Novelty</div>
-    <div class="defence-desc">First-time calculation types always require human review. Tool Library is only populated after human validation. Non-negotiable.</div>
-  </div>
-</div>
-
-<!-- Flywheel -->
-<div class="divider reveal"></div>
-<div class="reveal">
-  <div class="section-eyebrow">Economics</div>
-  <div class="section-title">The Tool Library Flywheel</div>
-  <div class="section-desc">Every approved script becomes a reusable asset. Novel calculations decrease exponentially. Month 1: ~$40/fund. Month 18: &lt;$0.50/fund.</div>
-</div>
-
-<div class="flywheel-visual reveal">
-  <div class="fly-node">Novel Fund Rule</div>
-  <div class="fly-arrow">→</div>
-  <div class="fly-node">Builder Generates Code</div>
-  <div class="fly-arrow">→</div>
-  <div class="fly-node">6-Layer Verification</div>
-  <div class="fly-arrow">→</div>
-  <div class="fly-node">Human Approves</div>
-  <div class="fly-arrow">→</div>
-  <div class="fly-node highlight">Tool Library ↻</div>
-  <div class="fly-arrow">→</div>
-  <div class="fly-node">Instant Reuse</div>
-</div>
-
-<!-- PoC Results -->
-<div class="poc-grid reveal">
-  <div class="poc-metric">
-    <div class="poc-value">5/5</div>
-    <div class="poc-label">Documents Extracted</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">0.92</div>
-    <div class="poc-label">Avg Confidence</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">12/12</div>
-    <div class="poc-label">Guardrails Passed</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">18/18</div>
-    <div class="poc-label">Defence Checks Passed</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">610+</div>
-    <div class="poc-label">Properties Verified</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">10/10</div>
-    <div class="poc-label">Z3 Formal Proofs</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">~5s</div>
-    <div class="poc-label">Total Execution</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">$0.00</div>
-    <div class="poc-label">API Cost (Mock)</div>
-  </div>
-</div>
-```
-
-  </div>
-</section>
-
-<!-- ═══ PRODUCTS ═══ -->
-
-<section id="products" style="background: var(--black);">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-eyebrow">02 — Platform Suite</div>
-      <div class="section-title">Operational Intelligence Tools</div>
-      <div class="section-desc">Each tool solves a specific problem while contributing to a unified intelligence layer. Self-contained, multi-format, zero-dependency.</div>
-    </div>
-
-```
-<div class="products-grid">
-  <div class="product-card reveal">
-    <span class="product-icon">◈</span>
-    <div class="product-tag">Live &middot; Multi-format</div>
-    <div class="product-title">P&L Intelligence Platform</div>
-    <div class="product-desc">Error cost analysis, revenue erosion tracking, churn risk scoring, and P&L forecasting. Template-driven CSV ingestion with upload validation and AI-generated insights computed dynamically from uploaded data.</div>
-    <div class="product-features">
-      <span class="feature-tag">Streamlit</span>
-      <span class="feature-tag">Python CLI</span>
-      <span class="feature-tag">HTML</span>
-      <span class="feature-tag">Error Payouts</span>
-      <span class="feature-tag">Client Repricing</span>
-    </div>
-  </div>
-
-  <div class="product-card reveal">
-    <span class="product-icon">◇</span>
-    <div class="product-tag">Live &middot; Multi-format</div>
-    <div class="product-title">Deal Pricing Engine</div>
-    <div class="product-desc">Parametric cost-to-serve model covering fund type, complexity, domicile, services, and volume. Three negotiation scenarios, margin sensitivity matrix, and walk-away thresholds for live client discussions.</div>
-    <div class="product-features">
-      <span class="feature-tag">React</span>
-      <span class="feature-tag">Streamlit</span>
-      <span class="feature-tag">Rust API</span>
-      <span class="feature-tag">Swift/iOS</span>
-      <span class="feature-tag">Python CLI</span>
-    </div>
-  </div>
-
-  <div class="product-card reveal">
-    <span class="product-icon">△</span>
-    <div class="product-tag">Live &middot; Dual Phase</div>
-    <div class="product-title">Operational Risk Monitoring</div>
-    <div class="product-desc">Phase 1: Reactive anomaly detection (EWMA/SPC, Isolation Forest, PELT changepoint). Phase 2: Predictive engine using HistGradientBoosting with leading indicators and per-region forecast cards.</div>
-    <div class="product-features">
-      <span class="feature-tag">Streamlit</span>
-      <span class="feature-tag">Databricks</span>
-      <span class="feature-tag">EWMA</span>
-      <span class="feature-tag">Isolation Forest</span>
-      <span class="feature-tag">XGBoost</span>
-    </div>
-  </div>
-
-  <div class="product-card reveal">
-    <span class="product-icon">○</span>
-    <div class="product-tag">In Progress</div>
-    <div class="product-title">Bento Box Desktop App</div>
-    <div class="product-desc">Local-first, single-user SQLite application for personal fund administration workflows. NiceGUI with native mode, distributed as a double-click executable via PyInstaller.</div>
-    <div class="product-features">
-      <span class="feature-tag">NiceGUI</span>
-      <span class="feature-tag">SQLite</span>
-      <span class="feature-tag">PyInstaller</span>
-      <span class="feature-tag">Local-first</span>
-    </div>
-  </div>
-
-  <div class="product-card reveal">
-    <span class="product-icon">□</span>
-    <div class="product-tag">Horizon &middot; Concept</div>
-    <div class="product-title">Fund Lifecycle Digital Twin</div>
-    <div class="product-desc">Discrete-event simulation engine that creates virtual replicas of fund launches and administrator transitions. Monte Carlo scenario modelling with Rust-Python hybrid architecture for performance.</div>
-    <div class="product-features">
-      <span class="feature-tag">Rust Core</span>
-      <span class="feature-tag">PyO3</span>
-      <span class="feature-tag">SimPy</span>
-      <span class="feature-tag">Streamlit</span>
-      <span class="feature-tag">AWS</span>
-    </div>
-  </div>
-
-  <div class="product-card reveal">
-    <span class="product-icon">⬡</span>
-    <div class="product-tag">Horizon &middot; Concept</div>
-    <div class="product-title">Competitive Intelligence Engine</div>
-    <div class="product-desc">Systematic market research, competitor surveillance, and pricing model development. Firecrawl for web scraping, Polygon for fund flows, SimilarWeb for traffic analysis, Ahrefs for content positioning.</div>
-    <div class="product-features">
-      <span class="feature-tag">Firecrawl</span>
-      <span class="feature-tag">Polygon</span>
-      <span class="feature-tag">SimilarWeb</span>
-      <span class="feature-tag">Ahrefs</span>
-      <span class="feature-tag">Manus</span>
-    </div>
-  </div>
-</div>
-```
-
-  </div>
-</section>
-
-<!-- ═══ COMPETITIVE LANDSCAPE ═══ -->
-
-<section id="landscape">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-eyebrow">03 — Competitive Landscape</div>
-      <div class="section-title">Top Fund Administrators</div>
-      <div class="section-desc">Comparative analysis across technology, asset class coverage, and AI readiness. Intelligence sourced from market research, hiring signals, and industry analysis.</div>
-    </div>
-
-```
-<div class="reveal" style="overflow-x: auto;">
-  <table class="comp-table">
-    <thead>
-      <tr>
-        <th>Administrator</th>
-        <th>Proprietary Platform</th>
-        <th>Alternatives</th>
-        <th>AI / Automation</th>
-        <th>ESG / SFDR</th>
-        <th>Digital Assets</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="firm-name">BNY</td>
-        <td>Eagle, Nexen</td>
-        <td><span class="indicator ind-strong"></span>Strong</td>
-        <td>125+ AI solutions in production. Predictive analytics, automation, anomaly detection.</td>
-        <td><span class="indicator ind-strong"></span>Strong</td>
-        <td><span class="indicator ind-moderate"></span>Growing</td>
-      </tr>
-      <tr>
-        <td class="firm-name">State Street</td>
-        <td>Aladdin partnership, Alpha platform</td>
-        <td><span class="indicator ind-strong"></span>Strong</td>
-        <td>Significant investment in data-driven operations and AI-powered insights.</td>
-        <td><span class="indicator ind-strong"></span>Strong</td>
-        <td><span class="indicator ind-moderate"></span>Growing</td>
-      </tr>
-      <tr>
-        <td class="firm-name">J.P. Morgan</td>
-        <td>Fusion, Arcesium stake</td>
-        <td><span class="indicator ind-strong"></span>Strong</td>
-        <td>Major AI investment. Onyx platform for blockchain. Internal LLM initiatives.</td>
-        <td><span class="indicator ind-moderate"></span>Moderate</td>
-        <td><span class="indicator ind-strong"></span>Leading</td>
-      </tr>
-      <tr>
-        <td class="firm-name">Northern Trust</td>
-        <td>Broadridge integration, FMC</td>
-        <td><span class="indicator ind-moderate"></span>Moderate</td>
-        <td>Technology modernisation. Cloud migration. RPA deployment across operations.</td>
-        <td><span class="indicator ind-strong"></span>Strong</td>
-        <td><span class="indicator ind-weak"></span>Early</td>
-      </tr>
-      <tr>
-        <td class="firm-name">BBH</td>
-        <td>Infuse, proprietary custody</td>
-        <td><span class="indicator ind-moderate"></span>Moderate</td>
-        <td>Boutique approach. Selective automation. Client relationship-centric model.</td>
-        <td><span class="indicator ind-moderate"></span>Moderate</td>
-        <td><span class="indicator ind-weak"></span>Early</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="divider reveal"></div>
-<div class="reveal">
-  <div class="section-eyebrow">Intelligence Approach</div>
-  <div class="section-title">Four-Layer CI Stack</div>
-</div>
-<div class="defence-grid reveal">
-  <div class="defence-card">
-    <div class="defence-num">Layer 01</div>
-    <div class="defence-title">Firecrawl — Web Scraping</div>
-    <div class="defence-desc">Systematic crawling of competitor product pages, changelogs, release notes, and job postings. Automated diff detection for new features and technology signals.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">Layer 02</div>
-    <div class="defence-title">Polygon — Fund Flows</div>
-    <div class="defence-desc">Real-time fund flow data, ETF/mutual fund activity, and market structure shifts. Informs product roadmap priorities around emerging asset class demand.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">Layer 03</div>
-    <div class="defence-title">SimilarWeb + Ahrefs</div>
-    <div class="defence-desc">Traffic benchmarking, audience overlap, SEO positioning, and content intelligence. Reveals competitor framing and identifies unmet demand signals.</div>
-  </div>
-</div>
-```
-
-  </div>
-</section>
-
-<!-- ═══ TECH STACK ═══ -->
-
-<section id="tech" style="background: var(--black);">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-eyebrow">04 — Technology</div>
-      <div class="section-title">Architecture &amp; Stack</div>
-      <div class="section-desc">Multi-language, multi-platform. Each component chosen for its specific strength. Self-contained artefacts that run anywhere with zero infrastructure.</div>
-    </div>
-
-```
-<div class="tech-columns reveal">
-  <div class="tech-col">
-    <h4>Languages</h4>
-    <div class="tech-item">Python <span class="tech-role">Primary</span></div>
-    <div class="tech-item">Rust <span class="tech-role">Performance</span></div>
-    <div class="tech-item">JavaScript / React <span class="tech-role">Interactive</span></div>
-    <div class="tech-item">Swift / SwiftUI <span class="tech-role">iOS</span></div>
-    <div class="tech-item">HTML / CSS <span class="tech-role">Universal</span></div>
-  </div>
-  <div class="tech-col">
-    <h4>Frameworks</h4>
-    <div class="tech-item">Streamlit <span class="tech-role">Apps</span></div>
-    <div class="tech-item">NiceGUI <span class="tech-role">Desktop</span></div>
-    <div class="tech-item">FastAPI / Axum <span class="tech-role">APIs</span></div>
-    <div class="tech-item">Plotly <span class="tech-role">Charts</span></div>
-    <div class="tech-item">Recharts <span class="tech-role">React</span></div>
-  </div>
-  <div class="tech-col">
-    <h4>Data &amp; ML</h4>
-    <div class="tech-item">SQLite <span class="tech-role">Local</span></div>
-    <div class="tech-item">Databricks <span class="tech-role">Platform</span></div>
-    <div class="tech-item">Pandas <span class="tech-role">Wrangling</span></div>
-    <div class="tech-item">scikit-learn <span class="tech-role">ML</span></div>
-    <div class="tech-item">XGBoost <span class="tech-role">Prediction</span></div>
-  </div>
-  <div class="tech-col">
-    <h4>AI &amp; Cloud</h4>
-    <div class="tech-item">Claude <span class="tech-role">Primary LLM</span></div>
-    <div class="tech-item">AWS Bedrock <span class="tech-role">Managed</span></div>
-    <div class="tech-item">ECS Fargate <span class="tech-role">Compute</span></div>
-    <div class="tech-item">Aurora Serverless <span class="tech-role">DB</span></div>
-    <div class="tech-item">Z3 Solver <span class="tech-role">Proofs</span></div>
-  </div>
-</div>
-
-<div class="divider reveal"></div>
-<div class="reveal">
-  <div class="section-eyebrow">MVP Architecture</div>
-  <div class="section-title">Databricks-Centric Deployment</div>
-  <div class="section-desc">80/20 SLM/LLM routing: ~80% of queries (NAV lookups, standard reporting) to fine-tuned small language models for latency and cost. ~20% of complex queries escalated to larger models.</div>
-</div>
-```
-
-  </div>
-</section>
-
-<!-- ═══ PRINCIPLES ═══ -->
-
-<section id="principles">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-eyebrow">05 — Design Principles</div>
-      <div class="section-title">Non-Negotiable Foundations</div>
-    </div>
-
-```
-<div class="principles-grid reveal">
-  <div class="principle-card">
-    <div class="principle-num">01</div>
-    <div class="principle-title">Deterministic Validation is Durable</div>
-    <div class="principle-desc">Not a temporary workaround. The asymmetric cost of numerical errors (regulatory, reputational) justifies robust guardrail layers regardless of LLM capability improvements.</div>
-  </div>
-  <div class="principle-card">
-    <div class="principle-num">02</div>
-    <div class="principle-title">Never Compete on Price</div>
-    <div class="principle-desc">The dual-builder safety verification is the competitive moat. LLM cost deflation should flow to strengthening defence layers, not to fee reductions.</div>
-  </div>
-  <div class="principle-card">
-    <div class="principle-num">03</div>
-    <div class="principle-title">Accept Data in Any Format</div>
-    <div class="principle-desc">Never depend on upstream providers to change their systems. Accept any format, on any day. A core design principle for all fund administration tooling.</div>
-  </div>
-  <div class="principle-card">
-    <div class="principle-num">04</div>
-    <div class="principle-title">ESG Must Be Foundational</div>
-    <div class="principle-desc">The financial industry has structural power to shape societal and environmental outcomes. Sustainability metrics should be embedded at the architecture level, not bolted on as compliance afterthought.</div>
-  </div>
-  <div class="principle-card">
-    <div class="principle-num">05</div>
-    <div class="principle-title">Self-Contained Artefacts</div>
-    <div class="principle-desc">Single-file, zero-dependency outputs. Self-contained HTML, standalone Python scripts, local SQLite databases. Share without infrastructure.</div>
-  </div>
-  <div class="principle-card">
-    <div class="principle-num">06</div>
-    <div class="principle-title">Human Cost Visibility</div>
-    <div class="principle-desc">When deal pricing is a fire drill, people work excessive hours. When error remediation requires weekends, that's time from families. Make these human costs visible.</div>
-  </div>
-</div>
-```
-
-  </div>
-</section>
-
-<!-- ═══ ESG SECTION ═══ -->
-
-<section style="background: var(--black);">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-eyebrow">06 — ESG &amp; Multi-Capital Accounting</div>
-      <div class="section-title">Sustainability as Architecture</div>
-      <div class="section-desc">SFDR classification embedded at the pricing layer. PAI indicators, EU Taxonomy alignment, and sustainability risk metrics as first-class data entities alongside financial data.</div>
-    </div>
-
-```
-<div class="defence-grid reveal">
-  <div class="defence-card">
-    <div class="defence-num">SFDR Integration</div>
-    <div class="defence-title">Article 6 / 8 / 9 Classification</div>
-    <div class="defence-desc">Each classification carries different reporting obligations, operational complexity, and data requirements — all reflected transparently in the Deal Pricing Engine.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">PAI Reporting</div>
-    <div class="defence-title">Principal Adverse Impacts</div>
-    <div class="defence-desc">Data ingestion supports PAI indicators alongside financial data. Carbon intensity metrics embedded in P&L dashboard and lifecycle schematics.</div>
-  </div>
-  <div class="defence-card">
-    <div class="defence-num">Transition Enabler</div>
-    <div class="defence-title">Lowering the Barrier</div>
-    <div class="defence-desc">Making ESG fund administration efficient and well-understood lowers the barrier to launching sustainable investment products. Technology as enabler, not bottleneck.</div>
-  </div>
-</div>
-```
-
-  </div>
-</section>
-
-<!-- ═══ ROADMAP ═══ -->
-
-<section id="roadmap">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-eyebrow">07 — Roadmap</div>
-      <div class="section-title">Implementation Horizon</div>
-    </div>
-
-```
-<div class="timeline reveal">
-  <div class="timeline-item active">
-    <div class="timeline-phase">Horizon 1 — Weeks 1-12</div>
-    <div class="timeline-title">Prove Value</div>
-    <div class="timeline-desc">P&L Intelligence Platform and Deal Pricing Engine deployed with real data. Operational Risk Monitoring live. Evidence that converts sceptics and unlocks further investment.</div>
-  </div>
-  <div class="timeline-item active">
-    <div class="timeline-phase">Horizon 2 — Months 4-9</div>
-    <div class="timeline-title">Scale &amp; Integrate</div>
-    <div class="timeline-desc">Format-agnostic data ingestion. ESG metrics as first-class entities. Fund Lifecycle Modeller connecting deal pricing to implementation planning. Competitive intelligence automation.</div>
-  </div>
-  <div class="timeline-item">
-    <div class="timeline-phase">Horizon 3 — Months 10-18</div>
-    <div class="timeline-title">Autonomous Operations</div>
-    <div class="timeline-desc">Agentic ERP in production. Tool Library flywheel approaching steady-state. Digital Twin platform for fund launch simulation. Cost per fund approaching sub-$1.</div>
-  </div>
-  <div class="timeline-item">
-    <div class="timeline-phase">Beyond</div>
-    <div class="timeline-title">AI-Native Fund Administration</div>
-    <div class="timeline-desc">Full replacement of legacy operational model. 150-200+ fund capacity with 25 staff + platform. Capacity ceiling removed. Revenue opportunity unlocked.</div>
-  </div>
-</div>
-
-<div class="divider reveal"></div>
-<div class="reveal">
-  <div class="section-eyebrow">Revenue Opportunity</div>
-  <div class="section-title">The Cost of Inaction</div>
-</div>
-<div class="poc-grid reveal">
-  <div class="poc-metric">
-    <div class="poc-value">40–80</div>
-    <div class="poc-label">Current Capacity (Funds)</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">150–200+</div>
-    <div class="poc-label">Agentic Capacity (Funds)</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">€6M–€15M</div>
-    <div class="poc-label">Annual Revenue Unlocked</div>
-  </div>
-  <div class="poc-metric">
-    <div class="poc-value">€30M–€75M</div>
-    <div class="poc-label">5-Year Opportunity Cost</div>
-  </div>
-</div>
-```
-
-  </div>
-</section>
-
-<!-- ═══ FOOTER ═══ -->
-
-<footer>
-  <div class="footer-line">Innovation Lab &middot; Fund Administration Product Management &middot; 2026</div>
-  <div class="footer-sub">Confidential — Internal Use Only</div>
-</footer>
-
-<!-- ═══ JAVASCRIPT ═══ -->
-
-<script>
-// ─── NAV SCROLL EFFECT ──────────────────────────
-const nav = document.getElementById('mainNav');
-window.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', window.scrollY > 60);
-});
-
-// ─── SMOOTH SCROLL ──────────────────────────────
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-});
-
-// ─── INTERSECTION OBSERVER FOR REVEALS ──────────
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
-
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-// ─── STAGGER CHILD ANIMATIONS ───────────────────
-const staggerObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      const children = entry.target.children;
-      Array.from(children).forEach((child, i) => {
-        child.style.opacity = '0';
-        child.style.transform = 'translateY(20px)';
-        child.style.transition = `all 0.6s ${i * 0.1}s cubic-bezier(0.16, 1, 0.3, 1)`;
-        requestAnimationFrame(() => {
-          child.style.opacity = '1';
-          child.style.transform = 'translateY(0)';
-        });
-      });
-    }
-  });
-}, { threshold: 0.15 });
-
-document.querySelectorAll('.pipeline-flow, .defence-grid, .products-grid, .tech-columns, .principles-grid, .poc-grid').forEach(el => {
-  staggerObserver.observe(el);
-});
-
-// ─── COUNTER ANIMATION ──────────────────────────
-function animateCounters() {
-  document.querySelectorAll('.hero-stat-num, .poc-value').forEach(el => {
-    const text = el.textContent;
-    if (text.match(/^\d+/)) {
-      const num = parseInt(text);
-      const suffix = text.replace(/[\d,]+/, '');
-      let current = 0;
-      const step = Math.max(1, Math.floor(num / 40));
-      const interval = setInterval(() => {
-        current += step;
-        if (current >= num) {
-          current = num;
-          clearInterval(interval);
-        }
-        el.textContent = current + suffix;
-      }, 30);
-    }
-  });
-}
-
-// Trigger counters when hero is visible
-const heroObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      animateCounters();
-      heroObserver.disconnect();
-    }
-  });
-}, { threshold: 0.3 });
-
-heroObserver.observe(document.querySelector('.hero'));
-</script>
-
-</body>
-</html>
+Comprehensive Analysis of Next-Generation Investment Management and Accounting Platforms
+The global asset management, wealth management, and broader financial servicing industries are currently navigating an era of unprecedented structural and technological transformation. Driven by relentless margin compression, the blurring of lines between public and private market asset classes, the regulatory push toward shorter settlement cycles, and an ever-increasing demand for granular transparency from institutional investors, financial entities are being forced to fundamentally reassess their technological infrastructures. Historically, the buy-side has relied upon a fragmented mosaic of monolithic, legacy applications characterized by 
+overnight batch processing, rigid relational databases, and extensive manual workarounds. The current operational paradigm demands real-time data accessibility, cloud-native scalability, and the deep integration of artificial intelligence into core workflows.
+This exhaustive research report evaluates five distinct technological ecosystems operating within this rapidly evolving space: Milestone Group and its pControl platform, the emergent CorpAI enterprise ecosystem, FundGuard, Finbourne Technology and its LUSID architecture, and Linedata. By rigorously analyzing their client-facing tools, core platforms, key functionality, deployment and operations, integration and extensibility, pricing models, and ownership structures, this analysis provides a definitive capability assessment across critical operational vectors. The objective is to systematically delineate how these platforms resolve complex data management and accounting challenges, thereby enabling investment firms to generate operational alpha, mitigate systemic risk, and significantly reduce their total cost of ownership.
+Milestone Group
+Milestone Group operates as a highly specialized institutional financial technology provider, delivering advanced fund processing, oversight, and asset allocation solutions tailored explicitly for asset owners, fund managers, life companies, and third-party administrators. The firm’s technological architecture is deliberately engineered to automate highly complex, multi-tiered fund structures, cross-invested pooled products, and sophisticated algorithmic rebalancing strategies that traditional accounting systems struggle to support natively.
+Client Facing Tools
+Milestone Group provides highly specialized, role-based interfaces designed specifically for the nuanced workflows of institutional asset allocators, portfolio managers, and compliance teams. The primary client-facing environment is the Portfolio Management Dashboard, which operates as the central nervous system for institutional oversight. This dashboard delivers a comprehensive, 360-degree view across all investments, allowing users to define multiple concurrent views over a single complex asset allocation model. Rather than offering a generalized, retail-oriented graphical interface, these tools are precision-engineered for professional stakeholders requiring deep, interactive visibility into transaction lifecycles, real-time cash forecasting, and complex pre-trade compliance checks.
+The interface empowers users to apply highly bespoke investment compliance rules directly to investible assets and sectors, alongside sub-advised holdings and interfund allocations. By providing a tailored lens for different operational personas—whether the focus is asset allocation, trading liquidity, or production management—the platform ensures that users can monitor bespoke client allocations and manage multi-dimensional investment compliance limits without resorting to offline spreadsheet models.
+Core Platforms
+The foundational architecture of Milestone Group is the pControl enterprise investment automation platform. The pControl ecosystem functions as a unified, single-application architecture that seamlessly consolidates front, middle, and back-office capabilities. The platform is structurally divided into three primary solution suites: Asset Allocation, Oversight, and Fund Processing.
+The Asset Allocation suite is explicitly intended for organizations managing full or hybrid discretionary allocations, automating the investment processes for endowments, defined benefit and defined contribution pension funds, and outsourced Chief Investment Officers. The Oversight suite provides an independent verification and backup Net Asset Value (NAV) solution for organizations that have outsourced their primary back-office operations but require stringent internal governance. The Fund Processing suite handles the heavy lifting for firms with retained in-house operations or Third Party Administrators, executing securities valuation oversight, unit pricing, and tax expense management.
+Key Functionality
+The functional supremacy of the pControl platform lies in its extraordinarily sophisticated NAV calculation, validation, and oversight capabilities. The platform automates the end-to-end process of generating accurate NAVs, natively processing multi-class, multi-currency, and hedged share classes with deep efficiency. It supports both single and dual price calculations, incorporating highly specific mechanisms such as swing pricing, income equalization, and crediting rates. A defining capability is its independent NAV Oversight function, which calculates a per-share expected value to autonomously execute control responsibilities and validate the data provided by third-party administrators.
+Furthermore, pControl excels in algorithmic portfolio management. The platform automates the top-down cascading of cash, dynamically manages target-date fund glide paths, and executes complex asset liability box management where assets cannot be fully matched to liability movements. The platform also features a robust Unitized Order Management system that provides comprehensive transaction lifecycle management for alternative investments, unlisted funds, and equalization crystallization. Pre-trade compliance checks run automatically upon the authorization of rebalancing allocations, immediately flagging tolerance breaks related to minimum cash balances or restricted security lists.
+Deployment and Operations
+The pControl platform operates on a resilient, global cloud-based infrastructure that is designed to be completely operating-model agnostic. This inherent flexibility allows it to underpin virtually all forms of product structures on a single environment, accommodating the unique operational cadences of different global jurisdictions. Milestone Group has advanced its deployment capabilities through the introduction of pControl SmartSourcing, a fully managed cloud service that incorporates managed data operations, thereby radically reducing the operational and technological maintenance burden on the client's internal IT departments.
+The deployment strategy is heavily focused on immediate risk reduction and operational acceleration. By standardizing process templates, calculation rules, and input/output data structures, Milestone ensures that its clients can achieve maximum operational benefits with a minimal time to return on investment. Implementations at major global entities, such as Waystone Management and Schroder Investment Management, highlight the platform's ability to ingest massive volumes of pricing data—such as processing thousands of prices within a rigid 45-minute window—automating previously fragile, manual checking processes.
+Integration and Extensibility
+Integration is a core tenet of the pControl architecture, which is designed to connect seamlessly with a firm's existing upstream data providers and downstream accounting engines. The platform routinely connects with centralized market data feeds, external fund accounting applications, and complex distribution networks to enable true end-to-end lifecycle management. The Order Management module automates the entire lifecycle of subscriptions, redemptions, transfers, and switch processing, featuring integrated, bi-directional connectivity directly to external registries and transfer agencies.
+Extensibility is further enhanced through sophisticated message routing capabilities. pControl autonomously generates instruction and notification messages, providing robust support for multiple operating centers and managing complex out-of-timezone confirmations and settlements. For tax-aware entities, optional modules seamlessly deliver actual daily tax expense values directly into the core NAV calculation process, bridging the gap between portfolio administration and localized tax compliance.
+Pricing Model
+While specific licensing and subscription fees remain proprietary and subject to the scale of the deployment, Milestone Group’s pricing model is fundamentally predicated on delivering massive operational efficiency gains and a sharply lowered total cost of ownership. The value proposition centers on labor displacement and the retirement of legacy technical debt. The deployment of the pControl platform routinely displaces between 25 percent and 80 percent of the manual labor effort associated with specific back-office tasks, reconciliation workarounds, and shadow accounting roles. By collapsing multiple legacy technology layers—such as disparate data management tools, price checking algorithms, and independent workflow engines—into a single processing environment, the platform drastically reduces the aggregate software licensing and infrastructure maintenance costs for asset managers.
+Ownership
+Milestone Group operated as a highly successful independent entity until it entered into a definitive agreement to be acquired by The Bank of New York Mellon Corporation (BNY Mellon) in the second half of 2021. This strategic acquisition embedded Milestone’s cutting-edge pControl technology directly into the ecosystem of the world's largest custodian bank, substantially augmenting BNY Mellon’s digital offerings and core asset servicing capabilities. Crucially, despite this acquisition by a major global custodian, pControl remains strictly platform and provider agnostic. This operational independence allows Milestone to continue servicing asset owners and managers who utilize multiple third-party administrators beyond BNY Mellon, preserving its utility as an independent oversight mechanism.
+CorpAI
+Within the broader financial, legal, and corporate ecosystem, "CorpAI" designates a rapidly advancing paradigm of embedded artificial intelligence applications, enterprise workflow automation tools, and generative data solutions. Unlike monolithic core accounting ledgers or traditional order management systems, the CorpAI technological footprint consists of highly targeted, AI-driven applications designed to augment corporate finance, legal strategy, operational efficiency, and large-scale data extraction.
+Client Facing Tools
+The user interfaces within the CorpAI paradigm prioritize natural language processing, semantic search, and intuitive, chat-based command structures. These tools are delivered via centralized, role-specific dashboards that allow corporate users to interact dynamically with vast, unstructured datasets without requiring technical programming expertise. Applications utilize job-specific prompts and predefined operational templates to generate highly accurate outputs, such as drafting complex regulatory compliance responses, summarizing lengthy legal contracts, or generating customized customer support communications based on historical interaction data. Furthermore, these dashboard environments include sophisticated progress monitoring systems to track internal AI utilization rates, providing management with granular analytics on adoption metrics across different enterprise divisions.
+Core Platforms
+The foundational platforms of the CorpAI domain are heavily decentralized, relying on vast cloud-based generative AI engines, customized large language models, and high-performance computing clusters. These platforms act as intelligent, cognitive overlays to existing enterprise resource planning, contract lifecycle management, and financial reporting systems. Notable iterations include AI-assisted research tools—such as those integrated into platforms like Westlaw Precision—which are utilized for complex regulatory and legal strategy development. These tools allow legal and compliance professionals to parse decades of case law, corporate filings, and global financial regulations instantaneously. Corporate AI platforms are increasingly specialized for distinct industry verticals, leveraging proprietary corporate data to build highly customized models that understand the specific vernacular and operational logic of a given business.
+Key Functionality
+The core functionality of CorpAI systems revolves around extreme workflow automation, unstructured data extraction, and predictive analytics. In contract and compliance management, these AI systems automate the extraction of complex legal terms, identifying financial anomalies, contradictory clauses, and mitigating risk well before physical execution. In broader corporate operations, AI-infused robotics and automation algorithms execute low-value, repetitive activities, such as automated inventory management and real-time stock counting, transmitting critical data back to centralized decision-making hubs. Furthermore, specific financial applications of these AI models provide automated, natural language summarization of market movements, synthesizing complex macroeconomic events and corporate earnings reports into easily digestible, actionable trading intelligence.
+Deployment and Operations
+Deployment of CorpAI technologies relies heavily on advanced cloud infrastructure and massive computational scale. Systems are frequently deployed on specialized AI hardware platforms, such as NVIDIA DGX SuperPOD architectures, ensuring that the computational power scales dynamically with the exponential complexity of the machine learning tasks required by the enterprise. Operational frameworks within the corporate AI space emphasize incredibly strict security protocols and data sovereignty. Enterprise AI models are carefully ring-fenced to ensure that proprietary corporate input data, sensitive financial records, and client information are completely isolated and absolutely prevented from being ingested into public AI training models.
+Integration and Extensibility
+CorpAI tools are inherently designed as extensible integration layers. They utilize modern API endpoints and secure webhook connections to interface seamlessly with a firm's existing operational software, ranging from legal research databases and portfolio management systems to internal human resources and accounting mainframes. By functioning as intelligent, autonomous agents, these AI integrations can query external market data, cross-reference it instantaneously with internal operational metrics, and deliver synthesized, highly contextual analysis directly into the end-user's primary workflow application.
+Pricing Model
+The pricing architecture for corporate AI solutions typically follows a multi-tiered Software-as-a-Service subscription or a consumption-based utility model. Costs are generally correlated directly to computational utilization, the sheer volume of unstructured data processed, or the number of licensed enterprise user seats. By automating intensely manual research tasks, streamlining contract lifecycle deployments, and eliminating repetitive operational duties, these AI models promise an exceptionally rapid return on investment. The economic value is realized by alleviating severe labor constraints, reducing costly human error, and improving overall operational consistency.
+Ownership
+The ownership and development of major CorpAI systems are distributed among leading global technology conglomerates, specialized legal-technology firms, and telecommunications giants. Major stakeholders aggressively developing and funding these localized corporate AI models include massive entities such as SoftBank Group Corp, Rakuten, and Thomson Reuters. These organizations inject substantial capital into advancing enterprise-grade AI infrastructure, building the underlying computational hardware and the proprietary language models necessary to drive the next generation of automated corporate services.
+FundGuard
+FundGuard represents a fundamental architectural revolution in the realm of investment accounting, serving as the industry's first fully cloud-native, AI-powered system of record. Designed specifically to replace decades-old, batch-driven legacy accounting mainframes, the platform unifies all books of record across public, private, and digital asset classes within a single, dynamic, real-time processing environment.
+Client Facing Tools
+FundGuard equips investment professionals with modern, highly intuitive operational interfaces that stand in stark contrast to the rigid, green-screen systems characteristic of legacy providers. The platform features a centralized "Report Studio" alongside highly configurable Operations and Management Dashboards. The user interface is inherently collaborative, designed to support modern distributed workforces. It features built-in oversight workflows, automated escalation triggers, and contextual chat functions that allow geographically dispersed operational teams to identify and resolve reconciliation breaks seamlessly within the application itself. Users benefit immensely from bitemporal data views, allowing them to instantly query historical positions with precise "knowledge-date" accuracy, a critical feature for supporting complex client inquiries, performance attribution, and regulatory audits.
+Core Platforms
+The core of the FundGuard ecosystem is its real-time, multi-asset investment accounting engine, which consolidates the Accounting Book of Record (ABOR), Investment Book of Record (IBOR), and Contingent Net Asset Value (CNAV) onto a single, unified architectural foundation. By utilizing a single, immutable transactional dataset, the platform executes multi-book accounting seamlessly. It processes varying Generally Accepted Accounting Principles (GAAP), distinct tax rules, and complex multi-currency requirements simultaneously from a single fund or trade entry. By unifying these historically disparate books of record, FundGuard completely eliminates the need for the complex, batch-driven "flush and fill" reconciliation processes that typically occur overnight between independent front, middle, and back-office systems.
+Key Functionality
+FundGuard's technological distinction is heavily anchored in its deep integration of artificial intelligence for continuous controls and proactive anomaly detection. The embedded AI engine continuously monitors millions of financial ledger entries, auto-resolving routine operational exceptions and surfacing critical key performance indicators in real-time. Additionally, FundGuard provides an industry-leading, low-touch "Shadow NAV" and contingency accounting solution. This autonomous system operates continuously in parallel to a client's primary accounting system, ensuring near-instantaneous recovery and uninterrupted NAV production in the event of a primary servicer outage, software failure, or severe cyber-attack. The platform effortlessly manages near-limitless transaction volumes, handling continuous corporate actions, complex income accruals, and highly precise general ledger postings without performance degradation.
+Deployment and Operations
+FundGuard's deployment model is a true Software-as-a-Service, cloud-native architecture utterly devoid of legacy relational database constraints. It utilizes a modern NoSQL big-data database framework, allowing for immense computational elasticity and massive data scalability. Crucially, FundGuard employs an advanced "blue-green deployment" strategy. This sophisticated approach creates two completely separate, parallel production environments (the blue and the green). Software updates are applied and rigorously tested in the idle green environment; once validated, live user traffic is seamlessly redirected from the blue to the green environment. This methodology completely eliminates system downtime, averts the traditionally risky "weekend upgrades," and enables the continuous, monthly delivery of new product features without requiring extensive, resource-draining user acceptance testing from the client.
+Integration and Extensibility
+The platform thrives on an open-API ecosystem designed specifically for rapid client onboarding and frictionless third-party connectivity. It features a proprietary "Fast File Mapper" ETL (Extract, Transform, Load) tool that drastically accelerates the ingestion, translation, and reconciliation of client data and historical records during the implementation phase. FundGuard maintains deep, strategic integrations with major front-office trading systems and global data providers. Most notably, its profound integration with State Street's Charles River Development enables flawless straight-through processing, carrying data instantly from portfolio management and trading directly through to custody and fund administration. It also partners closely with SIX for integrated global market and pricing data, and with Confluence for automated, regulatory-grade fund reporting.
+Pricing Model
+FundGuard operates on a modern SaaS-based commercial model that seeks to dramatically reduce a firm's total cost of ownership. By providing an all-in-one, multi-book platform that eradicates the need for multiple layered bespoke accounting systems, localized on-premise servers, and extensive manual reconciliation teams, the platform significantly lowers both physical hardware and human personnel costs. The elimination of technical debt and the consolidation of vendor relationships present a compelling economic argument for institutions burdened by maintaining fragmented legacy architectures.
+Ownership
+FundGuard is a rapidly growing, privately held financial technology corporation heavily supported by high-profile venture capital and strategic industry investors. Validating its market trajectory, the company successfully closed a massive $100 million Series C funding round in early 2024. This pivotal round was led by Key1 Capital, Euclidean Capital, and funds managed by Hamilton Lane, and saw continued participation from its earliest strategic investors including Blumberg Capital, Team8, Citigroup, and State Street Corporation. This formidable backing provides FundGuard with the capital required to continuously scale its AI capabilities and aggressively expand its global market reach.
+Finbourne Technology (LUSID)
+Finbourne Technology was founded with the explicit mission to structurally reduce the cost of investing by fundamentally reengineering the data architecture that underpins the investment lifecycle. The firm provides a cloud-native, heavily developer-friendly enterprise data management ecosystem that completely eradicates rigid data silos and the structural constraints imposed by legacy investment systems.
+Client Facing Tools
+Finbourne delivers highly configurable, responsive interfaces tailored specifically for the analytical demands of portfolio managers, quantitative analysts, and data operations personnel. Through its centralized Client Hub and specialized web applications, users can access fully customizable data visualizations and complex operational dashboards. The platform enables investment teams to execute complex data queries and extract real-time, actionable insights regarding portfolio limits, asset exposures, and shifting cash balances. Because the entire platform is constructed with a developer-first ethos, technical users can leverage comprehensive Python (Lumipy), Java, and C# Software Development Kits (SDKs) to build proprietary applications, custom interfaces, and bespoke analytical tools directly on top of the Finbourne data fabric.
+Core Platforms
+The Finbourne ecosystem is anchored by its flagship product, LUSID, an API-first, SaaS-native operational data hub and comprehensive investment management system. LUSID functions seamlessly as an Accounting Book of Record, an Investment Book of Record, and an Order Management System. Accompanying LUSID is Luminesce, an incredibly powerful data virtualization engine. Luminesce allows firms to query, blend, and analyze data from multiple external sources and internal legacy systems in absolute real-time, without requiring the heavy, risky, and expensive physical replication or movement of data. Together with the EDM+ (Enterprise Data Management) module, these interconnected platforms create a centralized, fully reconciled, event-sourced immutable datastore.
+Key Functionality
+The technological hallmark and primary differentiator of the LUSID platform is its bitemporal data model, paired with a highly flexible schema-on-read architecture. Bitemporality ensures that every single piece of data entering the system is permanently stamped with both when it became effective in the real world and when it was actually recorded in the system. This allows users to accurately and confidently "rewind" the entire state of a portfolio to any exact historical microsecond. This capability is absolutely critical for resolving complex trade breaks, accurately auditing historical performance, executing shadow IBOR functions, and satisfying stringent regulatory inquiries.
+Furthermore, the platform's Luminesce engine provides robust, native support for Machine Learning Operations (MLOps). By dramatically simplifying the data preparation phase and providing native Python providers, quantitative teams can seamlessly train, rigorously test, and directly deploy complex artificial intelligence models against clean, fully reconciled operational data without leaving the Finbourne ecosystem.
+Deployment and Operations
+Finbourne's operational infrastructure relies entirely on continuous integration and continuous delivery (CI/CD) methodologies, ensuring rapid innovation and supreme system stability. The operational environment employs sophisticated "release rings" to manage deployments safely. This mechanism utilizes a 'fast ring' for the absolute latest version of the code, and a 'slow ring' trailing exactly seven days behind. This allows clients to test updates in a single-tenant preproduction environment before they hit live operations, preventing any disruption to end users. The platform effortlessly processes over 9 billion API calls daily and manages over $12 trillion in combined Assets Under Management, demonstrating massive, battle-tested scale and systemic resilience. The architecture allows firms to gradually phase out their legacy systems by securely running LUSID in parallel before committing to a full cutover.
+Integration and Extensibility
+Integration is not just a feature but the central tenet of Finbourne's strategic approach, facilitated heavily by its "Horizon" partnership program. The Horizon program creates a curated, low-friction ecosystem that provides bidirectional connectivity to a vast array of third-party vendors, alternative data providers, and execution venues. By design, LUSID only requires a minimal set of core entities (such as instruments, transactions, and portfolios) to function out-of-the-box. However, its extensible data model allows clients to seamlessly append limitless custom properties and massive volumes of tabular data to perfectly match their specific, proprietary operating logic. Recent major integration milestones include extensive, customized data ingestion from SIX Financial Information for real-time portfolio rebalancing, and deep workflow connectivity with Taskize to drastically reduce resolution times for intraday trade breaks. Additionally, Northern Trust selected Finbourne to integrate LUSID and Luminesce directly into its enterprise Matrix Data Platform, modernizing its global valuation and reporting functions.
+Pricing Model
+Finbourne utilizes a highly transparent, SaaS-driven commercial model designed to align costs directly with utilization. Core services such as LUSID and EDM+ can be efficiently procured via private offers on major cloud marketplaces like AWS, scaling predictably according to the contract duration and specific computational consumption dimensions. By collapsing multiple expensive data management layers, disparate reporting tools, and siloed accounting systems into a single, highly interoperable platform, Finbourne aims to structurally reduce the total cost of ownership. The model systematically eliminates the expensive overhead, licensing fees, and manual labor costs associated with maintaining outdated, patchwork legacy reconciliation tools.
+Ownership
+Finbourne Technology operates as a privately held enterprise, heavily backed by a consortium of leading global financial institutions and top-tier venture capital firms. Demonstrating immense market confidence in its architecture, the company completed a massive Series B and subsequent secondary funding round in 2024, raising over £100 million. This major capital injection was led by prominent entities including Highland Europe, AXA Venture Partners (AVP), CommerzVentures, and HSBC. This formidable capitalization ensures Finbourne possesses the resources to continually expand its engineering footprint and aggressively capture global market share.
+Linedata
+Linedata stands as a highly established, global provider of asset management and credit technology, distinguished in recent years by a strategic, aggressive pivot from legacy localized software to highly modular, cloud-ready enterprise platforms. Operating under the strategic philosophy that "integration is the strategy," Linedata focuses on bridging the painful gap between a firm's historical, fragmented infrastructure and the demands of modern, real-time investment operations.
+Client Facing Tools
+Linedata provides sophisticated, persona-based digital workspaces that are meticulously designed to adapt to the specific, day-to-day requirements of distinct user groups, including portfolio managers, traders, and compliance officers. The user experience is intelligently unified through Linedata Mosaic, a powerful integration layer that acts as a "single pane of glass," seamlessly connecting both proprietary Linedata modules and disparate third-party tools into a cohesive desktop environment. The interfaces include highly actionable, interactive dashboards that utilize sophisticated exception-based alerting to instantly direct user attention toward portfolio deviations, critical cash flow needs, and potential pre-trade compliance breaches. Demonstrating a commitment to next-generation user experiences, Linedata is also actively advancing natural language interfaces, allowing users to query complex system data and trigger operational workflows intuitively, drastically reducing training time and increasing daily productivity.
+Core Platforms
+The modernization of Linedata's comprehensive offering is anchored by Linedata AMP (Asset Management Platform), an open, cloud-ready technological foundation designed specifically for deep interoperability and modular adoption. Integrated deeply within the AMP architecture is the market-proven Longview Order Management System (OMS), which handles complex multi-asset portfolio modeling and global trading execution. For critical middle and back-office operations, Linedata provides the robust Icon fund accounting platform—trusted for decades by massive entities like Baillie Gifford—and the highly specialized Navquest NAV oversight solution. Beyond traditional asset management, Linedata is a dominant force in the credit and lending sphere, operating the Capitalstream platform for sophisticated commercial loan origination, and Ekip360 for comprehensive, front-to-back contract and lease management.
+Key Functionality
+Linedata offers robust, deeply entrenched functionality spanning the entirety of the investment and lending lifecycles. Its Front Office tools provide precision portfolio modeling, automated cash management, and advanced algorithmic trading execution with direct, seamless access to over 600 global brokers. The Compliance module features a highly acclaimed, award-winning rules engine that effortlessly converts complex regulatory mandates and bespoke client guidelines into automated, real-time pre- and post-trade controls. Furthermore, Linedata has aggressively embedded Artificial Intelligence into its core operational workflows. Tools like Optima AI automate the historically manual extraction of unstructured, document-driven data, while the Compliance AI Assistant drastically reduces the time required to map, interpret, and implement new investment guidelines during the client onboarding process.
+Deployment and Operations
+While maintaining steadfast support for traditional hosted and private cloud environments favored by highly risk-averse institutions, Linedata's AMP architecture heavily emphasizes public cloud scalability and modern continuous integration/continuous delivery (CI/CD) methodologies. This CI/CD approach represents a major operational shift, allowing Linedata to push smaller, highly frequent software updates directly to clients without requiring massive, highly disruptive systemic upgrades that paralyze business operations. Linedata also extensively augments its pure software offerings with comprehensive co-sourcing and managed services. By providing deep operational support, advanced cybersecurity management, and optimized hosting functions, Linedata effectively relieves the severe operational and administrative burden on the client's internal teams.
+Integration and Extensibility
+Recognizing the pragmatic reality that modern asset managers rarely utilize a single vendor for all functions, Linedata’s platforms are built entirely on open standards. Utilizing an event-driven architecture and modern, GraphQL-powered APIs, Linedata enables seamless interoperability between its own modules and a client's broader technological ecosystem. A standout, highly differentiated capability is the Linedata Data Management Service. This operates as a comprehensive turnkey solution where Linedata acts as a single point of accountability for sourcing, integrating, and cleaning reference and pricing data from multiple global vendors (including complex ESG datasets), piping it directly and securely into the Linedata software suite.
+Pricing Model
+Linedata monetizes its technology and services through a diversified combination of SaaS subscriptions, traditional licensed software models, and highly recurring managed services fees. This model ensures a highly stable revenue base, with recurring revenue accounting for approximately 80% of its total income. For its specific Data Management Service, Linedata successfully transitions clients away from volatile, unpredictable per-usage data pricing models toward a bundled, highly flexible pricing structure. This fundamentally reduces the severe indirect costs, administrative friction, and general complexity associated with managing dozens of individual data vendor contracts.
+Ownership
+Unlike the highly venture-backed startups in this space, Linedata operates as an independent, publicly listed company on the Euronext Paris exchange (Ticker: LIN.FP). However, its corporate governance is incredibly concentrated; founder and CEO Anvaraly Jiva, operating through the family holding entity Aépure, exercises profound control, holding approximately 62% of the total share capital and over 78% of the voting rights. This unique, family-dominated ownership structure provides a massive strategic advantage. It wholly protects the company from aggressive, short-term activist shareholder interference, allowing leadership to confidently execute multi-year, long-term strategic transformations, massive cloud migration initiatives, and deep AI integration plans entirely independently.
+Feature Comparison
+Milestone Group
+FundGuard
+Finbourne (LUSID)
+Linedata
+CorpAI Ecosystem
+Primary Focus
+NAV Oversight, Asset Allocation, TPAs
+Multi-book ABOR/IBOR, Cloud-native
+Enterprise Data Management, Bitemporal Data
+Modular Front-to-Back, Compliance, Lending
+Automated Extraction, Legal, Generative Analytics
+Deployment Model
+Cloud, Managed SmartSourcing
+True SaaS, Blue-Green Deployment
+SaaS, Release Rings, CI/CD
+Hybrid, Public Cloud, CI/CD
+Cloud, High-Performance AI Clusters
+Data Architecture
+Relational / Rules-based
+NoSQL Big-Data Framework
+Event-sourced, Schema-on-read
+Open APIs, GraphQL, Event-driven
+Proprietary LLMs, Unstructured Data
+Ownership
+BNY Mellon (Acquired 2021)
+Private (VC/Strategic Backed)
+Private (VC/Strategic Backed)
+Public (Euronext), Family Controlled
+Distributed (Tech Conglomerates)
+Capability Assessment
+The following assessment strictly evaluates each technological provider across eight critical functional parameters. Scores are assigned on a scale of 1 to 10, based exclusively on the depth, modernity, architectural resilience, and automation capabilities evidenced in the provided source data. (Note: The CorpAI ecosystem is assessed purely on its enterprise AI data-extraction and operational workflow footprint, as it functions as an intelligent overlay rather than a traditional core ABOR/IBOR ledger).
+Capability Parameter
+Milestone Group
+CorpAI Ecosystem
+FundGuard
+Finbourne (LUSID)
+Linedata
+NAV Calculation
+10
+N/A
+10
+8
+9
+Reconciliation
+8
+5
+10
+9
+8
+Data Management
+7
+8
+9
+10
+8
+AI and Automation
+6
+9
+10
+8
+8
+Reporting & Analytics
+8
+8
+9
+9
+9
+Cloud Infrastructure
+8
+8
+10
+10
+8
+API and Integration
+7
+8
+9
+10
+9
+Regulatory Support
+8
+7
+9
+9
+10
+NAV Calculation
+Milestone Group and FundGuard achieve perfect scores (10) for NAV capabilities, though they approach the operational challenge from entirely different architectural philosophies. Milestone remains the undisputed industry leader in independent NAV oversight, shadow NAV calculation, and algorithmic cash allocation across deeply complex, multi-tiered fund-of-fund structures. FundGuard matches this perfection by providing a revolutionary multi-book, real-time NAV engine combined with a fully autonomous Contingent NAV solution. This solution operates entirely independent of legacy relational architectures, providing an unbreakable safety net for daily pricing. Linedata secures a highly respectable 9 due to the robust, deeply entrenched, and battle-tested capabilities of its Icon fund accounting platform and dedicated Navquest module, which are relied upon globally by massive administrators. Finbourne scores an 8; while its ABOR capabilities are highly modern, mathematically precise, and structurally flexible, they generally serve as highly customizable components within its broader operational data hub rather than functioning as out-of-the-box replacements for legacy Third Party Administrators.
+Reconciliation
+FundGuard completely dominates the reconciliation category (10) because its unified, single-ledger architecture inherently eliminates the fundamental need for traditional batch reconciliation. Because multi-book data (ABOR, IBOR, CNAV) is generated simultaneously from a single entry, breaks are structurally prevented before they can even happen. Finbourne scores a stellar 9 due to the genius of its bitemporal data model. When breaks do occur between external systems, LUSID allows operations teams to instantly rewind time to identify the exact historical microsecond a data discrepancy was introduced, making resolution mathematical rather than investigative. Milestone and Linedata score highly (8) for utilizing highly mature, rules-based cognitive engines to manage exception handling and rapidly alert operators to tolerance breaches. CorpAI technologies can assist in reconciliation via unstructured data pattern matching, but severely lack dedicated, auditable financial ledgers (5).
+Data Management
+Finbourne represents the absolute industry standard for modern, enterprise-scale data management (10). Its brilliant Luminesce data virtualization engine and EDM+ module allow financial firms to seamlessly federate, construct, and query data across the entire enterprise in real-time, completely avoiding the risks and costs of physical data migration. FundGuard follows very closely (9), utilizing a highly elastic NoSQL big-data framework to manage immense, uninterrupted transaction volumes natively without the performance bottlenecks of legacy databases. Linedata (8) excels through a unique service model; its turnkey Data Management Service effectively outsources the massive administrative burden of vendor procurement, data cleansing, and integration entirely to Linedata. CorpAI models (8) excel at rapidly ingesting chaotic, unstructured corporate data to train localized LLMs. Milestone (7) provides strong, reliable integrated data management, though it is strictly bound to the specific parameters of its accounting and oversight rule sets rather than acting as an enterprise-wide data fabric.
+AI and Automation
+FundGuard achieves a perfect 10 by successfully building artificial intelligence directly into the core accounting ledger itself, executing continuous anomaly detection, identifying financial irregularities, and driving autonomous exception resolution at an enterprise scale. The CorpAI ecosystem (9) represents the absolute bleeding edge of generative enterprise automation, utilizing predictive analytics and deep NLP for automating dense legal parsing and robotic operational workflows. Linedata (8) demonstrates highly powerful, practical applications of AI through its Optima AI tool for complex document ingestion and the Compliance AI Assistant for rapid regulatory rule mapping. Finbourne (8) takes a developer-centric approach, providing the underlying MLOps infrastructure (via Lumipy) that allows a firm's own quantitative teams to seamlessly build, test, and deploy their own proprietary AI models against clean data. Milestone (6) currently relies much more heavily on deterministic, rules-based cognitive process automation rather than generative, learning-based AI.
+Reporting and Analytics
+All evaluated platforms demonstrate high proficiency in this vital category. Finbourne (9) and FundGuard (9) offer deeply granular, real-time visual dashboards and comprehensive Report Studios. They uniquely leverage their immense underlying data fabrics to provide practically instantaneous exposure and risk metrics to executives. Linedata (9) offers highly tailored, persona-based dashboards that deliver actionable predictive analytics, deep ESG scoring metrics, and specific trade insights directly to the relevant user's desktop. Milestone (8) and the CorpAI platforms (8) deliver highly accurate, targeted compliance documentation and operational progress reporting that satisfy the strictest governance requirements.
+Cloud Infrastructure
+FundGuard and Finbourne receive unquestionable perfect scores (10) as they are fully cloud-native, SaaS-only platforms built from the ground up for the modern era. Finbourne utilizes highly advanced deployment "release rings" to manage continuous updates with zero risk , while FundGuard leverages ingenious blue-green deployment strategies to completely eliminate system downtime during monthly upgrades. Linedata (8) and Milestone (8) possess highly robust, secure cloud-ready and SaaS capabilities, but their scores reflect the fact that they still manage significant legacy technical debt and must continually support hybrid or on-premise instances for older, highly entrenched institutional clients.
+API and Integration
+Finbourne (10) is API-first to its absolute core; every single mathematical and operational function within the LUSID architecture is completely accessible via beautifully documented REST APIs and SDKs, further bolstered by the expansive Horizon integration ecosystem. Linedata (9) secures a massive score through its highly forward-thinking use of GraphQL and event-driven architecture via Linedata Mosaic, allowing even the oldest legacy tools to communicate seamlessly within a modern framework. FundGuard (9) utilizes open APIs and rapid ETL mappers to securely and instantly pipe massive datasets into complex systems like Charles River. CorpAI tools (8) integrate effortlessly as intelligent, cognitive overlays into existing enterprise systems without requiring hard coding. Milestone (7) provides critical, highly reliable message routing and system integration, though its connectivity is largely focused within the strict, defined parameters of transfer agencies and market data pipelines.
+Regulatory Support
+Linedata leads this category with absolute authority (10) due to its award-winning, deeply entrenched compliance rules engine, which meticulously and automatically enforces global regulatory mandates in real-time across both pre- and post-trade environments. Finbourne (9) and FundGuard (9) provide immediate, massive regulatory value by ensuring that data lineage is absolutely immutable and seamlessly bitemporal, allowing firms to easily and confidently satisfy complex audit trails and historical reporting requests from regulators. Milestone (8) natively and reliably handles stringent tax accounting, regulatory valuation thresholds, and complex AIFMD/UCITS compliance requirements. CorpAI (7) tools heavily augment legal teams tracking rapid regulatory shifts but ultimately still rely heavily on human oversight for actual physical enforcement.
+Overall Ratings and Conclusions
+Milestone Group: Operating as the undisputed, battle-tested leader in multi-tiered fund automation and backup NAV calculations, Milestone Group provides completely irreplaceable operational defense for complex asset allocators. Its highly strategic acquisition by BNY Mellon provides it with an unparalleled global distribution network and massive institutional backing. The pControl platform is highly recommended for asset owners, life companies, and Third Party Administrators where accurate, large-scale oversight, cash allocation, and strict algorithmic rule enforcement are paramount. While it trails the newer market entrants in the aggressive deployment of native generative AI, its reliability in executing complex fund processing at scale is unmatched.
+CorpAI (Enterprise Ecosystem): As a rapidly expanding paradigm representing highly specialized, generative corporate AI tools rather than a singular financial ledger, CorpAI systems represent the inevitable future of workflow augmentation. Backed heavily by massive corporate technology giants, these tools are highly recommended as intelligent overlays designed to instantly extract unstructured data, completely automate legal and compliance onboarding, and synthesize vast amounts of market data. They are vital operational accelerators that should be aggressively deployed in conjunction with, rather than as replacements for, core accounting ledgers to generate immediate cost savings.
+FundGuard: FundGuard is a truly transformative force in the investment accounting sector, successfully proving that a true cloud-native, NoSQL-backed, AI-driven accounting engine can seamlessly replace 30-year-old legacy systems. With massive venture backing and ingenious blue-green deployment mechanics that completely eliminate system downtime, it is the premier choice for large asset managers seeking to dramatically lower their total cost of ownership. FundGuard is the definitive solution for firms demanding real-time, multi-book visibility and autonomous, AI-driven anomaly detection across all global asset classes.
+Finbourne Technology (LUSID): Finbourne provides arguably the most technologically advanced, mathematically rigorous data foundation currently available in the financial market. By intelligently treating operational data as an extensible, bitemporal fabric rather than a static database, LUSID and Luminesce allow investment firms to utterly eradicate data silos and cleanly deploy sophisticated machine learning models. Supported by heavy Series B funding, Finbourne is highly recommended for technically sophisticated asset managers and quantitative hedge funds that require absolute architectural flexibility, API-first extensibility, and the unparalleled ability to instantly rewind and audit portfolio states.
+Linedata: Linedata expertly and pragmatically navigates the immensely difficult transition from legacy software to modern interoperability. Fortified by highly stable, long-term family ownership, the firm's AMP platform addresses the stark reality that massive asset managers simply cannot always afford to rip and replace their entire infrastructure overnight. By intelligently utilizing GraphQL, embedding cutting-edge AI compliance tools, and offering turnkey data management services, Linedata is highly recommended for established financial institutions seeking to modernize their front-to-back workflows progressively, securely, and seamlessly without sacrificing the depth of functionality required by regulators.
+Final Conclusion: The technological arms race within the global investment management sector has definitively and irreversibly shifted away from localized, batch-driven relational databases toward cloud-native, bitemporal data fabrics and fully unified platforms. Vendors like FundGuard and Finbourne are aggressively forcing the industry to abandon archaic batch processing in favor of real-time, API-driven data accessibility and AI-augmented accounting. Simultaneously, proven incumbents like Linedata and Milestone Group are successfully leveraging their massive, decades-long domain expertise to carefully integrate modern cloud architectures and automation features into highly complex, highly regulated environments. Ultimately, the financial institutions that successfully leverage these next-generation architectures to cleanly manage their data, deploy embedded AI, and streamline their books of record will secure an insurmountable, compounding advantage in operational alpha, regulatory compliance, and overall cost efficiency.
+Works cited
+1. Milestone Group - Global leaders in Investment Technology, https://www.milestonegroup.com/ 2. Asset Allocation - Milestone Group, https://www.milestonegroup.com/sites/default/files/2022-08/ProductOverview_AssetAllocation_R22-US.pdf 3. Order Management | Milestone Group, https://www.milestonegroup.com/solutions/order-management 4. pControl™ Solutions - Milestone Group, https://www.milestonegroup.com/solutions 5. pControl Asset Allocation - The Wealth Mosaic, https://www.thewealthmosaic.com/vendors/milestone-group/pcontrol-asset-allocation/ 6. NAV Calculation & Pricing Solution - Milestone Group, https://www.milestonegroup.com/solutions/nav-calculation-pricing 7. The pControl - Milestone Group, https://milestonegroup.com.au/sites/default/files/2019-10/Article_MyTechMag_web.pdf 8. BNY Mellon Announces Innovative Suite of Services to Deliver Greater NAV Oversight and Contingency for the Investment Industry, https://www.bny.com/corporate/global/en/about-us/newsroom/press-release/bny-mellon-announces-innovative-suite-of-services-to-deliver-greater-nav-oversight-and-contingency-for-the-investment-industry.html 9. Fund Accounting Solutions for Investment Efficiency | Milestone Group, https://www.milestonegroup.com/solutions/asset-allocation/fund-accounting 10. Top software solutions and software for mutual funds - Bobsguide, https://www.bobsguide.com/top-software-solutions-and-software-for-mutual-funds/ 11. ISSUE074 - Asset Servicing Times, https://www.assetservicingtimes.com/astimes/ASTimes_issue_74.pdf 12. Waystone goes live with Milestone Group's oversight platform, https://www.waystone.com/waystone-goes-live-with-milestone-groups-oversight-platform/ 13. Citi goes live with Milestone's pControl - Investment Magazine, https://www.investmentmagazine.com.au/2011/01/citi-goes-live-with-milestones-pcontrol/ 14. Milestone Group Agrees to be Acquired by BNY Mellon, https://www.milestonegroup.com/press-releases/milestone-group-agrees-be-acquired-bny-mellon 15. BNY Mellon to acquire fund management tech firm Milestone Group - FinTech Futures, https://www.fintechfutures.com/m-a/bny-mellon-to-acquire-fund-management-tech-firm-milestone-group 16. BNY Mellon to Bolster Digital Solutions Capabilities with Planned Acquisition of Fund Management Technology Leader Milestone Group, https://www.bny.com/corporate/global/en/about-us/newsroom/press-release/bny-mellon-to-bolster-digital-solutions-capabilities-with-planned-acquisition-of-fund-management-technology-leader-milestone-group-130209.html 17. 2024 Directory of LEADING LEGAL TECHNOLOGY AND PROJECT MANAGEMENT SOLUTIONS - CCBJ, https://ccbjournal.com/assets/features/2024_LegalTech_Review_LQ_2024-01-26-144248_egvr.pdf 18. Rakuten AI | Rakuten Group, Inc., https://global.rakuten.com/corp/ai/ 19. Automation Scorecard: How Companies That Invest Heavily Gain an Edge in Speed and Cost, https://www.bain.com/insights/automation-scorecard/ 20. DGX SuperPOD: AI Infrastructure for Enterprise Deployments | NVIDIA, https://www.nvidia.com/en-us/data-center/dgx-superpod/ 21. Become a super trader with Morpher AI, https://www.morpher.com/ai 22. Similarweb Launches AI Agents Powered by Comprehensive Digital Data, Delivering Results for Marketing and Sales Teams - Investor Relations, https://ir.similarweb.com/news-events/press-releases/detail/123/similarweb-launches-ai-agents-powered-by-comprehensive-digital-data-delivering-results-for-marketing-and-sales-teams 23. Energy Department Announces Partnership to Ensure Affordable Energy and Power America's AI Future, https://www.energy.gov/articles/energy-department-announces-partnership-ensure-affordable-energy-and-power-americas-ai 24. Investment Accounting Software & Portfolio Accounting System - FundGuard, https://www.fundguard.com/product/ 25. FundGuard | Fund Accounting Platform & IBOR Software Solutions, https://www.fundguard.com/ 26. Investment Accounting in State Street Alpha and Charles River, Powered by FundGuard, https://www.crd.com/wp-content/uploads/2023/05/CRD-FundGuard_Datasheet.pdf 27. Ability and agility - Asset Servicing Times, https://www.assetservicingtimes.com/astimes/ASTimes_SIBOS_2023.pdf 28. Cloud Natives & Blue-Green Deployment - FundGuard, https://www.fundguard.com/blue-green-deployment/ 29. Press Releases - SIX Group, https://www.six-group.com/en/newsroom/media-releases.html 30. Confluence and FundGuard partner on fund reporting - Hedgeweek, https://www.hedgeweek.com/confluence-and-fundguard-partner-fund-reporting/ 31. Investment Management Platform FundGuard Closes $40 Million Series B Funding, https://www.fundguard.com/investment-management-platform-fundguard-closes-40-million-series-b-funding/ 32. FundGuard Closes $100M Series C Funding Round | Business Wire - STT, https://www.sttinfo.fi/tiedote/70126938/fundguard-closes-100m-series-c-funding-round?publisherId=58763726 33. FundGuard Closes $100M Series C Funding Round, https://www.fundguard.com/fundguard-series-c/ 34. FINBOURNE Technology | Data Management Platform for Investment Management, https://www.finbourne.com/ 35. About us - FINBOURNE Technology, https://www.finbourne.com/company/about-us/ 36. Client Hub - FINBOURNE Technology, https://www.finbourne.com/client-hub/ 37. AWS Marketplace: FINBOURNE LUSID & EDM+, https://aws.amazon.com/marketplace/pp/prodview-4ixywcdp2lxws 38. lusid-sdk-python/sdk/docs/PricingOptions.md at main - GitHub, https://github.com/finbourne/lusid-sdk-python/blob/main/sdk/docs/PricingOptions.md 39. Next Generation Data Platforms: A Closer Look at Arcesium, Finbourne, CWAN, and Indus Valley Partners - Meradia, https://meradia.com/thought-leadership/next-generation-data-platforms-a-closer-look/ 40. Investment data management outlook 2023 - FINBOURNE Technology, https://www.finbourne.com/insight/investment-data-management-outlook-2023/ 41. Unlocking competitive edge: The untapped potential of machine learning in financial services - FINBOURNE Technology, https://www.finbourne.com/insight/unlocking-competitive-edge-the-untapped-potential-of-machine-learning-in-financial-services/ 42. LUSID platform release rings, https://support.lusid.com/docs/lusid-platform-release-rings 43. Introducing FINBOURNE Horizon, https://www.finbourne.com/introducing-finbourne-horizon/ 44. Fundamental principles of LUSID - LUSID Knowledge Base, https://support.lusid.com/docs/fundamental-principles-of-lusid 45. Omba Advisory & Investments, FINBOURNE, and SIX: A Case Study on Optimizing Asset Management via Data and Tech Innovation, https://www.six-group.com/dam/download/financial-information/partners/omba-finbourne-six-case-study.pdf 46. FINBOURNE Deepens Integration With Taskize to Increase Post-trade Operational Efficiency, https://www.finbourne.com/finbourne-deepens-integration-with-taskize-to-increase-post-trade-operational-efficiency/ 47. Northern Trust selects FINBOURNE to help accelerate its digital journey and integrate with its Matrix Data Platform, https://www.finbourne.com/northern-trust-selects-finbourne-to-help-accelerate-its-digital-journey-and-integrate-with-its-matrix-data-platform/ 48. Highland Europe and AXA Venture Partners (AVP) Invest £55m in FINBOURNE Technology to Drive Global Expansion, https://www.finbourne.com/highland-europe-and-axa-venture-partners-avp-invest-55m-in-finbourne-technology-to-drive-global-expansion-2/ 49. FINBOURNE Technology Completes £100 Million Funding Round - Orrick, https://www.orrick.com/News/2024/09/FINBOURNE-Technology-Completes-100-Million-Funding-Round 50. FINBOURNE Technology completes a successful funding round of over £100m, https://www.finbourne.com/finbourne-technology-completes-a-successful-funding-round-of-over-100m/ 51. Asset Management Technology Platform | Connected Investment Operating Model | Linedata, https://www.linedata.com/asset-management-technology-linedata-amp-software-data-analytics-and-services 52. Wealth management technology solutions, private wealth management - software for wealth managers - Linedata, https://www.linedata.com/solutions-for-wealth-managers/front-office 53. Brief - Page 113 of 188 - A-Team, https://a-teaminsight.com/briefs/page/113/ 54. Beyond Functionality: The Next Evolution of Enterprise Platforms | Linedata, https://www.linedata.com/beyond-functionality-next-evolution-enterprise-platforms 55. Fintech Platform Modernization at Linedata: Powering the Future with a Smarter Technical Platform, https://www.linedata.com/fintech-platform-modernization-linedata-powering-future-smarter-technical-platform 56. Asset management software: Linedata AMP for Asset Managers, https://www.linedata.com/asset-managers/asset-management-software-linedata-amp-asset-managers 57. Baillie Gifford extends partnership with Linedata, https://www.linedata.com/newsroom/news/baillie-gifford-extends-partnership-linedata 58. First-quarter 2025 revenue: €44.0m (+0.2%) - Linedata, https://www.linedata.com/investor-relations/latest-financial-releases/first-quarter-2025-revenue-eu440m-02 59. Commercial & Small Business Loan Origination Software | Linedata Capitalstream, https://www.linedata.com/lending-leasing/linedata-capitalstream 60. A Scalable, Proven and Innovative Platform to Drive Business Growth - Equipment Leasing and Finance Association, https://apps.elfaonline.org/Directories/Software/2018SoftwareGuide.pdf 61. Linedata Unveils Asset Management Platform - AMP, https://www.linedata.com/newsroom/news/linedata-unveils-asset-management-platform-amp 62. Portfolio model management benefits from CI/CD - Linedata, https://www.linedata.com/how-portfolio-model-management-benefits-continuous-integration-and-continuous-delivery-ci/cd 63. Professional and Hosting Services for Lenders and Lessors | Linedata, https://www.linedata.com/lenders-and-lessors/professional-and-hosting-services 64. Portfolio Management Software for Hedge Funds - Linedata, https://www.linedata.com/asset-managers/hedge-fund-portfolio-management-platform-integrated-software-data-analytics-and 65. Efficient, turn-key reference data services and solution for global asset managers - Linedata, https://www.linedata.com/asset-managers/linedata-data-management-service-turn-key-solution-reference-data-needs-global-asset 66. What is Competitive Landscape of Linedata Services Company? - Matrix BCG, https://matrixbcg.com/blogs/competitors/linedata 67. CORRECTING and REPLACING: Bank of Shanghai International (BOSCI) Chooses Linedata's Global Hedge Solution to Improve Reporting Capabilities - Business Wire, https://www.businesswire.com/news/home/20241112787359/en/CORRECTING-and-REPLACING-Bank-of-Shanghai-International-BOSCI-Chooses-Linedatas-Global-Hedge-Solution-to-Improve-Reporting-Capabilities 68. Who Owns Linedata Services Company? - Matrix BCG, https://matrixbcg.com/blogs/owners/linedata 69. declaration of extra-financial performance 2023 - Linedata, https://www.linedata.com/sites/default/files/2024-05/DPEF%202023%20-%20Linedata%20-%20vEN%20Def.pdf 70. Understanding all the applications in the FINBOURNE platform - LUSID Knowledge Base, https://support.lusid.com/docs/understanding-all-the-applications-in-the-finbourne-platform
