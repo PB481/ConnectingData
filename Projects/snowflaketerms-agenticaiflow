@@ -1,1 +1,879 @@
-test
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic ERP — Data Architecture Mapping</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+–bg: #0C0C0E;
+–surface: #141418;
+–surface-2: #1C1C22;
+–surface-3: #24242C;
+–border: #2A2A34;
+–border-light: #3A3A46;
+–text: #E8E6E3;
+–text-secondary: #9A9A9A;
+–text-muted: #6A6A72;
+
+```
+/* Medallion colours */
+--bronze: #CD7F32;
+--bronze-bg: rgba(205,127,50,0.08);
+--bronze-border: rgba(205,127,50,0.25);
+--silver: #A8A9AD;
+--silver-bg: rgba(168,169,173,0.08);
+--silver-border: rgba(168,169,173,0.25);
+--gold: #D4AF37;
+--gold-bg: rgba(212,175,55,0.08);
+--gold-border: rgba(212,175,55,0.25);
+
+/* Accent */
+--accent: #4ECDC4;
+--accent-bg: rgba(78,205,196,0.08);
+--accent-border: rgba(78,205,196,0.25);
+--red: #FF6B6B;
+--red-bg: rgba(255,107,107,0.06);
+--purple: #A78BFA;
+--purple-bg: rgba(167,139,250,0.08);
+--green: #6BCB77;
+```
+
+}
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘IBM Plex Sans’, system-ui, sans-serif;
+min-height: 100vh;
+line-height: 1.6;
+}
+
+/* ── GRAIN OVERLAY ── */
+body::before {
+content: ‘’;
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.03’/%3E%3C/svg%3E”);
+pointer-events: none; z-index: 9999;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* ── HEADER ── */
+.header {
+padding: 60px 0 48px;
+border-bottom: 1px solid var(–border);
+}
+.header-eyebrow {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+letter-spacing: 4px;
+text-transform: uppercase;
+color: var(–accent);
+margin-bottom: 12px;
+}
+.header h1 {
+font-size: 36px;
+font-weight: 700;
+letter-spacing: -1px;
+line-height: 1.2;
+margin-bottom: 8px;
+}
+.header h1 span { color: var(–gold); }
+.header-sub {
+font-size: 16px;
+color: var(–text-secondary);
+max-width: 740px;
+line-height: 1.7;
+}
+
+/* ── KEY INSIGHT BOX ── */
+.insight-box {
+margin: 40px 0;
+padding: 24px 28px;
+background: var(–surface);
+border: 1px solid var(–accent-border);
+border-left: 3px solid var(–accent);
+border-radius: 4px;
+}
+.insight-box h3 {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 12px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–accent);
+margin-bottom: 10px;
+}
+.insight-box p {
+font-size: 15px;
+color: var(–text-secondary);
+line-height: 1.7;
+}
+.insight-box strong { color: var(–text); font-weight: 600; }
+
+/* ── SECTION ── */
+.section {
+padding: 48px 0;
+border-bottom: 1px solid var(–border);
+opacity: 0;
+transform: translateY(20px);
+animation: fadeIn 0.5s ease-out forwards;
+}
+.section:nth-child(2) { animation-delay: 0.1s; }
+.section:nth-child(3) { animation-delay: 0.2s; }
+.section:nth-child(4) { animation-delay: 0.3s; }
+.section:nth-child(5) { animation-delay: 0.4s; }
+.section:nth-child(6) { animation-delay: 0.5s; }
+
+@keyframes fadeIn {
+to { opacity: 1; transform: translateY(0); }
+}
+
+.section-label {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(–text-muted);
+margin-bottom: 8px;
+}
+.section h2 {
+font-size: 26px;
+font-weight: 700;
+letter-spacing: -0.5px;
+margin-bottom: 16px;
+}
+.section-desc {
+font-size: 15px;
+color: var(–text-secondary);
+max-width: 720px;
+margin-bottom: 32px;
+line-height: 1.7;
+}
+
+/* ── MEDALLION FLOW ── */
+.medallion-flow {
+display: grid;
+grid-template-columns: 1fr auto 1fr auto 1fr;
+gap: 0;
+align-items: stretch;
+margin: 32px 0;
+}
+.medallion-layer {
+padding: 28px 24px;
+border-radius: 6px;
+position: relative;
+}
+.medallion-layer.bronze {
+background: var(–bronze-bg);
+border: 1px solid var(–bronze-border);
+}
+.medallion-layer.silver {
+background: var(–silver-bg);
+border: 1px solid var(–silver-border);
+}
+.medallion-layer.gold {
+background: var(–gold-bg);
+border: 1px solid var(–gold-border);
+}
+.layer-badge {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 10px;
+letter-spacing: 2px;
+text-transform: uppercase;
+font-weight: 700;
+margin-bottom: 6px;
+}
+.bronze .layer-badge { color: var(–bronze); }
+.silver .layer-badge { color: var(–silver); }
+.gold .layer-badge { color: var(–gold); }
+
+.layer-title {
+font-size: 18px;
+font-weight: 700;
+margin-bottom: 4px;
+}
+.layer-subtitle {
+font-size: 12px;
+color: var(–text-muted);
+font-family: ‘IBM Plex Mono’, monospace;
+margin-bottom: 14px;
+}
+.layer-agents {
+list-style: none;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.layer-agents li {
+font-size: 13px;
+color: var(–text-secondary);
+padding: 8px 10px;
+background: rgba(255,255,255,0.03);
+border-radius: 4px;
+border-left: 2px solid transparent;
+transition: all 0.2s;
+}
+.layer-agents li:hover {
+background: rgba(255,255,255,0.06);
+transform: translateX(2px);
+}
+.bronze .layer-agents li { border-left-color: var(–bronze); }
+.silver .layer-agents li { border-left-color: var(–silver); }
+.gold .layer-agents li { border-left-color: var(–gold); }
+
+.agent-tag {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 10px;
+font-weight: 600;
+padding: 2px 6px;
+border-radius: 3px;
+margin-right: 6px;
+display: inline-block;
+}
+.tag-llm {
+background: var(–purple-bg);
+color: var(–purple);
+border: 1px solid rgba(167,139,250,0.2);
+}
+.tag-det {
+background: var(–accent-bg);
+color: var(–accent);
+border: 1px solid rgba(78,205,196,0.2);
+}
+.tag-ml {
+background: rgba(107,203,119,0.08);
+color: var(–green);
+border: 1px solid rgba(107,203,119,0.2);
+}
+.tag-human {
+background: var(–red-bg);
+color: var(–red);
+border: 1px solid rgba(255,107,107,0.2);
+}
+
+.flow-arrow {
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 0 8px;
+color: var(–text-muted);
+font-size: 20px;
+}
+
+/* ── DATA VAULT MAPPING TABLE ── */
+.vault-grid {
+display: grid;
+grid-template-columns: 1fr 1fr 1fr;
+gap: 16px;
+margin: 24px 0;
+}
+.vault-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 24px;
+transition: border-color 0.2s;
+}
+.vault-card:hover { border-color: var(–border-light); }
+.vault-icon {
+font-size: 28px;
+margin-bottom: 10px;
+}
+.vault-label {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 10px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–accent);
+margin-bottom: 4px;
+}
+.vault-title {
+font-size: 17px;
+font-weight: 700;
+margin-bottom: 8px;
+}
+.vault-desc {
+font-size: 13px;
+color: var(–text-secondary);
+line-height: 1.6;
+}
+.vault-example {
+margin-top: 10px;
+padding: 8px 10px;
+background: var(–surface-2);
+border-radius: 4px;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+color: var(–text-muted);
+}
+
+/* ── COMPARISON TABLE ── */
+.comp-table {
+width: 100%;
+border-collapse: collapse;
+margin: 24px 0;
+font-size: 14px;
+}
+.comp-table th {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–text-muted);
+text-align: left;
+padding: 12px 16px;
+border-bottom: 1px solid var(–border);
+font-weight: 600;
+}
+.comp-table td {
+padding: 14px 16px;
+border-bottom: 1px solid rgba(42,42,52,0.5);
+color: var(–text-secondary);
+vertical-align: top;
+}
+.comp-table tr:hover td { background: rgba(255,255,255,0.02); }
+.comp-table td:first-child {
+color: var(–text);
+font-weight: 600;
+white-space: nowrap;
+}
+
+/* ── DATA MESH MAPPING ── */
+.mesh-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 16px;
+margin: 24px 0;
+}
+.mesh-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 22px;
+}
+.mesh-card h4 {
+font-size: 14px;
+font-weight: 700;
+margin-bottom: 6px;
+}
+.mesh-principle {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 10px;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+color: var(–purple);
+margin-bottom: 4px;
+}
+.mesh-card p {
+font-size: 13px;
+color: var(–text-secondary);
+line-height: 1.6;
+}
+
+/* ── DEFENCE LAYER STRIP ── */
+.defence-strip {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin: 24px 0 16px;
+}
+.def-chip {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+padding: 6px 12px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 4px;
+color: var(–text-secondary);
+transition: all 0.2s;
+cursor: default;
+}
+.def-chip:hover {
+border-color: var(–accent-border);
+color: var(–accent);
+}
+.def-chip .chip-num {
+color: var(–accent);
+font-weight: 700;
+margin-right: 4px;
+}
+
+/* ── ARCHITECTURE PHILOSOPHY ── */
+.philosophy-grid {
+display: grid;
+grid-template-columns: 1fr 1fr 1fr;
+gap: 16px;
+margin: 24px 0;
+}
+.phil-card {
+padding: 22px;
+border: 1px solid var(–border);
+border-radius: 6px;
+background: var(–surface);
+}
+.phil-card h4 {
+font-size: 14px;
+font-weight: 700;
+margin-bottom: 6px;
+}
+.phil-card p {
+font-size: 13px;
+color: var(–text-secondary);
+line-height: 1.6;
+}
+.phil-icon { font-size: 24px; margin-bottom: 8px; }
+
+/* ── FOOTER ── */
+.footer {
+padding: 40px 0;
+text-align: center;
+color: var(–text-muted);
+font-size: 12px;
+font-family: ‘IBM Plex Mono’, monospace;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+.medallion-flow {
+grid-template-columns: 1fr;
+gap: 12px;
+}
+.flow-arrow {
+transform: rotate(90deg);
+padding: 4px 0;
+}
+.vault-grid, .philosophy-grid { grid-template-columns: 1fr; }
+.mesh-grid { grid-template-columns: 1fr; }
+.header h1 { font-size: 26px; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ═══ HEADER ═══ -->
+
+  <header class="header">
+    <div class="header-eyebrow">Architecture Reference</div>
+    <h1>Agentic ERP Pipeline →<br><span>Medallion / Data Vault / Data Mesh</span></h1>
+    <p class="header-sub">
+      Mapping our AI-native fund administration engine to industry-standard data architecture terminology.
+      These are not competing patterns — they solve different problems at different layers, and we use them together.
+    </p>
+  </header>
+
+  <!-- ═══ KEY INSIGHT ═══ -->
+
+  <div class="insight-box">
+    <h3>The Point</h3>
+    <p>
+      <strong>Medallion</strong> is our data layering pattern (Bronze → Silver → Gold).
+      <strong>Data Vault</strong> is our modelling discipline (Hubs, Satellites, Links for auditability and history).
+      <strong>Data Mesh</strong> describes how domain ownership is distributed.
+      <strong>The Agentic Pipeline</strong> is the processing engine that moves data through these layers — with LLMs generating code, deterministic systems verifying it, and humans approving exceptions.
+      These four concepts are complementary, not competing.
+    </p>
+  </div>
+
+  <!-- ═══ SECTION 1: MEDALLION MAPPING ═══ -->
+
+  <div class="section" style="animation-delay: 0.1s;">
+    <div class="section-label">Section 01</div>
+    <h2>Medallion Layer Mapping</h2>
+    <p class="section-desc">
+      The 5-step agentic pipeline maps directly onto the Bronze → Silver → Gold medallion pattern.
+      Each layer progressively increases data quality, trust, and business readiness.
+    </p>
+
+```
+<div class="medallion-flow">
+  <!-- BRONZE -->
+  <div class="medallion-layer bronze">
+    <div class="layer-badge">Bronze Layer</div>
+    <div class="layer-title">Raw Ingestion</div>
+    <div class="layer-subtitle">Accept anything, transform nothing</div>
+    <ul class="layer-agents">
+      <li>
+        <span class="agent-tag tag-det">DET</span>
+        <strong>A1: Intake Agent</strong> — Routes inbound documents (PDFs, emails, CSVs, API feeds) by type. Classifies without transforming.
+      </li>
+      <li>
+        <span class="agent-tag tag-llm">LLM</span>
+        <strong>A2: Reader Agent</strong> — Extracts structured JSON from raw documents. Per-field confidence scores attached. Schema-on-read, not schema-on-write.
+      </li>
+    </ul>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- SILVER -->
+  <div class="medallion-layer silver">
+    <div class="layer-badge">Silver Layer</div>
+    <div class="layer-title">Validated &amp; Verified</div>
+    <div class="layer-subtitle">Generate, execute, verify, flag</div>
+    <ul class="layer-agents">
+      <li>
+        <span class="agent-tag tag-llm">LLM</span>
+        <strong>A3: Builder Agent</strong> — Generates Python calculation scripts. Checks Tool Library first. Writes code, never computes.
+      </li>
+      <li>
+        <span class="agent-tag tag-llm">LLM</span>
+        <strong>A3b: Builder (Secondary)</strong> — Independent code generation using a different model family. Dual-builder consensus.
+      </li>
+      <li>
+        <span class="agent-tag tag-det">DET</span>
+        <strong>A4: Constitution Agent</strong> — Executes code in sandbox. 4 guardrails: double-entry, LPA limits, ACID, dimensional integrity.
+      </li>
+      <li>
+        <span class="agent-tag tag-det">DET</span>
+        <strong>Z3 Formal Verification</strong> — Proves arithmetic properties hold for all inputs, not just test cases.
+      </li>
+      <li>
+        <span class="agent-tag tag-ml">ML</span>
+        <strong>A5: Anomaly Agent</strong> — Isolation Forest + EWMA + PELT. Flags statistical outliers, low confidence, material events.
+      </li>
+    </ul>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- GOLD -->
+  <div class="medallion-layer gold">
+    <div class="layer-badge">Gold Layer</div>
+    <div class="layer-title">Production-Ready</div>
+    <div class="layer-subtitle">Approved, posted, audit-trailed</div>
+    <ul class="layer-agents">
+      <li>
+        <span class="agent-tag tag-human">HUMAN</span>
+        <strong>A7: Human Gate</strong> — Expert reviews flagged items only. Approves → Tool Library. ~85%+ auto-posted.
+      </li>
+      <li>
+        <span class="agent-tag tag-llm">LLM</span>
+        <strong>A6: Auditor Agent</strong> — Generates plain-English explanation of the code for human reviewers. Cross-refs Fund Rules Ontology.
+      </li>
+      <li>
+        <span class="agent-tag tag-det">DET</span>
+        <strong>A8: Posting Agent</strong> — Atomic posting to production ledger. Full audit trail. Client portal update.
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div style="margin-top: 16px; padding: 16px 20px; background: var(--surface); border-radius: 4px; font-size: 13px; color: var(--text-secondary);">
+  <strong style="color: var(--text);">Key distinction:</strong> In a standard Medallion implementation, each layer is a passive data store.
+  In our architecture, each layer is an <em>active processing stage</em> — agents perform work, not just transformations.
+  The Medallion pattern describes <em>where</em> data lives at each stage of trust. The agents describe <em>how</em> it gets there.
+</div>
+```
+
+  </div>
+
+  <!-- ═══ SECTION 2: DATA VAULT MAPPING ═══ -->
+
+  <div class="section" style="animation-delay: 0.2s;">
+    <div class="section-label">Section 02</div>
+    <h2>Data Vault Modelling Layer</h2>
+    <p class="section-desc">
+      Underneath the Medallion layers, our entity model follows Data Vault 2.0 principles.
+      This gives us full auditability, change history, and the ability to absorb data from any source without schema conflicts.
+    </p>
+
+```
+<div class="vault-grid">
+  <div class="vault-card">
+    <div class="vault-icon">🏛️</div>
+    <div class="vault-label">Hubs</div>
+    <div class="vault-title">Business Keys</div>
+    <div class="vault-desc">
+      Core entities identified by durable business keys. LEI codes where available, synthetic canonical IDs where not.
+      Hubs never change — they are append-only records of entity existence.
+    </div>
+    <div class="vault-example">
+      HUB_FUND (fund_id, LEI)<br>
+      HUB_INVESTOR (investor_id, LEI)<br>
+      HUB_COUNTERPARTY (entity_id, canonical_id)
+    </div>
+  </div>
+
+  <div class="vault-card">
+    <div class="vault-icon">🛰️</div>
+    <div class="vault-label">Satellites</div>
+    <div class="vault-title">Change History</div>
+    <div class="vault-desc">
+      Temporal attributes attached to hubs. Every change creates a new satellite record — never overwrites.
+      This is how we answer "what did we know, and when did we know it?" for any regulatory query.
+    </div>
+    <div class="vault-example">
+      SAT_FUND_NAV (nav_date, nav_per_share, aum)<br>
+      SAT_INVESTOR_KYC (kyc_status, risk_rating, review_date)<br>
+      SAT_FUND_FEES (mgmt_rate, perf_rate, effective_from)
+    </div>
+  </div>
+
+  <div class="vault-card">
+    <div class="vault-icon">🔗</div>
+    <div class="vault-label">Links</div>
+    <div class="vault-title">Relationships</div>
+    <div class="vault-desc">
+      Many-to-many relationships between hubs. An investor can hold multiple funds; a fund can have multiple administrators; a counterparty can serve multiple roles.
+    </div>
+    <div class="vault-example">
+      LNK_FUND_INVESTOR (fund_id, investor_id)<br>
+      LNK_TRADE_COUNTERPARTY (trade_id, cp_id)<br>
+      LNK_FUND_SERVICE_PROVIDER (fund_id, provider_id)
+    </div>
+  </div>
+</div>
+
+<div style="padding: 16px 20px; background: var(--surface); border-radius: 4px; font-size: 13px; color: var(--text-secondary);">
+  <strong style="color: var(--text);">Entity Resolution connection:</strong> Our two-pass entity resolution pipeline (deterministic LEI matching → LLM fuzzy matching → HITL review) feeds directly into Hub creation.
+  When 10 messy backend systems call the same counterparty by different names, the resolution engine produces a single canonical Hub record with provenance tracking in the Satellites.
+</div>
+```
+
+  </div>
+
+  <!-- ═══ SECTION 3: DATA MESH MAPPING ═══ -->
+
+  <div class="section" style="animation-delay: 0.3s;">
+    <div class="section-label">Section 03</div>
+    <h2>Data Mesh Alignment</h2>
+    <p class="section-desc">
+      Data Mesh is not a data architecture — it's an organisational model for who owns data products.
+      Our platform naturally aligns with its four principles.
+    </p>
+
+```
+<div class="mesh-grid">
+  <div class="mesh-card">
+    <div class="mesh-principle">Principle 1</div>
+    <h4>Domain Ownership</h4>
+    <p>
+      NAV operations, Transfer Agency, Regulatory Reporting, and AML each own their data products end-to-end.
+      The Fund Rules Ontology encodes domain-specific logic per fund type (UCITS vs AIF vs QIAIF).
+    </p>
+  </div>
+  <div class="mesh-card">
+    <div class="mesh-principle">Principle 2</div>
+    <h4>Data as a Product</h4>
+    <p>
+      Each domain publishes Gold-layer outputs as consumable products: NAV packs, regulatory filings, investor statements.
+      The Tool Library is itself a data product — verified, versioned, reusable calculation templates.
+    </p>
+  </div>
+  <div class="mesh-card">
+    <div class="mesh-principle">Principle 3</div>
+    <h4>Self-Serve Platform</h4>
+    <p>
+      The Agentic Pipeline is the self-serve infrastructure. Domain teams don't build ETL — they upload documents and describe what they need. The pipeline handles ingestion, transformation, and verification.
+    </p>
+  </div>
+  <div class="mesh-card">
+    <div class="mesh-principle">Principle 4</div>
+    <h4>Federated Governance</h4>
+    <p>
+      The Constitution Agent enforces global standards (double-entry, ACID, dimensional integrity) while domain-specific rules live in the Fund Rules Ontology. Central guardrails, local logic.
+    </p>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- ═══ SECTION 4: THE HOW ═══ -->
+
+  <div class="section" style="animation-delay: 0.4s;">
+    <div class="section-label">Section 04</div>
+    <h2>The HOW — Not Just the What</h2>
+    <p class="section-desc">
+      The questions that separate real architecture from three-box diagrams — and how we answer them.
+    </p>
+
+```
+<table class="comp-table">
+  <thead>
+    <tr>
+      <th>Architecture Question</th>
+      <th>Industry Pattern</th>
+      <th>Our Implementation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Conflicting business keys?</td>
+      <td>Data Vault Hubs + business key resolution</td>
+      <td>Two-pass entity resolution: deterministic LEI matching, then LLM fuzzy matching with HITL review queue. Canonical IDs assigned at Hub level.</td>
+    </tr>
+    <tr>
+      <td>Change history?</td>
+      <td>Data Vault Satellites (temporal versioning)</td>
+      <td>Every attribute change appends a new Satellite record. Full bitemporal tracking: when it happened vs. when we recorded it. Regulatory queries answered from Satellite history.</td>
+    </tr>
+    <tr>
+      <td>Transformation consistency?</td>
+      <td>dbt-style lineage + testing</td>
+      <td>Six defence layers: Dual-Builder consensus, Tool Library regression, Z3 formal verification, Inverse Verification, 1000+ property tests, Human Gate for novelty. No equivalent in standard data pipelines.</td>
+    </tr>
+    <tr>
+      <td>Key management?</td>
+      <td>Surrogate keys + natural key mapping</td>
+      <td>LEI as the golden natural key where available. Canonical surrogate IDs from entity resolution where not. Hub records are append-only — no key conflicts possible.</td>
+    </tr>
+    <tr>
+      <td>Schema evolution?</td>
+      <td>Schema-on-read at Bronze, enforce at Silver</td>
+      <td>Reader Agent accepts any format on any day. Data Dictionary normalises at extraction time. New fields absorbed without pipeline changes. "Never ask upstream to change."</td>
+    </tr>
+    <tr>
+      <td>Quality assurance?</td>
+      <td>Great Expectations / dbt tests</td>
+      <td>Constitution Agent runs 4 guardrails per transaction. Anomaly Agent applies statistical triage (Isolation Forest, EWMA, PELT). Zero manual data quality rules to maintain — the agents learn from approvals.</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+  </div>
+
+  <!-- ═══ SECTION 5: DEFENCE LAYERS ═══ -->
+
+  <div class="section" style="animation-delay: 0.5s;">
+    <div class="section-label">Section 05</div>
+    <h2>Defence Layers — The Verification Pipeline</h2>
+    <p class="section-desc">
+      In standard data engineering, quality gates are tests that run after transformation.
+      In our architecture, verification is a permanent structural layer — not because LLMs are unreliable,
+      but because the asymmetric cost of errors in fund administration demands it.
+    </p>
+
+```
+<div class="defence-strip">
+  <div class="def-chip"><span class="chip-num">L1</span> Dual-Builder Consensus</div>
+  <div class="def-chip"><span class="chip-num">L2</span> Tool Library Regression</div>
+  <div class="def-chip"><span class="chip-num">L3</span> Z3 Formal Verification</div>
+  <div class="def-chip"><span class="chip-num">L4</span> Inverse Verification</div>
+  <div class="def-chip"><span class="chip-num">L5</span> Property Testing (1000+)</div>
+  <div class="def-chip"><span class="chip-num">L6</span> Human Gate for Novelty</div>
+</div>
+
+<div class="philosophy-grid">
+  <div class="phil-card">
+    <div class="phil-icon">🔄</div>
+    <h4>Not Transitional</h4>
+    <p>These layers are permanent architectural features — not workarounds for current LLM limitations. Even if models become perfect, the regulatory and reputational cost of a single incorrect NAV justifies formal verification.</p>
+  </div>
+  <div class="phil-card">
+    <div class="phil-icon">📊</div>
+    <h4>Neuro-Symbolic</h4>
+    <p>LLMs generate and interpret (probabilistic). Deterministic systems execute and verify. The AI never touches a number. 4 of 9 agents use no LLM at all — they are the deterministic backbone.</p>
+  </div>
+  <div class="phil-card">
+    <div class="phil-icon">🔁</div>
+    <h4>Tool Library Flywheel</h4>
+    <p>Every human-approved calculation becomes a verified, reusable template. Over time, more requests hit the library and bypass LLM generation entirely. Cost per transaction trends toward zero.</p>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- ═══ SECTION 6: TERMINOLOGY ROSETTA STONE ═══ -->
+
+  <div class="section" style="animation-delay: 0.6s; border-bottom: none;">
+    <div class="section-label">Section 06</div>
+    <h2>Terminology Rosetta Stone</h2>
+    <p class="section-desc">
+      For conversations with Snowflake, Databricks, or data engineering teams — a quick reference mapping our concepts to theirs.
+    </p>
+
+```
+<table class="comp-table">
+  <thead>
+    <tr>
+      <th>Our Term</th>
+      <th>Snowflake Equivalent</th>
+      <th>Databricks Equivalent</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bronze Layer (Reader)</td>
+      <td>RAW database / Stages</td>
+      <td>Auto Loader → Delta Bronze tables</td>
+    </tr>
+    <tr>
+      <td>Silver Layer (Constitution)</td>
+      <td>CLEANSED database / Streams + Tasks</td>
+      <td>Lakeflow Declarative Pipelines (Silver)</td>
+    </tr>
+    <tr>
+      <td>Gold Layer (Posting)</td>
+      <td>ANALYTICS database / Secure Views</td>
+      <td>Delta Gold tables / Unity Catalog</td>
+    </tr>
+    <tr>
+      <td>Fund Rules Ontology</td>
+      <td>Stored Procedures / UDFs</td>
+      <td>Unity Catalog Functions / Feature Store</td>
+    </tr>
+    <tr>
+      <td>Tool Library</td>
+      <td>No direct equivalent</td>
+      <td>MLflow Model Registry (closest analogy)</td>
+    </tr>
+    <tr>
+      <td>Constitution Agent</td>
+      <td>Data Quality checks (Snowpark)</td>
+      <td>Expectations in DLT pipelines</td>
+    </tr>
+    <tr>
+      <td>Anomaly Agent</td>
+      <td>Snowflake Cortex ML functions</td>
+      <td>MLflow models on scheduled notebooks</td>
+    </tr>
+    <tr>
+      <td>Human Gate</td>
+      <td>No direct equivalent</td>
+      <td>No direct equivalent</td>
+    </tr>
+    <tr>
+      <td>Entity Resolution</td>
+      <td>Snowpark ML (fuzzy matching)</td>
+      <td>Zingg / Splink on Spark</td>
+    </tr>
+    <tr>
+      <td>Dual-Builder Consensus</td>
+      <td>No direct equivalent</td>
+      <td>No direct equivalent</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="margin-top: 20px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--accent-border); border-radius: 4px; font-size: 13px; color: var(--text-secondary);">
+  <strong style="color: var(--accent);">Where we go beyond standard patterns:</strong>
+  The "No direct equivalent" rows are where our architecture adds capabilities that don't exist in standard data platforms.
+  Dual-Builder Consensus, Z3 Formal Verification, and the Human Gate aren't features of Snowflake or Databricks —
+  they're domain-specific defence layers required by the asymmetric cost of errors in fund administration.
+  This is the competitive moat.
+</div>
+```
+
+  </div>
+
+  <footer class="footer">
+    Agentic ERP — Architecture Reference Document<br>
+    Not every pretty diagram is architecture. Not every pipeline is verified.
+  </footer>
+
+</div>
+
+</body>
+</html>
