@@ -1,0 +1,179 @@
+# Command Center — Maintenance & Workflow Guide
+
+## How It Works
+
+The Command Center is a single HTML file. No server, no database, no build step. You save it to a folder, open it in a browser, and it works. Data is stored in two places:
+
+1. **Browser localStorage** — automatic, instant, per-machine
+1. **JSON file export** — manual, portable, shareable
+
+-----
+
+## Recommended Folder Structure
+
+```
+📁 CommandCenter/
+├── command-center.html     ← the app (this file)
+├── data.json               ← shared data snapshot (exported from the app)
+└── archive/
+    ├── data_2026-04-07.json
+    ├── data_2026-04-14.json
+    └── ...
+```
+
+Place this folder on a shared drive, OneDrive, or SharePoint. Anyone with access can open `command-center.html` in their browser via the file path or a hyperlink.
+
+-----
+
+## Daily Workflow (2 minutes)
+
+1. **Open** `command-center.html` from the shared folder
+1. **Edit** data directly in any tab — billing rows, pipeline blockers, sales deals, etc.
+1. Your changes save to **your browser automatically** (localStorage)
+1. End of day: click **Export** in the sidebar → saves `command-center-data_2026-04-10.json`
+1. Drop that file into the `CommandCenter/` folder as `data.json` (overwrite the old one)
+1. Move the old `data.json` into `archive/` with a date suffix for history
+
+That’s it. The next person who opens the HTML file picks up the latest `data.json` automatically.
+
+-----
+
+## Weekly Workflow (5 minutes)
+
+1. Open the app, update any data that’s changed during the week
+1. Go to **Weekly Update** tab → click **Generate Update**
+1. Click **Copy to Clipboard** → paste into email, Slack, or Teams
+1. Click **Export** → save the JSON to the shared folder
+1. Archive the previous week’s JSON
+
+-----
+
+## How the Data Flow Works
+
+```
+┌─────────────┐    auto-save     ┌──────────────────┐
+│  You edit    │ ──────────────→ │  localStorage     │
+│  in browser  │                 │  (your machine)   │
+└─────────────┘                  └──────────────────┘
+       │                                 │
+       │  click "Export"                 │
+       ▼                                 │
+┌─────────────────┐                      │
+│  data.json      │ ← shared folder      │
+│  (portable)     │                      │
+└─────────────────┘                      │
+       │                                 │
+       │  auto-loaded on first visit     │
+       ▼                                 │
+┌─────────────────┐                      │
+│  New browser /  │ ──── loads data.json if no localStorage exists
+│  new machine    │
+└─────────────────┘
+```
+
+**Key rule**: localStorage always takes priority. The `data.json` file is only auto-loaded when someone opens the app for the first time (empty localStorage). After that, they work from localStorage and re-export when ready to share.
+
+To force a refresh from the shared `data.json`: click **Import** in the sidebar and select the file.
+
+-----
+
+## Updating the App Itself
+
+When you want to add new seed data, change logic, or update templates:
+
+### To update seed data (e.g. add a new RFP module)
+
+1. Open `command-center.html` in any text editor (VS Code, Notepad++, even Notepad)
+1. Find the `INITIAL_RFP_MODULES` array near the top of the `<script>` block
+1. Add your new entry following the same format
+1. Save the file
+1. The new data appears for anyone who hasn’t already loaded data into their localStorage
+1. For existing users: they can click “Reset to defaults” on that tab, or import a fresh JSON
+
+### To update strategic templates
+
+1. Find `STRATEGIC_TEMPLATES` in the script block
+1. Edit the regex patterns or replacement text
+1. Add new templates by copying the structure of an existing one
+
+### To update the capability matrix (Sweet Spot)
+
+1. Find `CAPABILITY_DIMENSIONS` in the script block
+1. Add rows to any dimension, or change ratings from “Strong” to “Adequate” etc.
+1. The heatmap regenerates automatically
+
+### To add a new client to the Sweet Spot map
+
+Either:
+
+- Use the “Add Client” form in the app (persists to localStorage/export), or
+- Edit `INITIAL_CLIENT_MAP` in the source for permanent default data
+
+-----
+
+## Sharing via Hyperlink
+
+### On a network drive
+
+Save the folder to a shared path. The hyperlink is just the file path:
+
+```
+file:///S:/Shared/CommandCenter/command-center.html
+```
+
+Or on OneDrive/SharePoint, right-click → Copy link.
+
+### On SharePoint/Teams
+
+Upload the HTML file to a SharePoint document library. People can open it in their browser. Note: SharePoint may block some JavaScript — if so, download and open locally.
+
+### As an email attachment
+
+The file is ~1,700 lines, roughly 90KB. You can email it directly. The recipient saves it locally and opens in Chrome/Edge/Firefox.
+
+-----
+
+## Backup Strategy
+
+Keep it simple:
+
+- **Weekly**: Export → save to `archive/` folder with date
+- **Monthly**: Copy the entire `CommandCenter/` folder to a backup location
+- Your `data.json` files ARE your backups — they’re plain text, human-readable, and contain every field from every tab
+
+To restore from any point: click **Import** and select the archived JSON file.
+
+-----
+
+## Limitations to Know
+
+|Constraint                 |Impact                                                          |Workaround                                                          |
+|---------------------------|----------------------------------------------------------------|--------------------------------------------------------------------|
+|localStorage is per-browser|Two people editing simultaneously won’t see each other’s changes|Agree on one “editor of record” per day, or export/import frequently|
+|No real-time sync          |Not a live collaborative tool                                   |The Export/Import cycle is the sync mechanism                       |
+|Browser clears localStorage|Clearing browser data wipes local edits                         |Always export before clearing cache                                 |
+|SharePoint may block JS    |App might not run inline on SharePoint                          |Download and open locally, or host on a simple internal web server  |
+
+-----
+
+## If You Want to Go Further (Future Options)
+
+These are optional upgrades if the file-based workflow ever feels limiting:
+
+1. **Simple Python HTTP server**: Run `python -m http.server 8080` in the folder. Now it’s at `http://localhost:8080` and the auto-load from `data.json` works perfectly.
+1. **Streamlit wrapper**: Since you already build Streamlit apps, you could wrap this HTML in a Streamlit `components.html()` call with a FastAPI backend for read/write — but that’s a different tier of complexity.
+1. **GitHub Pages**: Push the folder to your `ConnectingData` repo. Enable GitHub Pages. Now it’s a URL anyone can access. Data still per-browser via localStorage, but the app itself is always up to date.
+
+-----
+
+## Quick Reference
+
+|Action                |How                                                 |
+|----------------------|----------------------------------------------------|
+|Edit data             |Just type in any field — auto-saves                 |
+|Share latest data     |Sidebar → Export → drop `data.json` in shared folder|
+|Load shared data      |Sidebar → Import → select `data.json`               |
+|Reset one section     |Bottom of each tab → “Reset to defaults”            |
+|Reset everything      |Open browser console → `resetAllData()` → reload    |
+|Update the app        |Edit the HTML file in a text editor → save          |
+|Generate weekly report|Weekly Update tab → Generate → Copy                 |
