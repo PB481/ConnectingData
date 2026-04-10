@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Manager Command Center</title>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — LIGHT THEME
+   All styling is self-contained. Zero external CSS frameworks.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@import url(‘https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap’);
+
+:root {
+/* Surface hierarchy */
+–bg-page:    #f4f5f7;
+–bg-surface: #ffffff;
+–bg-inset:   #f8f9fb;
+–bg-hover:   #f0f1f4;
+–bg-active:  #e8eaf0;
+
+/* Borders */
+–border:       #e2e4ea;
+–border-light: #ecedf1;
+–border-focus: #4a7cfa;
+
+/* Text hierarchy */
+–text-primary:   #1a1e2c;
+–text-secondary: #5c6274;
+–text-tertiary:  #8b90a0;
+–text-muted:     #b0b4c0;
+
+/* Accents */
+–blue:       #4a7cfa;
+–blue-bg:    #eef3ff;
+–blue-border:#c5d5fc;
+–green:      #22a06b;
+–green-bg:   #e6f9f0;
+–green-border:#a1e6c8;
+–red:        #de350b;
+–red-bg:     #ffedeb;
+–red-border: #f8b4b4;
+–yellow:     #d97706;
+–yellow-bg:  #fef9ec;
+–yellow-border:#fcd88e;
+–purple:     #7c5cfc;
+–purple-bg:  #f3f0ff;
+
+/* Typography */
+–font-sans: ‘IBM Plex Sans’, -apple-system, BlinkMacSystemFont, ‘Segoe UI’, sans-serif;
+–font-mono: ‘IBM Plex Mono’, ‘SF Mono’, ‘Consolas’, monospace;
+
+/* Sizing */
+–sidebar-w: 256px;
+–radius:    8px;
+–radius-sm: 5px;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+body {
+font-family: var(–font-sans);
+font-size: 13.5px;
+line-height: 1.6;
+color: var(–text-primary);
+background: var(–bg-page);
+-webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(–text-muted); }
+
+/* ── Number input spinners ────────────────────────────────────────────────── */
+input[type=“number”]::-webkit-inner-spin-button,
+input[type=“number”]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type=“number”] { -moz-appearance: textfield; }
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+.fade-in { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+LAYOUT
+══════════════════════════════════════════════════════════════════════════════ */
+
+.app-shell     { display: flex; min-height: 100vh; }
+.sidebar       { width: var(–sidebar-w); background: var(–bg-surface); border-right: 1px solid var(–border); display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s ease, opacity 0.3s ease; overflow: hidden; }
+.sidebar.collapsed { width: 0; border-right: none; }
+.main-area     { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: auto; }
+
+/* Sidebar elements */
+.sidebar-logo    { padding: 20px 20px 16px; border-bottom: 1px solid var(–border); }
+.sidebar-logo h1 { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(–blue); margin-bottom: 2px; }
+.sidebar-logo p  { font-size: 10px; color: var(–text-tertiary); letter-spacing: 0.06em; }
+.sidebar-nav     { padding: 10px 8px; flex: 1; }
+.sidebar-footer  { padding: 12px 16px; border-top: 1px solid var(–border); font-size: 10px; color: var(–text-muted); }
+
+.nav-item {
+display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: var(–radius-sm);
+cursor: pointer; font-size: 12.5px; font-weight: 500; transition: all 0.15s;
+color: var(–text-secondary); border: 1px solid transparent; margin-bottom: 2px;
+}
+.nav-item:hover { background: var(–bg-hover); color: var(–text-primary); }
+.nav-item.active { background: var(–blue-bg); color: var(–blue); font-weight: 600; border-color: var(–blue-border); }
+.nav-item i { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Top bar */
+.top-bar { display: flex; align-items: center; gap: 14px; padding: 14px 24px; border-bottom: 1px solid var(–border); background: var(–bg-surface); flex-shrink: 0; }
+.top-bar-title { font-size: 14px; font-weight: 700; color: var(–text-primary); }
+.top-bar-date  { margin-left: auto; font-size: 11px; color: var(–text-tertiary); }
+
+/* Metrics grid */
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; padding: 16px 24px; flex-shrink: 0; }
+
+/* Content area */
+.content-area { flex: 1; padding: 20px 24px; overflow: auto; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+REUSABLE COMPONENTS
+══════════════════════════════════════════════════════════════════════════════ */
+
+/* Cards */
+.card {
+background: var(–bg-surface); border: 1px solid var(–border); border-radius: var(–radius);
+padding: 20px; margin-bottom: 14px;
+}
+.card-inset { background: var(–bg-inset); border: 1px solid var(–border-light); border-radius: var(–radius-sm); padding: 12px 14px; }
+
+/* Metric cards */
+.metric-card {
+background: var(–bg-surface); border: 1px solid var(–border); border-radius: var(–radius);
+padding: 14px 16px; border-left: 3px solid var(–blue);
+}
+.metric-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(–text-tertiary); margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+.metric-value { font-size: 22px; font-weight: 700; font-family: var(–font-mono); }
+
+/* Section title */
+.section-title { font-size: 14px; font-weight: 700; color: var(–text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section-title i { width: 17px; height: 17px; }
+
+/* Inputs */
+.input, .textarea {
+background: var(–bg-surface); border: 1px solid var(–border); border-radius: var(–radius-sm);
+padding: 7px 10px; color: var(–text-primary); font-size: 12.5px; font-family: var(–font-sans);
+outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input:focus, .textarea:focus { border-color: var(–border-focus); box-shadow: 0 0 0 2px #4a7cfa18; }
+.input { width: 100%; }
+.textarea { width: 100%; min-height: 120px; resize: vertical; line-height: 1.65; }
+select.input { cursor: pointer; appearance: auto; }
+
+/* Tables */
+.tbl { width: 100%; border-collapse: separate; border-spacing: 0; }
+.tbl th { text-align: left; padding: 8px 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(–text-tertiary); border-bottom: 2px solid var(–border); }
+.tbl td { padding: 10px 12px; border-bottom: 1px solid var(–border-light); font-size: 12.5px; vertical-align: middle; }
+.tbl tbody tr:hover { background: var(–bg-hover); }
+.tbl .input { font-size: 12px; }
+
+/* Badges */
+.badge {
+display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: 700;
+letter-spacing: 0.04em; text-transform: uppercase;
+}
+.badge-red    { background: var(–red-bg);    color: var(–red);    border: 1px solid var(–red-border); }
+.badge-yellow { background: var(–yellow-bg); color: var(–yellow); border: 1px solid var(–yellow-border); }
+.badge-green  { background: var(–green-bg);  color: var(–green);  border: 1px solid var(–green-border); }
+.badge-blue   { background: var(–blue-bg);   color: var(–blue);   border: 1px solid var(–blue-border); }
+
+/* Tags / pills */
+.tag {
+display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 14px; font-size: 11px;
+font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(–border);
+color: var(–text-secondary); background: transparent;
+}
+.tag:hover { border-color: var(–text-muted); }
+.tag.active { background: var(–blue-bg); color: var(–blue); border-color: var(–blue-border); }
+
+/* Buttons */
+.btn {
+display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(–radius-sm);
+font-size: 11.5px; font-weight: 600; font-family: var(–font-sans); cursor: pointer;
+transition: all 0.15s; border: 1px solid transparent;
+}
+.btn i { width: 13px; height: 13px; }
+.btn-primary  { background: var(–blue); color: #fff; }
+.btn-primary:hover { background: #3a6ae8; }
+.btn-ghost    { background: transparent; color: var(–text-secondary); border-color: var(–border); }
+.btn-ghost:hover { background: var(–bg-hover); color: var(–text-primary); }
+.btn-danger   { background: transparent; color: var(–red); border-color: var(–red-border); }
+.btn-danger:hover { background: var(–red-bg); }
+
+/* Toggle button (sidebar) */
+.toggle-btn { background: none; border: none; cursor: pointer; padding: 4px; color: var(–text-secondary); }
+.toggle-btn:hover { color: var(–text-primary); }
+.toggle-btn i { width: 18px; height: 18px; }
+
+/* Toast */
+.toast {
+position: fixed; bottom: 24px; right: 24px; background: var(–green-bg); color: var(–green);
+padding: 10px 18px; border-radius: var(–radius); font-size: 12px; font-weight: 600;
+z-index: 9999; border: 1px solid var(–green-border); box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 6px;
+}
+.toast i { width: 14px; height: 14px; }
+
+/* Reset link */
+.reset-link { font-size: 10px; color: var(–text-muted); cursor: pointer; border: none; background: none; font-family: var(–font-sans); }
+.reset-link:hover { color: var(–red); }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+.sidebar { position: fixed; z-index: 100; height: 100vh; box-shadow: 4px 0 24px rgba(0,0,0,0.08); }
+.sidebar.collapsed { box-shadow: none; }
+.grid-2 { grid-template-columns: 1fr !important; }
+}
+
+/* Utility classes */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.flex-wrap-gap { display: flex; flex-wrap: wrap; gap: 8px; }
+.overflow-x { overflow-x: auto; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mb-3 { margin-top: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.text-right { text-align: right; }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 11px; }
+.text-mono { font-family: var(–font-mono); }
+.font-bold { font-weight: 700; }
+.font-semi { font-weight: 600; }
+.color-red { color: var(–red); }
+.color-green { color: var(–green); }
+.color-yellow { color: var(–yellow); }
+.color-blue { color: var(–blue); }
+.color-purple { color: var(–purple); }
+.color-muted { color: var(–text-tertiary); }
+
+/* Progress bar */
+.progress-track { height: 6px; background: var(–bg-active); border-radius: 3px; overflow: hidden; }
+.progress-fill  { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+.progress-fill.blue   { background: var(–blue); }
+.progress-fill.green  { background: var(–green); }
+.progress-fill.red    { background: var(–red); }
+.progress-fill.yellow { background: var(–yellow); }
+.progress-fill.purple { background: var(–purple); }
+
+/* Stage tags */
+.stage-tag { display: inline-flex; padding: 3px 11px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.stage-onboarding  { background: var(–blue-bg); color: var(–blue); }
+.stage-launch      { background: var(–green-bg); color: var(–green); }
+.stage-liquidation { background: var(–red-bg); color: var(–red); }
+/* Sales stages */
+.stage-prospect    { background: #f3f0ff; color: var(–purple); }
+.stage-proposal    { background: var(–blue-bg); color: var(–blue); }
+.stage-negotiation { background: var(–yellow-bg); color: var(–yellow); }
+.stage-won         { background: var(–green-bg); color: var(–green); }
+.stage-lost        { background: var(–bg-active); color: var(–text-tertiary); }
+
+/* Product lifecycle stages */
+.stage-research    { background: #f3f0ff; color: var(–purple); }
+.stage-build       { background: var(–blue-bg); color: var(–blue); }
+.stage-beta        { background: var(–yellow-bg); color: var(–yellow); }
+.stage-live        { background: var(–green-bg); color: var(–green); }
+.stage-retired     { background: var(–bg-active); color: var(–text-tertiary); }
+
+/* Capability Heatmap */
+.heatmap-grid {
+display: grid;
+gap: 2px;
+font-size: 10px;
+}
+.heatmap-cell {
+padding: 6px 8px;
+border-radius: 3px;
+text-align: center;
+font-weight: 600;
+font-size: 10px;
+line-height: 1.3;
+transition: all 0.15s;
+cursor: default;
+position: relative;
+}
+.heatmap-cell:hover { opacity: 0.85; transform: scale(1.03); z-index: 2; }
+.heatmap-cell.str-strong   { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.heatmap-cell.str-adequate { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+.heatmap-cell.str-emerging { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.heatmap-cell.str-weak     { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.heatmap-cell.str-na       { background: var(–bg-inset); color: var(–text-muted); border: 1px solid var(–border-light); }
+.heatmap-header { background: var(–bg-active); color: var(–text-secondary); font-weight: 700; letter-spacing: 0.05em; font-size: 9.5px; text-transform: uppercase; }
+.heatmap-row-label { background: var(–bg-surface); color: var(–text-primary); font-weight: 600; text-align: left !important; padding: 6px 10px; border: 1px solid var(–border-light); white-space: nowrap; }
+
+/* Client scatter dot */
+.client-dot {
+display: inline-flex; align-items: center; justify-content: center;
+width: 28px; height: 28px; border-radius: 50%; font-size: 9px; font-weight: 700;
+border: 2px solid; cursor: pointer; transition: all 0.2s; position: relative;
+}
+.client-dot:hover { transform: scale(1.2); z-index: 10; }
+.client-dot.sweet-spot  { background: #dcfce7; border-color: #22c55e; color: #166534; }
+.client-dot.near-edge   { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+.client-dot.off-target  { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+
+/* Legend swatch */
+.legend-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: middle; margin-right: 5px; }
+
+/* Section divider */
+.section-divider { border-top: 2px solid var(–border); margin: 24px 0 20px; }
+
+/* Dimension section in sweetspot */
+.dim-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(–text-tertiary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.dim-section-title i { width: 14px; height: 14px; }
+</style>
+
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     SEED DATA & LOGIC
+     ════════════════════════════════════════════════════════════════════════════ -->
+
+<script>
+// ─── SEED DATA ───────────────────────────────────────────────────────────────
+
+const INITIAL_BILLING = [
+  { id: 1, client: "Emerald Capital Partners I",    fee: 8.5, tasks: 47, lastReview: "2024-06-15" },
+  { id: 2, client: "Nordic Sovereign Allocation",    fee: 3.0, tasks: 12, lastReview: "2025-01-10" },
+  { id: 3, client: "Atlantic Multi-Strategy QIAIF",  fee: 6.0, tasks: 62, lastReview: "2024-02-28" },
+  { id: 4, client: "Pacific UCITS Index Tracker",    fee: 1.5, tasks: 8,  lastReview: "2025-03-01" },
+  { id: 5, client: "Celtic Property Fund III",       fee: 5.0, tasks: 55, lastReview: "2023-09-20" },
+  { id: 6, client: "Vanguard ESG Overlay",           fee: 2.5, tasks: 31, lastReview: "2024-11-05" },
+];
+
+const INITIAL_RFP_MODULES = [
+  { id: 1, category: "Tech",  question: "Describe your approach to NAV automation and straight-through processing.", answer: "Our platform leverages an AI-native, neuro-symbolic architecture where LLMs handle format interpretation and data ingestion while deterministic engines execute all numerical calculations. This dual-layer approach delivers >99.97% NAV accuracy with full audit trails, reducing manual intervention by approximately 70% across our client base." },
+  { id: 2, category: "ESG",   question: "How do you support SFDR reporting requirements?", answer: "We provide end-to-end SFDR compliance across Article 6, 8, and 9 classifications. Our platform ingests principal adverse impact (PAI) data from multiple providers, applies entity-level resolution to ensure accuracy, and generates pre-contractual disclosures, periodic reports, and website disclosures in regulatory-ready formats aligned with the latest RTS requirements." },
+  { id: 3, category: "Ops",   question: "What is your approach to operational risk management?", answer: "Our operational risk framework combines real-time statistical process control (EWMA/SPC) with machine learning anomaly detection (Isolation Forest) and automated changepoint analysis (PELT). This multi-layered approach identifies emerging risk patterns before they crystallise into incidents, supported by a human-in-the-loop escalation gate for all material findings." },
+  { id: 4, category: "Legal", question: "How do you handle cross-border regulatory reporting?", answer: "We maintain dedicated regulatory reporting capabilities across CBI, FCA, SEC, and BaFin jurisdictions. Our config-driven reporting engine adapts output formats to each regulator's specifications without custom development, ensuring timely and accurate filings. All reports undergo automated validation checks before submission." },
+  { id: 5, category: "Tech",  question: "What is your data architecture and security posture?", answer: "We employ a Medallion/Data Vault hybrid architecture ensuring full data lineage from source to report. All data is encrypted at rest (AES-256) and in transit (TLS 1.3). Our entity resolution pipeline unifies data across 10+ upstream sources using a two-pass approach: deterministic LEI/exact-name matching followed by LLM-assisted fuzzy resolution with human review." },
+  { id: 6, category: "ESG",   question: "How do you integrate ESG considerations into fund administration?", answer: "ESG and social responsibility are embedded as foundation-layer design constraints in our platform architecture, not bolted-on features. We support taxonomy-aligned activity reporting, do-no-significant-harm assessments, and good governance screening integrated directly into our NAV and reporting workflows." },
+  { id: 7, category: "Ops",   question: "Describe your business continuity and disaster recovery capabilities.", answer: "Our infrastructure operates across geographically separated AWS availability zones with automated failover. RPO is sub-15 minutes and RTO is under 2 hours for all critical NAV production systems. We conduct quarterly DR tests with full client notification and publish results in our operational transparency dashboard." },
+  { id: 8, category: "Tech",  question: "How does your platform handle complex/illiquid asset pricing?", answer: "For Level 2 and Level 3 assets, our pricing engine applies a configurable hierarchy: primary vendor feed, secondary vendor, model-based valuation, then manual override with dual-approval. All pricing decisions carry full audit trails including source, timestamp, and approval chain. Stale price detection uses EWMA-based drift monitoring." },
+];
+
+const INITIAL_PIPELINE = [
+  { id: 1, project: "Nordic Sovereign — AIFMD II Migration",     stage: "Launch",       stakeholder: "Legal",  blocker: "Red" },
+  { id: 2, project: "Celtic Property III — Liquidation",          stage: "Liquidation",  stakeholder: "Ops",    blocker: "Yellow" },
+  { id: 3, project: "Pacific UCITS — Share Class Restructure",    stage: "Onboarding",   stakeholder: "Client", blocker: "Green" },
+  { id: 4, project: "Atlantic Multi-Strat — New Sub-Fund",        stage: "Onboarding",   stakeholder: "Legal",  blocker: "Red" },
+  { id: 5, project: "Vanguard ESG — SFDR Reclassification",       stage: "Launch",       stakeholder: "Ops",    blocker: "Red" },
+  { id: 6, project: "Emerald Capital — Side Pocket Unwind",       stage: "Liquidation",  stakeholder: "Tech",   blocker: "Yellow" },
+  { id: 7, project: "New Mandate — Gulf SWF Allocation",          stage: "Onboarding",   stakeholder: "Legal",  blocker: "Yellow" },
+  { id: 8, project: "Pacific UCITS — Swing Pricing Review",       stage: "Launch",       stakeholder: "Ops",    blocker: "Green" },
+];
+
+const INITIAL_SALES = [
+  { id: 1, prospect: "Gulf SWF — Sovereign Allocation Mandate", contact: "Khalid Al-Mansouri", aum: 850, stage: "Negotiation", probability: 70, nextAction: "Fee proposal due", nextDate: "2026-04-18", notes: "Decision committee meets end of April. Strong relationship via London office." },
+  { id: 2, prospect: "Nordea Pension — UCITS Mandate Transfer",  contact: "Ingrid Lindqvist",   aum: 420, stage: "Proposal",    probability: 50, nextAction: "Technical due diligence call", nextDate: "2026-04-22", notes: "Moving from incumbent due to NAV errors. Price-sensitive." },
+  { id: 3, prospect: "Blackthorn Capital — QIAIF Launch",        contact: "Siobhán Murphy",     aum: 180, stage: "Prospect",    probability: 25, nextAction: "Initial scoping meeting", nextDate: "2026-04-30", notes: "New fund launch. Complex multi-asset with Level 3." },
+  { id: 4, prospect: "Rhine Asset Management — AIF Migration",   contact: "Thomas Weber",        aum: 310, stage: "Prospect",    probability: 20, nextAction: "RFP response", nextDate: "2026-05-06", notes: "AIFMD II compliance driver. Current admin underperforming." },
+  { id: 5, prospect: "Pacific Re — Insurance-Linked Securities", contact: "James Tan",           aum: 560, stage: "Won",         probability: 100, nextAction: "Onboarding kick-off", nextDate: "2026-04-14", notes: "Signed. 6bps on AUM. 3-year contract." },
+];
+
+const INITIAL_PRODUCTS = [
+  { id: 1, name: "Digital Transfer Agent Module",     type: "Platform",  stage: "Research",    owner: "Tech",     target: "2026-Q3", priority: "High",   blockers: "Regulatory clarity on tokenised share classes pending CBI guidance", progress: 15 },
+  { id: 2, name: "AIFMD II Reporting Engine",         type: "Regulatory", stage: "Build",      owner: "Product",  target: "2026-Q2", priority: "High",   blockers: "Final RTS templates not yet published", progress: 55 },
+  { id: 3, name: "Real-Time NAV Dashboard (Client)",  type: "Platform",  stage: "Beta",       owner: "Tech",     target: "2026-Q2", priority: "Medium", blockers: "Pending SSO integration with 2 clients", progress: 80 },
+  { id: 4, name: "ESG Data Ingestion — PAI v2",       type: "Data",      stage: "Build",      owner: "Product",  target: "2026-Q2", priority: "Medium", blockers: "Vendor API rate limits on Bloomberg PAI feed", progress: 40 },
+  { id: 5, name: "Automated Swing Pricing Engine",    type: "Platform",  stage: "Research",    owner: "Quant",    target: "2026-Q4", priority: "Low",    blockers: "Requires validated market-impact model", progress: 10 },
+  { id: 6, name: "Client Self-Service Portal v2",     type: "Platform",  stage: "Live",       owner: "Product",  target: "2026-Q1", priority: "Medium", blockers: "", progress: 100 },
+  { id: 7, name: "Web3 / RWA Tokenisation PoC",       type: "Innovation", stage: "Research",   owner: "Tech",     target: "2026-Q4", priority: "Low",    blockers: "Custody integration not finalised; waiting on partnership agreement", progress: 8 },
+  { id: 8, name: "Effort-Based Pricing Calculator",   type: "Internal",  stage: "Beta",       owner: "Commercial", target: "2026-Q2", priority: "High", blockers: "Needs validation against 3 more live client mandates", progress: 70 },
+];
+
+// ─── SWEET SPOT: CAPABILITY MATRIX ───────────────────────────────────────────
+// Strength levels: "Strong", "Adequate", "Emerging", "Weak", "N/A"
+
+const CAPABILITY_DIMENSIONS = {
+  // Dimension 1: Fund Types × Service Level
+  fundTypes: {
+    label: "Fund Type Capabilities",
+    columns: ["Admin & NAV", "TA & Investor Services", "Regulatory Reporting", "Risk & Compliance", "Pricing & Valuation"],
+    rows: [
+      { name: "Mutual Fund Admin (UCITS — Ireland)", ratings: ["Strong","Strong","Strong","Strong","Strong"] },
+      { name: "UCITS — Equity & Bonds", ratings: ["Strong","Strong","Strong","Strong","Strong"] },
+      { name: "UCITS — With Derivatives", ratings: ["Strong","Strong","Strong","Strong","Strong"] },
+      { name: "UCITS — Complex Derivatives (OTC/Exotics)", ratings: ["Adequate","Adequate","Strong","Strong","Adequate"] },
+      { name: "AIF / QIAIF (Irish Regulated)", ratings: ["Strong","Strong","Strong","Strong","Strong"] },
+      { name: "AIF — Private Equity / Real Assets", ratings: ["Adequate","Adequate","Adequate","Adequate","Weak"] },
+      { name: "Money Market Funds", ratings: ["Strong","Strong","Strong","Strong","Strong"] },
+      { name: "ETFs", ratings: ["Adequate","Emerging","Adequate","Adequate","Strong"] },
+      { name: "Tax Transparent Funds (CCFs / ICAVs)", ratings: ["Strong","Strong","Strong","Strong","Adequate"] },
+      { name: "LDI / Liability Driven Funds", ratings: ["Adequate","Adequate","Adequate","Strong","Adequate"] },
+      { name: "Unregulated Funds / SPVs", ratings: ["Emerging","Emerging","Weak","Adequate","Weak"] },
+      { name: "Hedge Funds (Liquid)", ratings: ["Adequate","Adequate","Adequate","Strong","Adequate"] },
+      { name: "Hedge Funds (Illiquid / Side Pockets)", ratings: ["Weak","Weak","Adequate","Adequate","Weak"] },
+    ]
+  },
+  // Dimension 2: Investment Strategy
+  strategies: {
+    label: "Investment Strategy Coverage",
+    columns: ["Operational Readiness", "Pricing Complexity", "Regulatory Depth", "Scalability"],
+    rows: [
+      { name: "Long Only — Equity", ratings: ["Strong","Strong","Strong","Strong"] },
+      { name: "Long Only — Fixed Income", ratings: ["Strong","Strong","Strong","Strong"] },
+      { name: "Long Only — Multi-Asset", ratings: ["Strong","Adequate","Strong","Strong"] },
+      { name: "Quantitative / Systematic", ratings: ["Adequate","Adequate","Adequate","Adequate"] },
+      { name: "Event Driven / Macro", ratings: ["Adequate","Adequate","Adequate","Adequate"] },
+      { name: "Long/Short Equity", ratings: ["Adequate","Adequate","Strong","Adequate"] },
+      { name: "Credit / Distressed", ratings: ["Emerging","Weak","Adequate","Emerging"] },
+      { name: "Real Estate / Infrastructure", ratings: ["Emerging","Weak","Adequate","Weak"] },
+      { name: "Private Debt", ratings: ["Emerging","Weak","Adequate","Weak"] },
+      { name: "Digital Assets / Tokenised", ratings: ["Weak","Weak","Emerging","Weak"] },
+    ]
+  },
+  // Dimension 3: Client Type
+  clientTypes: {
+    label: "Client Segment Fit",
+    columns: ["Service Alignment", "Pricing Model Fit", "Regulatory Knowledge", "Relationship Depth"],
+    rows: [
+      { name: "Asset Managers — Traditional", ratings: ["Strong","Strong","Strong","Strong"] },
+      { name: "Asset Managers — Boutique / Startup", ratings: ["Strong","Strong","Strong","Adequate"] },
+      { name: "Asset Managers — Large Global", ratings: ["Adequate","Adequate","Strong","Emerging"] },
+      { name: "Asset Owners — Pension Funds", ratings: ["Strong","Adequate","Strong","Adequate"] },
+      { name: "Asset Owners — Sovereign Wealth", ratings: ["Adequate","Adequate","Adequate","Emerging"] },
+      { name: "Asset Owners — Insurance", ratings: ["Adequate","Adequate","Strong","Emerging"] },
+      { name: "Institutional Investors", ratings: ["Strong","Strong","Strong","Adequate"] },
+      { name: "Retail / Wholesale Distribution", ratings: ["Adequate","Strong","Strong","Adequate"] },
+    ]
+  },
+  // Dimension 4: Geographic
+  geography: {
+    label: "Geographic Coverage",
+    columns: ["Regulatory Expertise", "Local Presence", "Language / Timezone", "Client Base Depth"],
+    rows: [
+      { name: "Ireland", ratings: ["Strong","Strong","Strong","Strong"] },
+      { name: "United Kingdom", ratings: ["Strong","Adequate","Strong","Strong"] },
+      { name: "Luxembourg", ratings: ["Adequate","Emerging","Adequate","Emerging"] },
+      { name: "Germany / DACH", ratings: ["Adequate","Emerging","Emerging","Emerging"] },
+      { name: "Nordics", ratings: ["Adequate","Weak","Adequate","Adequate"] },
+      { name: "Middle East / Gulf", ratings: ["Emerging","Weak","Adequate","Emerging"] },
+      { name: "Americas", ratings: ["Weak","Weak","Emerging","Weak"] },
+      { name: "Asia Pacific", ratings: ["Weak","Weak","Weak","Weak"] },
+    ]
+  },
+};
+
+// ─── SWEET SPOT: CLIENT POSITIONING ──────────────────────────────────────────
+// zone: "sweet-spot" (core strength), "near-edge" (serviceable, stretch), "off-target" (weak fit)
+
+const INITIAL_CLIENT_MAP = [
+  { id: 1,  client: "Emerald Capital Partners I",     fundType: "AIF / QIAIF",          strategy: "Multi-Asset",         clientType: "Asset Managers — Boutique", geo: "Ireland",  zone: "sweet-spot" },
+  { id: 2,  client: "Nordic Sovereign Allocation",     fundType: "UCITS — Equity & Bonds", strategy: "Long Only — Equity",  clientType: "Asset Owners — Sovereign Wealth", geo: "Nordics", zone: "near-edge" },
+  { id: 3,  client: "Atlantic Multi-Strategy QIAIF",   fundType: "AIF / QIAIF",          strategy: "Event Driven / Macro", clientType: "Asset Managers — Boutique", geo: "Ireland",  zone: "sweet-spot" },
+  { id: 4,  client: "Pacific UCITS Index Tracker",     fundType: "UCITS — Equity & Bonds", strategy: "Long Only — Equity",  clientType: "Asset Managers — Traditional", geo: "Ireland", zone: "sweet-spot" },
+  { id: 5,  client: "Celtic Property Fund III",        fundType: "AIF — Private Equity",  strategy: "Real Estate",         clientType: "Institutional Investors",    geo: "Ireland",  zone: "near-edge" },
+  { id: 6,  client: "Vanguard ESG Overlay",            fundType: "UCITS — With Derivatives", strategy: "Long Only — Multi-Asset", clientType: "Asset Managers — Large Global", geo: "United Kingdom", zone: "near-edge" },
+  { id: 7,  client: "Gulf SWF Allocation (Pipeline)",  fundType: "AIF / QIAIF",          strategy: "Long Only — Multi-Asset", clientType: "Asset Owners — Sovereign Wealth", geo: "Middle East / Gulf", zone: "off-target" },
+  { id: 8,  client: "Nordea Pension (Pipeline)",       fundType: "UCITS — Equity & Bonds", strategy: "Long Only — Fixed Income", clientType: "Asset Owners — Pension Funds", geo: "Nordics", zone: "sweet-spot" },
+  { id: 9,  client: "Pacific Re (Won)",                fundType: "Unregulated Funds / SPVs", strategy: "Credit / Distressed", clientType: "Asset Owners — Insurance", geo: "Asia Pacific", zone: "off-target" },
+  { id: 10, client: "Blackthorn Capital (Pipeline)",   fundType: "AIF / QIAIF",          strategy: "Multi-Asset",         clientType: "Asset Managers — Boutique", geo: "Ireland",  zone: "sweet-spot" },
+];
+
+// ─── STRATEGIC TEMPLATES ─────────────────────────────────────────────────────
+
+const STRATEGIC_TEMPLATES = {
+  "Strategic / Innovative": {
+    prefix: "STRATEGIC UPDATE — Innovation & Operational Excellence",
+    transforms: [
+      [/error|mistake|forgot|missed|wrong/gi, "identified optimisation opportunity"],
+      [/delay|late|slow|behind/gi, "adjusted timeline to ensure quality delivery"],
+      [/problem|issue|bug/gi, "enhancement opportunity"],
+      [/broke|broken|failed|crash/gi, "triggered automated resilience protocol"],
+      [/client complaint|unhappy client|client angry/gi, "received direct client engagement signal requiring priority response"],
+      [/manual process|manual work|by hand/gi, "process currently targeted for next-phase automation"],
+      [/don't know|not sure|confused/gi, "conducting structured discovery analysis"],
+      [/short.?staffed|understaffed|no resource/gi, "optimising resource allocation through intelligent workload distribution"],
+      [/old system|legacy|outdated/gi, "platform modernisation candidate identified"],
+      [/check the cash|cash rec|cash break/gi, "implementing enhanced data-validation protocols to mitigate reconciliation risk"],
+    ],
+    suffix: "These initiatives reinforce our commitment to continuous operational innovation and position us ahead of industry benchmarks.",
+  },
+  "Risk Mitigation": {
+    prefix: "RISK & CONTROL UPDATE — Proactive Assurance",
+    transforms: [
+      [/error|mistake|forgot|missed|wrong/gi, "control gap identified and remediation in progress"],
+      [/delay|late|slow|behind/gi, "delivery timeline recalibrated with enhanced checkpoint cadence"],
+      [/problem|issue|bug/gi, "risk event captured in incident register with root-cause analysis underway"],
+      [/broke|broken|failed|crash/gi, "system event triggered failover protocols; post-incident review scheduled"],
+      [/client complaint|unhappy client|client angry/gi, "client escalation received; executive sponsor engaged for resolution"],
+      [/manual process|manual work|by hand/gi, "manual control point — automation assessment in backlog to reduce key-person dependency"],
+      [/don't know|not sure|confused/gi, "knowledge gap flagged; targeted training and documentation sprint planned"],
+      [/short.?staffed|understaffed|no resource/gi, "resource constraint identified; contingency plan activated with cross-training initiative"],
+      [/old system|legacy|outdated/gi, "legacy platform risk — migration pathway under active evaluation"],
+      [/check the cash|cash rec|cash break/gi, "reconciliation control enhancement deployed to strengthen cash oversight framework"],
+    ],
+    suffix: "All items are tracked in the operational risk register with assigned owners and target remediation dates.",
+  },
+  "Commercial Growth": {
+    prefix: "COMMERCIAL UPDATE — Revenue Protection & Growth",
+    transforms: [
+      [/error|mistake|forgot|missed|wrong/gi, "service quality enhancement to protect client retention"],
+      [/delay|late|slow|behind/gi, "delivery cadence adjustment to align with commercial SLA commitments"],
+      [/problem|issue|bug/gi, "client experience improvement initiative launched"],
+      [/broke|broken|failed|crash/gi, "service continuity event — client impact contained; trust-building response deployed"],
+      [/client complaint|unhappy client|client angry/gi, "high-value relationship intervention — senior engagement to reaffirm partnership value"],
+      [/manual process|manual work|by hand/gi, "efficiency opportunity identified — automation would unlock margin improvement of est. 15-20%"],
+      [/don't know|not sure|confused/gi, "market intelligence gap — competitive analysis initiated"],
+      [/short.?staffed|understaffed|no resource/gi, "capacity investment case being prepared to support pipeline growth"],
+      [/old system|legacy|outdated/gi, "platform upgrade positioned as client-facing differentiator for upcoming RFP season"],
+      [/check the cash|cash rec|cash break/gi, "operational rigour enhancement to support premium pricing positioning in fee reviews"],
+    ],
+    suffix: "These actions directly support our revenue protection targets and strengthen our competitive positioning for upcoming mandates.",
+  },
+};
+
+// ─── CONSTANTS & HELPERS ─────────────────────────────────────────────────────
+
+const TASK_THRESHOLD = 5.5;
+const MONTHS_OVERDUE  = 18;
+
+function monthsSince(dateStr) {
+  if (!dateStr) return 0;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+}
+function formatDateIE()  { return new Date().toLocaleDateString('en-IE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); }
+function shortDateIE()   { return new Date().toLocaleDateString('en-IE'); }
+function todayISO()      { return new Date().toISOString().slice(0, 10); }
+
+// localStorage helpers
+function loadData(key, fallback) {
+  try { const s = localStorage.getItem('cc_' + key); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(fallback)); }
+  catch { return JSON.parse(JSON.stringify(fallback)); }
+}
+function saveData(key, data) {
+  try { localStorage.setItem('cc_' + key, JSON.stringify(data)); } catch {}
+}
+</script>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     APPLICATION SHELL
+     ════════════════════════════════════════════════════════════════════════════ -->
+
+<div x-data="commandCenter()" class="app-shell">
+
+  <!-- ─── SIDEBAR ───────────────────────────────────────────────────────────── -->
+
+  <aside class="sidebar" :class="sidebarOpen ? '' : 'collapsed'">
+    <div class="sidebar-logo">
+      <h1>Command Center</h1>
+      <p>Product Management Intelligence</p>
+    </div>
+    <nav class="sidebar-nav">
+      <template x-for="item in navItems" :key="item.key">
+        <div class="nav-item" :class="activeTab === item.key ? 'active' : ''" @click="activeTab = item.key">
+          <i :data-lucide="item.icon"></i>
+          <span x-text="item.label"></span>
+        </div>
+      </template>
+    </nav>
+    <div class="sidebar-footer">v2.0 · <span x-text="shortDateIE()"></span></div>
+  </aside>
+
+  <!-- ─── MAIN ──────────────────────────────────────────────────────────────── -->
+
+  <main class="main-area">
+
+```
+<!-- Top Bar -->
+<header class="top-bar">
+  <button class="toggle-btn" @click="sidebarOpen = !sidebarOpen">
+    <i :data-lucide="sidebarOpen ? 'panel-left-close' : 'panel-left-open'"></i>
+  </button>
+  <span class="top-bar-title" x-text="currentLabel"></span>
+  <span class="top-bar-date" x-text="formatDateIE()"></span>
+</header>
+
+<!-- Key Metrics -->
+<div class="metrics-grid">
+  <template x-for="(m, i) in metrics" :key="i">
+    <div class="metric-card" :style="'border-left-color:' + m.accent">
+      <div class="metric-label">
+        <i :data-lucide="m.icon" :style="'color:' + m.accent" style="width:13px;height:13px;"></i>
+        <span x-text="m.label"></span>
+      </div>
+      <div class="metric-value" :style="'color:' + m.accent" x-text="m.value"></div>
+    </div>
+  </template>
+</div>
+
+<!-- Content -->
+<div class="content-area">
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       BILLING
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div x-show="activeTab === 'billing'" x-data="billingSection()" class="fade-in">
+    <div class="section-title"><i data-lucide="dollar-sign"></i> Fee vs. Effort Analyzer</div>
+
+    <div class="grid-4 mb-4">
+      <div class="metric-card" style="border-left-color: var(--blue)">
+        <div class="metric-label">Clients Tracked</div>
+        <div class="metric-value color-blue" x-text="rows.length"></div>
+      </div>
+      <div class="metric-card" style="border-left-color: var(--red)">
+        <div class="metric-label">Revenue Leakage</div>
+        <div class="metric-value color-red" x-text="leakingRows.length"></div>
+      </div>
+      <div class="metric-card" style="border-left-color: var(--yellow)">
+        <div class="metric-label">Est. Leakage (€k)</div>
+        <div class="metric-value color-yellow" x-text="'€' + totalLeakageK + 'k'"></div>
+      </div>
+      <div class="metric-card" style="border-left-color: var(--purple)">
+        <div class="metric-label">Repricing Overdue</div>
+        <div class="metric-value color-purple" x-text="overdueRows.length"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="overflow-x">
+        <table class="tbl">
+          <thead><tr>
+            <th>Client</th><th>Fee (bps)</th><th>Manual Tasks</th><th>Task/bps Ratio</th><th>Last Review</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+            <template x-for="r in rows" :key="r.id">
+              <tr :style="isLeaking(r) ? 'background:' + 'var(--red-bg)' : ''">
+                <td><input class="input" :value="r.client" @input="r.client=$event.target.value; persist()" :style="isLeaking(r)?'border-color:var(--red-border)':''"></td>
+                <td><input class="input" type="number" step="0.5" style="width:75px" :value="r.fee" @input="r.fee=parseFloat($event.target.value)||0; persist()"></td>
+                <td><input class="input" type="number" style="width:75px" :value="r.tasks" @input="r.tasks=parseInt($event.target.value)||0; persist()"></td>
+                <td class="text-mono font-bold" :style="'color:' + (isLeaking(r)?'var(--red)':'var(--green)')">
+                  <span x-text="ratio(r).toFixed(1)"></span><span x-show="isLeaking(r)"> ▲</span>
+                </td>
+                <td><input class="input" type="date" style="width:140px" :value="r.lastReview" @input="r.lastReview=$event.target.value; persist()"></td>
+                <td>
+                  <span x-show="isLeaking(r)" class="badge badge-red">Leaking</span>
+                  <span x-show="isOverdue(r)" class="badge badge-yellow" :style="isLeaking(r)?'margin-left:4px':''">Reprice</span>
+                  <span x-show="!isLeaking(r) && !isOverdue(r)" class="badge badge-green">OK</span>
+                </td>
+              </tr>
+            </template>
+            <tr style="background: var(--bg-inset)">
+              <td><input class="input" placeholder="New client..." x-model="newRow.client"></td>
+              <td><input class="input" type="number" placeholder="bps" step="0.5" style="width:75px" x-model="newRow.fee"></td>
+              <td><input class="input" type="number" placeholder="#" style="width:75px" x-model="newRow.tasks"></td>
+              <td></td>
+              <td><input class="input" type="date" style="width:140px" x-model="newRow.lastReview"></td>
+              <td><button class="btn btn-primary" @click="addRow()">+ Add</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div x-show="overdueRows.length > 0" class="card">
+      <div class="section-title" style="font-size:12px; margin-bottom:10px"><i data-lucide="clock" style="width:14px;height:14px"></i> Repricing Countdown — Overdue (&gt;18 months)</div>
+      <template x-for="r in overdueRows" :key="r.id">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-light)">
+          <span class="font-semi" x-text="r.client"></span>
+          <span class="color-yellow text-xs" x-text="monthsSince(r.lastReview) + ' months since last review'"></span>
+        </div>
+      </template>
+    </div>
+    <div class="text-right"><button class="reset-link" @click="if(confirm('Reset billing data to defaults?')){rows=JSON.parse(JSON.stringify(INITIAL_BILLING));persist();}">Reset to defaults</button></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       RFP VAULT
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div x-show="activeTab === 'rfp'" x-data="rfpVault()" class="fade-in">
+    <div class="section-title"><i data-lucide="layers"></i> RFP Knowledge Vault</div>
+
+    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px">
+      <div style="position:relative; flex:1 1 220px">
+        <i data-lucide="search" style="position:absolute;left:10px;top:9px;width:14px;height:14px;color:var(--text-tertiary)"></i>
+        <input class="input" style="padding-left:30px" placeholder="Search questions or answers..." x-model="search">
+      </div>
+      <div class="flex-wrap-gap">
+        <template x-for="c in categories" :key="c">
+          <span class="tag" :class="filter===c?'active':''" @click="filter=c" x-text="c"></span>
+        </template>
+      </div>
+    </div>
+    <div class="text-xs color-muted mb-4"><span x-text="filteredModules.length"></span> module<span x-show="filteredModules.length!==1">s</span> found</div>
+
+    <template x-for="m in filteredModules" :key="m.id">
+      <div class="card" :style="'border-left:3px solid ' + catColor(m.category)">
+        <div style="display:flex; justify-content:space-between; align-items:start; gap:12px; margin-bottom:6px">
+          <div>
+            <span class="tag active" x-text="m.category"></span>
+            <div class="font-semi" style="margin-top:8px; font-size:13px" x-text="m.question"></div>
+          </div>
+          <button class="btn btn-ghost" @click="copyText(m.answer)"><i data-lucide="copy"></i> Copy</button>
+        </div>
+        <div class="card-inset text-sm" style="margin-top:8px; line-height:1.7; color:var(--text-secondary)" x-text="m.answer"></div>
+      </div>
+    </template>
+
+    <div class="card" style="border-style:dashed">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:10px">Add Knowledge Module</div>
+      <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; margin-bottom:10px">
+        <select class="input" x-model="newModule.category"><option>Tech</option><option>ESG</option><option>Ops</option><option>Legal</option></select>
+        <input class="input" placeholder="Question..." x-model="newModule.question">
+      </div>
+      <textarea class="textarea" style="min-height:80px; margin-bottom:10px" placeholder="Golden Answer..." x-model="newModule.answer"></textarea>
+      <button class="btn btn-primary" @click="addModule()">+ Add Module</button>
+    </div>
+    <div class="text-right"><button class="reset-link" @click="if(confirm('Reset RFP vault to defaults?')){modules=JSON.parse(JSON.stringify(INITIAL_RFP_MODULES));persistRfp();}">Reset to defaults</button></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       CLIENT CHANGE PIPELINE
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div x-show="activeTab === 'pipeline'" x-data="pipelineSection()" class="fade-in">
+    <div class="section-title"><i data-lucide="git-branch"></i> Client Change Pipeline</div>
+
+    <div class="card mb-4" style="border-left:3px solid var(--red)">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--red); margin-bottom:12px">BOTTLENECK EXECUTIVE SUMMARY</div>
+      <div class="grid-4" style="margin-bottom:14px">
+        <template x-for="[k,v] in Object.entries(blockerCounts)" :key="k">
+          <div class="card-inset">
+            <div style="font-size:10px; color:var(--text-tertiary); font-weight:600; letter-spacing:0.1em; text-transform:uppercase" x-text="k"></div>
+            <div style="font-size:20px; font-weight:700" :style="'color:' + (v>1?'var(--red)':v>0?'var(--yellow)':'var(--green)')" x-text="v"></div>
+            <div style="font-size:10px; color:var(--text-muted)">blocked projects</div>
+          </div>
+        </template>
+      </div>
+      <div class="text-sm" style="color:var(--text-secondary); line-height:1.8">
+        <span class="font-bold" x-text="redCount"></span> critical blockers across <span class="font-bold" x-text="rows.length"></span> active projects.
+        <span x-show="blockerCounts.Legal>1" class="color-red" x-text="'Legal is the primary bottleneck with ' + blockerCounts.Legal + ' blocked workstreams — recommend escalation to Head of Legal. '"></span>
+        <span x-show="blockerCounts.Ops>1" class="color-yellow" x-text="'Ops capacity constraint affecting ' + blockerCounts.Ops + ' projects — consider resource reallocation.'"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="overflow-x"><table class="tbl"><thead><tr><th>Project</th><th>Stage</th><th>Stakeholder</th><th>Blocker</th></tr></thead><tbody>
+        <template x-for="r in rows" :key="r.id"><tr>
+          <td class="font-semi" x-text="r.project"></td>
+          <td><span class="stage-tag" :class="'stage-' + r.stage.toLowerCase()" x-text="r.stage"></span></td>
+          <td x-text="r.stakeholder"></td>
+          <td><span class="badge" :class="'badge-' + r.blocker.toLowerCase()" style="cursor:pointer" @click="cycleBlocker(r)" title="Click to cycle" x-text="r.blocker"></span></td>
+        </tr></template>
+      </tbody></table></div>
+    </div>
+
+    <div class="card" style="display:flex; flex-wrap:wrap; gap:16px">
+      <template x-for="[stage,count] in Object.entries(stageCounts)" :key="stage">
+        <div style="flex:1; min-width:100px">
+          <div style="font-size:10px; color:var(--text-tertiary); font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px" x-text="stage"></div>
+          <div class="progress-track"><div class="progress-fill" :class="stage==='Onboarding'?'blue':stage==='Launch'?'green':'red'" :style="'width:' + (count/rows.length*100) + '%'"></div></div>
+          <div class="text-xs color-muted" style="margin-top:4px" x-text="count + ' / ' + rows.length"></div>
+        </div>
+      </template>
+    </div>
+    <div class="text-right"><button class="reset-link" @click="if(confirm('Reset pipeline to defaults?')){rows=JSON.parse(JSON.stringify(INITIAL_PIPELINE));persistPipeline();}">Reset to defaults</button></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SALES PIPELINE (NEW)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div x-show="activeTab === 'sales'" x-data="salesSection()" class="fade-in">
+    <div class="section-title"><i data-lucide="trending-up"></i> Sales Pipeline</div>
+
+    <!-- Sales summary strip -->
+    <div class="grid-4 mb-4">
+      <div class="metric-card" style="border-left-color:var(--purple)">
+        <div class="metric-label">Total Pipeline</div>
+        <div class="metric-value color-purple" x-text="'€' + totalPipelineM + 'm'"></div>
+      </div>
+      <div class="metric-card" style="border-left-color:var(--blue)">
+        <div class="metric-label">Weighted Value</div>
+        <div class="metric-value color-blue" x-text="'€' + weightedValueM + 'm'"></div>
+      </div>
+      <div class="metric-card" style="border-left-color:var(--green)">
+        <div class="metric-label">Won</div>
+        <div class="metric-value color-green" x-text="wonCount"></div>
+      </div>
+      <div class="metric-card" style="border-left-color:var(--yellow)">
+        <div class="metric-label">Active Deals</div>
+        <div class="metric-value color-yellow" x-text="activeDeals"></div>
+      </div>
+    </div>
+
+    <!-- Sales table -->
+    <div class="card">
+      <div class="overflow-x">
+        <table class="tbl">
+          <thead><tr><th>Prospect</th><th>Contact</th><th>AUM (€m)</th><th>Stage</th><th>Prob %</th><th>Next Action</th><th>Date</th></tr></thead>
+          <tbody>
+            <template x-for="r in rows" :key="r.id"><tr>
+              <td class="font-semi" x-text="r.prospect"></td>
+              <td x-text="r.contact"></td>
+              <td class="text-mono"><input class="input" type="number" style="width:80px" :value="r.aum" @input="r.aum=parseFloat($event.target.value)||0; persist()"></td>
+              <td>
+                <select class="input" style="width:120px; font-size:11px" :value="r.stage" @change="r.stage=$event.target.value; persist()">
+                  <option>Prospect</option><option>Proposal</option><option>Negotiation</option><option>Won</option><option>Lost</option>
+                </select>
+              </td>
+              <td><input class="input text-mono" type="number" style="width:60px" :value="r.probability" @input="r.probability=parseInt($event.target.value)||0; persist()"></td>
+              <td><input class="input" :value="r.nextAction" @input="r.nextAction=$event.target.value; persist()"></td>
+              <td><input class="input" type="date" style="width:140px" :value="r.nextDate" @input="r.nextDate=$event.target.value; persist()"></td>
+            </tr></template>
+            <tr style="background: var(--bg-inset)">
+              <td><input class="input" placeholder="Prospect name..." x-model="newDeal.prospect"></td>
+              <td><input class="input" placeholder="Contact..." x-model="newDeal.contact"></td>
+              <td><input class="input" type="number" placeholder="€m" style="width:80px" x-model="newDeal.aum"></td>
+              <td><select class="input" style="width:120px" x-model="newDeal.stage"><option>Prospect</option><option>Proposal</option><option>Negotiation</option><option>Won</option><option>Lost</option></select></td>
+              <td><input class="input" type="number" placeholder="%" style="width:60px" x-model="newDeal.probability"></td>
+              <td><input class="input" placeholder="Next action..." x-model="newDeal.nextAction"></td>
+              <td><button class="btn btn-primary" @click="addDeal()">+ Add</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Notes per deal -->
+    <div class="card" style="border-left:3px solid var(--purple)">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--purple); margin-bottom:10px">DEAL NOTES</div>
+      <template x-for="r in rows.filter(r => r.notes)" :key="r.id + '_note'">
+        <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-light)">
+          <div class="font-semi text-sm" x-text="r.prospect"></div>
+          <div class="text-xs color-muted" style="margin-top:2px" x-text="r.notes"></div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Pipeline stage funnel -->
+    <div class="card">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:12px">PIPELINE FUNNEL</div>
+      <template x-for="s in ['Prospect','Proposal','Negotiation','Won','Lost']" :key="s">
+        <div style="margin-bottom:10px">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+            <span class="text-xs font-semi" x-text="s"></span>
+            <span class="text-xs text-mono color-muted" x-text="stageCount(s) + ' deal' + (stageCount(s)!==1?'s':'') + ' · €' + stageAum(s) + 'm'"></span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" :class="s==='Prospect'?'purple':s==='Proposal'?'blue':s==='Negotiation'?'yellow':s==='Won'?'green':''" :style="'width:' + (rows.length?stageCount(s)/rows.length*100:0) + '%; background:' + (s==='Lost'?'var(--text-muted)':'')"></div></div>
+        </div>
+      </template>
+    </div>
+    <div class="text-right"><button class="reset-link" @click="if(confirm('Reset sales data to defaults?')){rows=JSON.parse(JSON.stringify(INITIAL_SALES));persist();}">Reset to defaults</button></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PRODUCTS & MODELS (NEW)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div x-show="activeTab === 'products'" x-data="productsSection()" class="fade-in">
+    <div class="section-title"><i data-lucide="box"></i> Products & Models Tracker</div>
+
+    <!-- Summary strip -->
+    <div class="grid-4 mb-4">
+      <div class="metric-card" style="border-left-color:var(--purple)">
+        <div class="metric-label">Total Products</div>
+        <div class="metric-value color-purple" x-text="rows.length"></div>
+      </div>
+      <div class="metric-card" style="border-left-color:var(--blue)">
+        <div class="metric-label">In Build</div>
+        <div class="metric-value color-blue" x-text="countStage('Build')"></div>
+      </div>
+      <div class="metric-card" style="border-left-color:var(--yellow)">
+        <div class="metric-label">In Beta</div>
+        <div class="metric-value color-yellow" x-text="countStage('Beta')"></div>
+      </div>
+      <div class="metric-card" style="border-left-color:var(--green)">
+        <div class="metric-label">Live</div>
+        <div class="metric-value color-green" x-text="countStage('Live')"></div>
+      </div>
+    </div>
+
+    <!-- Filter tags -->
+    <div class="flex-wrap-gap mb-4">
+      <template x-for="f in ['All','Research','Build','Beta','Live','Retired']" :key="f">
+        <span class="tag" :class="filter===f?'active':''" @click="filter=f" x-text="f"></span>
+      </template>
+      <span style="margin-left:8px; border-left:1px solid var(--border); padding-left:12px"></span>
+      <template x-for="t in typeFilters" :key="t">
+        <span class="tag" :class="typeFilter===t?'active':''" @click="typeFilter=t" x-text="t"></span>
+      </template>
+    </div>
+
+    <!-- Products table -->
+    <div class="card">
+      <div class="overflow-x">
+        <table class="tbl">
+          <thead><tr>
+            <th>Product / Model</th>
+            <th>Type</th>
+            <th>Stage</th>
+            <th>Progress</th>
+            <th>Owner</th>
+            <th>Target</th>
+            <th>Priority</th>
+          </tr></thead>
+          <tbody>
+            <template x-for="r in filteredRows" :key="r.id">
+              <tr>
+                <td class="font-semi" x-text="r.name"></td>
+                <td>
+                  <span class="badge badge-blue" x-text="r.type"></span>
+                </td>
+                <td>
+                  <select class="input" style="width:110px; font-size:11px" :value="r.stage" @change="r.stage=$event.target.value; persist()">
+                    <option>Research</option><option>Build</option><option>Beta</option><option>Live</option><option>Retired</option>
+                  </select>
+                </td>
+                <td style="min-width:120px">
+                  <div style="display:flex; align-items:center; gap:8px">
+                    <div class="progress-track" style="flex:1">
+                      <div class="progress-fill" :class="r.progress>=100?'green':r.progress>=50?'blue':r.progress>=25?'yellow':'purple'" :style="'width:'+r.progress+'%'"></div>
+                    </div>
+                    <input class="input text-mono" type="number" style="width:50px; font-size:11px; text-align:center" :value="r.progress" min="0" max="100" @input="r.progress=Math.min(100,Math.max(0,parseInt($event.target.value)||0)); persist()">
+                    <span class="text-xs color-muted">%</span>
+                  </div>
+                </td>
+                <td><input class="input" style="width:100px" :value="r.owner" @input="r.owner=$event.target.value; persist()"></td>
+                <td><input class="input" style="width:90px" :value="r.target" @input="r.target=$event.target.value; persist()"></td>
+                <td>
+                  <span class="badge" :class="r.priority==='High'?'badge-red':r.priority==='Medium'?'badge-yellow':'badge-green'" style="cursor:pointer"
+                        @click="cyclePriority(r)" title="Click to cycle" x-text="r.priority"></span>
+                </td>
+              </tr>
+            </template>
+            <!-- Add row -->
+            <tr style="background: var(--bg-inset)">
+              <td><input class="input" placeholder="Product name..." x-model="newProduct.name"></td>
+              <td>
+                <select class="input" style="width:100px" x-model="newProduct.type">
+                  <option>Platform</option><option>Regulatory</option><option>Data</option><option>Innovation</option><option>Internal</option>
+                </select>
+              </td>
+              <td>
+                <select class="input" style="width:110px" x-model="newProduct.stage">
+                  <option>Research</option><option>Build</option><option>Beta</option><option>Live</option>
+                </select>
+              </td>
+              <td></td>
+              <td><input class="input" placeholder="Owner..." style="width:100px" x-model="newProduct.owner"></td>
+              <td><input class="input" placeholder="2026-Q3" style="width:90px" x-model="newProduct.target"></td>
+              <td><button class="btn btn-primary" @click="addProduct()">+ Add</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Blocker / Risk cards -->
+    <div x-show="blockedProducts.length > 0" class="card" style="border-left:3px solid var(--red)">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--red); margin-bottom:12px">ACTIVE BLOCKERS</div>
+      <template x-for="r in blockedProducts" :key="r.id + '_block'">
+        <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-light)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span class="font-semi text-sm" x-text="r.name"></span>
+            <span class="stage-tag" :class="'stage-' + r.stage.toLowerCase()" x-text="r.stage"></span>
+          </div>
+          <div class="text-xs" style="color:var(--text-secondary); margin-top:4px">
+            <textarea class="textarea" style="min-height:40px; font-size:11px" :value="r.blockers" @input="r.blockers=$event.target.value; persist()"></textarea>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Lifecycle funnel -->
+    <div class="card">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:12px">LIFECYCLE DISTRIBUTION</div>
+      <template x-for="s in ['Research','Build','Beta','Live','Retired']" :key="s">
+        <div style="margin-bottom:10px">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+            <span class="text-xs font-semi" x-text="s"></span>
+            <span class="text-xs text-mono color-muted" x-text="countStage(s) + ' product' + (countStage(s)!==1?'s':'')"></span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" :class="s==='Research'?'purple':s==='Build'?'blue':s==='Beta'?'yellow':s==='Live'?'green':''" :style="'width:' + (rows.length?countStage(s)/rows.length*100:0) + '%; background:' + (s==='Retired'?'var(--text-muted)':'')"></div></div>
+        </div>
+      </template>
+      <!-- Average progress -->
+      <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border-light)">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+          <span class="text-xs font-semi">Average Progress (excl. Live/Retired)</span>
+          <span class="text-xs text-mono font-bold color-blue" x-text="avgProgress + '%'"></span>
+        </div>
+        <div class="progress-track"><div class="progress-fill blue" :style="'width:' + avgProgress + '%'"></div></div>
+      </div>
+    </div>
+
+    <div class="text-right"><button class="reset-link" @click="if(confirm('Reset product data to defaults?')){rows=JSON.parse(JSON.stringify(INITIAL_PRODUCTS));persist();}">Reset to defaults</button></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SWEET SPOT MAPPER
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div x-show="activeTab === 'sweetspot'" x-data="sweetSpotSection()" class="fade-in">
+    <div class="section-title"><i data-lucide="target"></i> Service & Product Sweet Spot Mapper</div>
+
+    <p class="text-sm" style="color:var(--text-secondary); margin-bottom:16px; max-width:800px; line-height:1.7">
+      This maps our capability strength across fund types, investment strategies, client segments, and geographies.
+      The heatmap shows where we're <strong style="color:var(--green)">strongest</strong>, where we're
+      <strong style="color:var(--yellow)">adequate</strong>, <strong style="color:var(--blue)">emerging</strong>,
+      and where we're <strong style="color:var(--red)">weak</strong>. Clients are plotted by zone to show
+      who sits in our sweet spot, who is at the edge, and who is off-target.
+    </p>
+
+    <!-- Legend -->
+    <div class="card" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; padding:12px 16px">
+      <span class="text-xs font-bold" style="color:var(--text-tertiary); letter-spacing:0.1em; text-transform:uppercase">STRENGTH KEY:</span>
+      <span class="text-xs"><span class="legend-swatch" style="background:#dcfce7; border:1px solid #bbf7d0"></span>Strong</span>
+      <span class="text-xs"><span class="legend-swatch" style="background:#fef9c3; border:1px solid #fde68a"></span>Adequate</span>
+      <span class="text-xs"><span class="legend-swatch" style="background:#dbeafe; border:1px solid #bfdbfe"></span>Emerging</span>
+      <span class="text-xs"><span class="legend-swatch" style="background:#fee2e2; border:1px solid #fecaca"></span>Weak</span>
+      <span style="border-left:1px solid var(--border); height:20px"></span>
+      <span class="text-xs font-bold" style="color:var(--text-tertiary); letter-spacing:0.1em; text-transform:uppercase">CLIENTS:</span>
+      <span class="text-xs"><span class="legend-swatch" style="background:#dcfce7; border:2px solid #22c55e; border-radius:50%"></span>Sweet Spot</span>
+      <span class="text-xs"><span class="legend-swatch" style="background:#fef3c7; border:2px solid #f59e0b; border-radius:50%"></span>Near Edge</span>
+      <span class="text-xs"><span class="legend-swatch" style="background:#fee2e2; border:2px solid #ef4444; border-radius:50%"></span>Off Target</span>
+    </div>
+
+    <!-- Dimension filter tabs -->
+    <div class="flex-wrap-gap mb-4" style="margin-top:14px">
+      <template x-for="d in dimensionKeys" :key="d">
+        <span class="tag" :class="activeDimension===d?'active':''" @click="activeDimension=d" x-text="dimensions[d].label"></span>
+      </template>
+    </div>
+
+    <!-- HEATMAP GRID -->
+    <div class="card" style="overflow-x:auto">
+      <div class="dim-section-title" style="margin-bottom:14px">
+        <i data-lucide="grid-3x3"></i> <span x-text="dimensions[activeDimension].label"></span>
+      </div>
+      <div class="heatmap-grid" :style="'grid-template-columns: minmax(200px, 250px) repeat(' + dimensions[activeDimension].columns.length + ', minmax(100px, 1fr))'">
+        <!-- Header row -->
+        <div class="heatmap-cell heatmap-header" style="text-align:left"></div>
+        <template x-for="col in dimensions[activeDimension].columns" :key="col">
+          <div class="heatmap-cell heatmap-header" x-text="col"></div>
+        </template>
+        <!-- Data rows -->
+        <template x-for="(row, ri) in dimensions[activeDimension].rows" :key="ri">
+          <template x-for="(cell, ci) in [row.name, ...row.ratings]" :key="ri + '-' + ci">
+            <div :class="ci === 0 ? 'heatmap-cell heatmap-row-label' : 'heatmap-cell str-' + cell.toLowerCase().replace(/ /g,'')"
+                 x-text="ci === 0 ? cell : cell"
+                 :title="ci === 0 ? '' : row.name + ' × ' + dimensions[activeDimension].columns[ci-1] + ': ' + cell"></div>
+          </template>
+        </template>
+      </div>
+
+      <!-- Strength summary for this dimension -->
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-light); display:flex; flex-wrap:wrap; gap:16px">
+        <template x-for="level in ['Strong','Adequate','Emerging','Weak']" :key="level">
+          <div style="min-width:100px">
+            <div class="text-xs color-muted font-semi" x-text="level" style="margin-bottom:4px"></div>
+            <div class="progress-track" style="height:8px">
+              <div class="progress-fill" :class="level==='Strong'?'green':level==='Adequate'?'yellow':level==='Emerging'?'blue':'red'"
+                   :style="'width:' + strengthPct(level) + '%'"></div>
+            </div>
+            <div class="text-xs text-mono color-muted" style="margin-top:2px" x-text="strengthPct(level) + '%'"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- CLIENT POSITIONING MAP -->
+    <div class="section-divider"></div>
+    <div class="dim-section-title"><i data-lucide="users"></i> Client Positioning Map</div>
+
+    <div class="card">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:16px">
+        <!-- Sweet Spot column -->
+        <div>
+          <div style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--green); margin-bottom:10px; display:flex; align-items:center; gap:6px">
+            <span class="legend-swatch" style="background:#dcfce7; border:2px solid #22c55e; border-radius:50%; width:10px; height:10px"></span>
+            SWEET SPOT (<span x-text="clientsByZone('sweet-spot').length"></span>)
+          </div>
+          <template x-for="c in clientsByZone('sweet-spot')" :key="c.id">
+            <div style="padding:8px 10px; margin-bottom:6px; border-radius:var(--radius-sm); background:#f0fdf4; border:1px solid #bbf7d0">
+              <div class="font-semi text-xs" style="color:var(--text-primary)" x-text="c.client"></div>
+              <div class="text-xs color-muted" style="margin-top:2px" x-text="c.fundType + ' · ' + c.strategy"></div>
+              <div class="text-xs" style="color:var(--text-tertiary); margin-top:1px" x-text="c.clientType + ' · ' + c.geo"></div>
+            </div>
+          </template>
+        </div>
+        <!-- Near Edge column -->
+        <div>
+          <div style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--yellow); margin-bottom:10px; display:flex; align-items:center; gap:6px">
+            <span class="legend-swatch" style="background:#fef3c7; border:2px solid #f59e0b; border-radius:50%; width:10px; height:10px"></span>
+            NEAR EDGE (<span x-text="clientsByZone('near-edge').length"></span>)
+          </div>
+          <template x-for="c in clientsByZone('near-edge')" :key="c.id">
+            <div style="padding:8px 10px; margin-bottom:6px; border-radius:var(--radius-sm); background:#fffbeb; border:1px solid #fde68a">
+              <div class="font-semi text-xs" style="color:var(--text-primary)" x-text="c.client"></div>
+              <div class="text-xs color-muted" style="margin-top:2px" x-text="c.fundType + ' · ' + c.strategy"></div>
+              <div class="text-xs" style="color:var(--text-tertiary); margin-top:1px" x-text="c.clientType + ' · ' + c.geo"></div>
+            </div>
+          </template>
+        </div>
+        <!-- Off Target column -->
+        <div>
+          <div style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--red); margin-bottom:10px; display:flex; align-items:center; gap:6px">
+            <span class="legend-swatch" style="background:#fee2e2; border:2px solid #ef4444; border-radius:50%; width:10px; height:10px"></span>
+            OFF TARGET (<span x-text="clientsByZone('off-target').length"></span>)
+          </div>
+          <template x-for="c in clientsByZone('off-target')" :key="c.id">
+            <div style="padding:8px 10px; margin-bottom:6px; border-radius:var(--radius-sm); background:#fef2f2; border:1px solid #fecaca">
+              <div class="font-semi text-xs" style="color:var(--text-primary)" x-text="c.client"></div>
+              <div class="text-xs color-muted" style="margin-top:2px" x-text="c.fundType + ' · ' + c.strategy"></div>
+              <div class="text-xs" style="color:var(--text-tertiary); margin-top:1px" x-text="c.clientType + ' · ' + c.geo"></div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Client add/edit -->
+      <div style="border-top:1px solid var(--border-light); padding-top:14px">
+        <div style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:8px">ADD / MANAGE CLIENTS</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 100px 100px; gap:8px; align-items:end">
+          <div><div class="text-xs color-muted" style="margin-bottom:3px">Client</div><input class="input" placeholder="Client name..." x-model="newClient.client"></div>
+          <div><div class="text-xs color-muted" style="margin-bottom:3px">Fund Type</div><input class="input" placeholder="e.g. UCITS — Equity" x-model="newClient.fundType"></div>
+          <div><div class="text-xs color-muted" style="margin-bottom:3px">Strategy</div><input class="input" placeholder="e.g. Long Only" x-model="newClient.strategy"></div>
+          <div><div class="text-xs color-muted" style="margin-bottom:3px">Geography</div><input class="input" placeholder="e.g. Ireland" x-model="newClient.geo"></div>
+          <div><div class="text-xs color-muted" style="margin-bottom:3px">Zone</div>
+            <select class="input" x-model="newClient.zone"><option value="sweet-spot">Sweet Spot</option><option value="near-edge">Near Edge</option><option value="off-target">Off Target</option></select>
+          </div>
+          <div style="padding-bottom:1px"><button class="btn btn-primary" @click="addClient()">+ Add</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRATEGIC INSIGHT SUMMARY -->
+    <div class="card" style="border-left:3px solid var(--blue)">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--blue); margin-bottom:8px">STRATEGIC POSITIONING INSIGHT</div>
+      <div class="text-sm" style="color:var(--text-secondary); line-height:1.8">
+        <strong x-text="clientsByZone('sweet-spot').length"></strong> clients sit firmly in our sweet spot — Irish-domiciled UCITS/QIAIF, vanilla-to-moderate complexity, traditional asset management.
+        <strong x-text="clientsByZone('near-edge').length" style="color:var(--yellow)"></strong> are near the edge — serviceable but stretching on geography, complexity, or client type.
+        <strong x-text="clientsByZone('off-target').length" style="color:var(--red)"></strong> are off-target — these mandates carry higher operational risk and may require capability investment or strategic partnering.
+        <span x-show="clientsByZone('off-target').length > 0" style="display:block; margin-top:8px; color:var(--red)">
+          <i data-lucide="alert-triangle" style="width:13px; height:13px; display:inline; vertical-align:middle"></i>
+          Off-target clients should be reviewed for repricing, capability investment, or managed exit.
+        </span>
+      </div>
+    </div>
+
+    <div class="text-right"><button class="reset-link" @click="if(confirm('Reset client map to defaults?')){clients=JSON.parse(JSON.stringify(INITIAL_CLIENT_MAP));persistClients();}">Reset to defaults</button></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       INCIDENT SITREP / MANAGEMENT BRIEFING
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div x-show="activeTab === 'briefing'" x-data="briefingSection()" class="fade-in">
+    <div class="section-title"><i data-lucide="pen-tool"></i> Management Briefing Generator</div>
+    <div class="grid-2 mb-4">
+      <div class="card">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:10px">RAW INPUT — Shadow Notes</div>
+        <textarea class="textarea" x-model="raw" placeholder="Paste your raw operational notes here..."></textarea>
+        <div class="flex-wrap-gap mt-3">
+          <template x-for="t in templateNames" :key="t">
+            <span class="tag" :class="template===t?'active':''" @click="template=t" x-text="t"></span>
+          </template>
+        </div>
+        <button class="btn btn-primary mt-3" @click="transform()"><i data-lucide="zap"></i> Transform</button>
+      </div>
+      <div class="card">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--blue); margin-bottom:10px">EXECUTIVE OUTPUT — <span x-text="template"></span></div>
+        <div class="card-inset" style="min-height:120px; white-space:pre-wrap; font-size:12px; font-family:var(--font-mono)" :style="output?'color:var(--text-primary)':'color:var(--text-muted)'" x-text="output || 'Click Transform to generate your management briefing...'"></div>
+        <button x-show="output" class="btn btn-ghost mt-3" @click="copyText(output)"><i data-lucide="copy"></i> Copy to Clipboard</button>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--blue)">
+      <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--blue); margin-bottom:8px">HOW IT WORKS</div>
+      <div class="text-sm" style="color:var(--text-secondary); line-height:1.8">The generator applies pattern-matched transformations to reframe operational language into strategic vocabulary. Terms like <span class="color-red">error</span>, <span class="color-red">delay</span>, <span class="color-red">broke</span> are replaced with context-appropriate strategic phrasing depending on the selected template voice. The three templates emphasise different angles: innovation positioning, risk governance, or commercial impact.</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       WEEKLY UPDATE (NEW)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div x-show="activeTab === 'weekly'" x-data="weeklySection()" class="fade-in">
+    <div class="section-title"><i data-lucide="calendar-check"></i> Weekly Update Generator</div>
+
+    <p class="text-sm color-muted mb-4">Auto-consolidates data from all sections into a structured weekly management update. Click "Generate" to pull live data, then edit before sharing.</p>
+
+    <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap">
+      <button class="btn btn-primary" @click="generate()"><i data-lucide="refresh-cw"></i> Generate Update</button>
+      <button class="btn btn-ghost" x-show="output" @click="copyText(output)"><i data-lucide="copy"></i> Copy to Clipboard</button>
+      <span class="text-xs color-muted" style="align-self:center" x-show="lastGenerated" x-text="'Last generated: ' + lastGenerated"></span>
+    </div>
+
+    <div x-show="output" class="card" style="border-left:3px solid var(--blue)">
+      <div class="card-inset" style="white-space:pre-wrap; font-size:12.5px; font-family:var(--font-mono); line-height:1.75; color:var(--text-primary)" x-text="output"></div>
+    </div>
+
+    <div x-show="!output" class="card" style="text-align:center; padding:48px 24px">
+      <i data-lucide="file-text" style="width:32px; height:32px; color:var(--text-muted); margin:0 auto 12px; display:block"></i>
+      <div class="font-semi" style="color:var(--text-tertiary); margin-bottom:4px">No update generated yet</div>
+      <div class="text-xs color-muted">Click "Generate Update" to consolidate all section data into a weekly management brief</div>
+    </div>
+  </div>
+
+</div><!-- /content-area -->
+```
+
+  </main>
+
+  <!-- Toast -->
+
+  <div x-show="toast" x-transition.opacity.duration.300ms class="toast">
+    <i data-lucide="check-circle"></i> Copied to clipboard
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     ALPINE COMPONENTS
+     ════════════════════════════════════════════════════════════════════════════ -->
+
+<script>
+
+// ─── ROOT ────────────────────────────────────────────────────────────────────
+
+function commandCenter() {
+  return {
+    activeTab: 'billing',
+    sidebarOpen: true,
+    toast: false,
+    navItems: [
+      { key: 'billing',  label: 'Commercials & Billing',  icon: 'dollar-sign' },
+      { key: 'rfp',      label: 'RFP Vault',              icon: 'layers' },
+      { key: 'pipeline', label: 'Client Change Pipeline',  icon: 'git-branch' },
+      { key: 'sales',    label: 'Sales Pipeline',          icon: 'trending-up' },
+      { key: 'products', label: 'Products & Models',        icon: 'box' },
+      { key: 'sweetspot', label: 'Sweet Spot Mapper',       icon: 'target' },
+      { key: 'briefing', label: 'Incident SITREP',         icon: 'pen-tool' },
+      { key: 'weekly',   label: 'Weekly Update',            icon: 'calendar-check' },
+    ],
+    get currentLabel() { return (this.navItems.find(n => n.key === this.activeTab) || {}).label || ''; },
+    get metrics() {
+      const b = loadData('billing', INITIAL_BILLING);
+      const p = loadData('pipeline', INITIAL_PIPELINE);
+      const s = loadData('sales', INITIAL_SALES);
+      const pr = loadData('products', INITIAL_PRODUCTS);
+      const leak = b.filter(r => r.fee > 0 && r.tasks / r.fee > TASK_THRESHOLD).length;
+      const red = p.filter(r => r.blocker === 'Red').length;
+      const pipeAum = s.filter(r => r.stage !== 'Won' && r.stage !== 'Lost').reduce((a,r) => a + (r.aum||0), 0);
+      const prodInDev = pr.filter(r => r.stage !== 'Live' && r.stage !== 'Retired').length;
+      return [
+        { label: 'Active Incidents', value: red, accent: 'var(--red)', icon: 'alert-triangle' },
+        { label: 'Sales Pipeline',   value: '€' + (pipeAum/1000).toFixed(1) + 'bn', accent: 'var(--purple)', icon: 'trending-up' },
+        { label: 'Products In Dev',  value: prodInDev, accent: 'var(--blue)', icon: 'box' },
+        { label: 'Risk Level', value: red > 2 ? 'HIGH' : red > 0 ? 'MEDIUM' : 'LOW', accent: red > 2 ? 'var(--red)' : red > 0 ? 'var(--yellow)' : 'var(--green)', icon: 'shield' },
+      ];
+    },
+    showToast() { this.toast = true; setTimeout(() => this.toast = false, 2000); },
+    copyText(t) { navigator.clipboard.writeText(t); this.showToast(); },
+    init() {
+      this.$watch('activeTab', () => this.$nextTick(() => lucide.createIcons()));
+      this.$watch('sidebarOpen', () => this.$nextTick(() => lucide.createIcons()));
+      this.$nextTick(() => lucide.createIcons());
+    }
+  };
+}
+
+// ─── BILLING ─────────────────────────────────────────────────────────────────
+
+function billingSection() {
+  return {
+    rows: loadData('billing', INITIAL_BILLING),
+    newRow: { client: '', fee: '', tasks: '', lastReview: '' },
+    ratio(r)     { return r.fee > 0 ? r.tasks / r.fee : 0; },
+    isLeaking(r) { return this.ratio(r) > TASK_THRESHOLD; },
+    isOverdue(r) { return monthsSince(r.lastReview) >= MONTHS_OVERDUE; },
+    get leakingRows() { return this.rows.filter(r => this.isLeaking(r)); },
+    get overdueRows() { return this.rows.filter(r => this.isOverdue(r)); },
+    get totalLeakageK() { return (this.leakingRows.reduce((s,r) => s + (r.tasks/r.fee - TASK_THRESHOLD)*r.fee*100, 0)/1000).toFixed(1); },
+    addRow() {
+      if (!this.newRow.client) return;
+      this.rows.push({ id: Date.now(), client: this.newRow.client, fee: parseFloat(this.newRow.fee)||0, tasks: parseInt(this.newRow.tasks)||0, lastReview: this.newRow.lastReview || todayISO() });
+      this.newRow = { client: '', fee: '', tasks: '', lastReview: '' };
+      this.persist();
+    },
+    persist() { saveData('billing', this.rows); },
+    monthsSince(d) { return monthsSince(d); },
+    init() { this.$nextTick(() => lucide.createIcons()); }
+  };
+}
+
+// ─── RFP VAULT ───────────────────────────────────────────────────────────────
+
+function rfpVault() {
+  return {
+    modules: loadData('rfp', INITIAL_RFP_MODULES),
+    search: '', filter: 'All',
+    newModule: { category: 'Tech', question: '', answer: '' },
+    get categories() { return ['All', ...new Set(this.modules.map(m => m.category))]; },
+    get filteredModules() {
+      return this.modules.filter(m => {
+        if (this.filter !== 'All' && m.category !== this.filter) return false;
+        if (this.search) { const q = this.search.toLowerCase(); if (!m.question.toLowerCase().includes(q) && !m.answer.toLowerCase().includes(q)) return false; }
+        return true;
+      });
+    },
+    catColor(c) { return c==='Tech'?'var(--blue)':c==='ESG'?'var(--green)':c==='Ops'?'var(--yellow)':'var(--purple)'; },
+    copyText(t) { navigator.clipboard.writeText(t); window.dispatchEvent(new CustomEvent('show-toast')); },
+    addModule() {
+      if (!this.newModule.question || !this.newModule.answer) return;
+      this.modules.push({ id: Date.now(), ...this.newModule });
+      this.newModule = { category: 'Tech', question: '', answer: '' };
+      this.persistRfp();
+    },
+    persistRfp() { saveData('rfp', this.modules); },
+    init() { this.$nextTick(() => lucide.createIcons()); }
+  };
+}
+
+// ─── PIPELINE ────────────────────────────────────────────────────────────────
+
+function pipelineSection() {
+  return {
+    rows: loadData('pipeline', INITIAL_PIPELINE),
+    cycleBlocker(r) { const o=['Green','Yellow','Red']; r.blocker=o[(o.indexOf(r.blocker)+1)%3]; this.persistPipeline(); },
+    get blockerCounts() { const c={Legal:0,Ops:0,Tech:0,Client:0}; this.rows.forEach(r=>{if(r.blocker!=='Green')c[r.stakeholder]=(c[r.stakeholder]||0)+1;}); return c; },
+    get stageCounts() { const c={Onboarding:0,Launch:0,Liquidation:0}; this.rows.forEach(r=>c[r.stage]=(c[r.stage]||0)+1); return c; },
+    get redCount() { return this.rows.filter(r=>r.blocker==='Red').length; },
+    persistPipeline() { saveData('pipeline', this.rows); },
+    init() { this.$nextTick(() => lucide.createIcons()); }
+  };
+}
+
+// ─── SALES PIPELINE (NEW) ────────────────────────────────────────────────────
+
+function salesSection() {
+  return {
+    rows: loadData('sales', INITIAL_SALES),
+    newDeal: { prospect:'', contact:'', aum:'', stage:'Prospect', probability:'25', nextAction:'', nextDate:'' },
+
+    get totalPipelineM() { return this.rows.filter(r=>r.stage!=='Lost').reduce((a,r)=>a+(r.aum||0),0).toFixed(0); },
+    get weightedValueM() { return this.rows.filter(r=>r.stage!=='Lost'&&r.stage!=='Won').reduce((a,r)=>a+(r.aum||0)*(r.probability||0)/100,0).toFixed(0); },
+    get wonCount()    { return this.rows.filter(r=>r.stage==='Won').length; },
+    get activeDeals() { return this.rows.filter(r=>r.stage!=='Won'&&r.stage!=='Lost').length; },
+
+    stageCount(s) { return this.rows.filter(r=>r.stage===s).length; },
+    stageAum(s)   { return this.rows.filter(r=>r.stage===s).reduce((a,r)=>a+(r.aum||0),0).toFixed(0); },
+
+    addDeal() {
+      if (!this.newDeal.prospect) return;
+      this.rows.push({ id: Date.now(), prospect: this.newDeal.prospect, contact: this.newDeal.contact, aum: parseFloat(this.newDeal.aum)||0, stage: this.newDeal.stage, probability: parseInt(this.newDeal.probability)||0, nextAction: this.newDeal.nextAction, nextDate: this.newDeal.nextDate || todayISO(), notes: '' });
+      this.newDeal = { prospect:'', contact:'', aum:'', stage:'Prospect', probability:'25', nextAction:'', nextDate:'' };
+      this.persist();
+    },
+    persist() { saveData('sales', this.rows); },
+    init() { this.$nextTick(() => lucide.createIcons()); }
+  };
+}
+
+// ─── PRODUCTS & MODELS (NEW) ─────────────────────────────────────────────────
+
+function productsSection() {
+  return {
+    rows: loadData('products', INITIAL_PRODUCTS),
+    filter: 'All',
+    typeFilter: 'All',
+    newProduct: { name:'', type:'Platform', stage:'Research', owner:'', target:'' },
+
+    get typeFilters() { return ['All', ...new Set(this.rows.map(r => r.type))]; },
+
+    get filteredRows() {
+      return this.rows.filter(r => {
+        if (this.filter !== 'All' && r.stage !== this.filter) return false;
+        if (this.typeFilter !== 'All' && r.type !== this.typeFilter) return false;
+        return true;
+      });
+    },
+
+    get blockedProducts() { return this.rows.filter(r => r.blockers && r.blockers.trim() && r.stage !== 'Live' && r.stage !== 'Retired'); },
+
+    get avgProgress() {
+      const active = this.rows.filter(r => r.stage !== 'Live' && r.stage !== 'Retired');
+      if (!active.length) return 0;
+      return Math.round(active.reduce((a,r) => a + (r.progress||0), 0) / active.length);
+    },
+
+    countStage(s) { return this.rows.filter(r => r.stage === s).length; },
+
+    cyclePriority(r) {
+      const o = ['Low','Medium','High'];
+      r.priority = o[(o.indexOf(r.priority)+1)%3];
+      this.persist();
+    },
+
+    addProduct() {
+      if (!this.newProduct.name) return;
+      this.rows.push({
+        id: Date.now(),
+        name: this.newProduct.name,
+        type: this.newProduct.type,
+        stage: this.newProduct.stage,
+        owner: this.newProduct.owner || 'TBD',
+        target: this.newProduct.target || 'TBD',
+        priority: 'Medium',
+        blockers: '',
+        progress: 0,
+      });
+      this.newProduct = { name:'', type:'Platform', stage:'Research', owner:'', target:'' };
+      this.persist();
+    },
+
+    persist() { saveData('products', this.rows); },
+    init() { this.$nextTick(() => lucide.createIcons()); }
+  };
+}
+
+// ─── SWEET SPOT MAPPER ───────────────────────────────────────────────────────
+
+function sweetSpotSection() {
+  return {
+    dimensions: CAPABILITY_DIMENSIONS,
+    activeDimension: 'fundTypes',
+    clients: loadData('clientmap', INITIAL_CLIENT_MAP),
+    newClient: { client:'', fundType:'', strategy:'', clientType:'Institutional Investors', geo:'Ireland', zone:'sweet-spot' },
+
+    get dimensionKeys() { return Object.keys(this.dimensions); },
+
+    // Calculate what % of cells in active dimension are a given level
+    strengthPct(level) {
+      const dim = this.dimensions[this.activeDimension];
+      let total = 0, match = 0;
+      dim.rows.forEach(r => r.ratings.forEach(rating => { total++; if (rating === level) match++; }));
+      return total ? Math.round(match / total * 100) : 0;
+    },
+
+    clientsByZone(zone) { return this.clients.filter(c => c.zone === zone); },
+
+    addClient() {
+      if (!this.newClient.client) return;
+      this.clients.push({
+        id: Date.now(),
+        client: this.newClient.client,
+        fundType: this.newClient.fundType || 'TBD',
+        strategy: this.newClient.strategy || 'TBD',
+        clientType: this.newClient.clientType,
+        geo: this.newClient.geo || 'Ireland',
+        zone: this.newClient.zone,
+      });
+      this.newClient = { client:'', fundType:'', strategy:'', clientType:'Institutional Investors', geo:'Ireland', zone:'sweet-spot' };
+      this.persistClients();
+    },
+
+    persistClients() { saveData('clientmap', this.clients); },
+    init() { this.$nextTick(() => lucide.createIcons()); }
+  };
+}
+
+// ─── BRIEFING ────────────────────────────────────────────────────────────────
+
+function briefingSection() {
+  return {
+    raw: "Ops forgot to check the cash rec again. The client is unhappy because the NAV was late. We're short-staffed and using a manual process that keeps breaking.",
+    template: 'Strategic / Innovative', output: '',
+    get templateNames() { return Object.keys(STRATEGIC_TEMPLATES); },
+    transform() {
+      const t = STRATEGIC_TEMPLATES[this.template];
+      if (!t || !this.raw.trim()) return;
+      let text = this.raw;
+      t.transforms.forEach(([re,rep]) => { text = text.replace(re, rep); });
+      text = text.replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
+      this.output = t.prefix + '\n' + '─'.repeat(50) + '\n\n' + text + '\n\n' + t.suffix;
+    },
+    copyText(t) { navigator.clipboard.writeText(t); window.dispatchEvent(new CustomEvent('show-toast')); },
+    init() {
+      this.$nextTick(() => lucide.createIcons());
+      this.$watch('template', () => { if (this.raw.trim()) this.transform(); });
+    }
+  };
+}
+
+// ─── WEEKLY UPDATE (NEW) ─────────────────────────────────────────────────────
+
+function weeklySection() {
+  return {
+    output: '',
+    lastGenerated: '',
+
+    generate() {
+      const billing  = loadData('billing',  INITIAL_BILLING);
+      const pipeline = loadData('pipeline', INITIAL_PIPELINE);
+      const sales    = loadData('sales',    INITIAL_SALES);
+      const rfp      = loadData('rfp',      INITIAL_RFP_MODULES);
+      const products = loadData('products', INITIAL_PRODUCTS);
+      const now      = new Date();
+      const weekOf   = now.toLocaleDateString('en-IE', { day:'numeric', month:'long', year:'numeric' });
+
+      // Billing metrics
+      const leaking  = billing.filter(r => r.fee>0 && r.tasks/r.fee > TASK_THRESHOLD);
+      const overdue  = billing.filter(r => monthsSince(r.lastReview) >= MONTHS_OVERDUE);
+      const totalLeak= leaking.reduce((s,r) => s + (r.tasks/r.fee - TASK_THRESHOLD)*r.fee*100, 0);
+
+      // Pipeline metrics
+      const redPipe  = pipeline.filter(r => r.blocker==='Red');
+      const yellowPipe = pipeline.filter(r => r.blocker==='Yellow');
+      const blockers = {};
+      pipeline.forEach(r => { if (r.blocker!=='Green') blockers[r.stakeholder] = (blockers[r.stakeholder]||0)+1; });
+
+      // Sales metrics
+      const activeS  = sales.filter(r => r.stage!=='Won' && r.stage!=='Lost');
+      const wonS     = sales.filter(r => r.stage==='Won');
+      const pipeAum  = activeS.reduce((a,r)=>a+(r.aum||0),0);
+      const weightV  = activeS.reduce((a,r)=>a+(r.aum||0)*(r.probability||0)/100,0);
+
+      let lines = [];
+      lines.push('WEEKLY MANAGEMENT UPDATE');
+      lines.push('Week of ' + weekOf);
+      lines.push('═'.repeat(56));
+      lines.push('');
+
+      // 1. Commercial Health
+      lines.push('1. COMMERCIAL HEALTH');
+      lines.push('─'.repeat(40));
+      lines.push('Clients tracked: ' + billing.length);
+      lines.push('Revenue leakage flagged: ' + leaking.length + ' client' + (leaking.length!==1?'s':''));
+      if (leaking.length) {
+        lines.push('  Leaking clients: ' + leaking.map(r => r.client + ' (ratio: ' + (r.tasks/r.fee).toFixed(1) + ')').join(', '));
+        lines.push('  Estimated leakage: €' + (totalLeak/1000).toFixed(1) + 'k');
+      }
+      lines.push('Fee reviews overdue (>18mo): ' + overdue.length);
+      if (overdue.length) lines.push('  Overdue: ' + overdue.map(r => r.client + ' (' + monthsSince(r.lastReview) + 'mo)').join(', '));
+      lines.push('');
+
+      // 2. Sales Pipeline
+      lines.push('2. SALES PIPELINE');
+      lines.push('─'.repeat(40));
+      lines.push('Total pipeline AUM: €' + pipeAum + 'm (' + activeS.length + ' active deal' + (activeS.length!==1?'s':'') + ')');
+      lines.push('Probability-weighted value: €' + weightV.toFixed(0) + 'm');
+      lines.push('Won this period: ' + wonS.length);
+      if (activeS.length) {
+        lines.push('Active deals:');
+        activeS.forEach(r => lines.push('  • ' + r.prospect + ' — €' + r.aum + 'm — ' + r.stage + ' (' + r.probability + '%) — Next: ' + r.nextAction));
+      }
+      lines.push('');
+
+      // 3. Change Pipeline
+      lines.push('3. CLIENT CHANGE PIPELINE');
+      lines.push('─'.repeat(40));
+      lines.push('Active projects: ' + pipeline.length);
+      lines.push('Critical (Red): ' + redPipe.length + ' | Amber (Yellow): ' + yellowPipe.length);
+      if (redPipe.length) lines.push('  Red blockers: ' + redPipe.map(r => r.project + ' [' + r.stakeholder + ']').join(', '));
+      const topBlocker = Object.entries(blockers).sort((a,b)=>b[1]-a[1])[0];
+      if (topBlocker && topBlocker[1]>1) lines.push('  Primary bottleneck: ' + topBlocker[0] + ' (' + topBlocker[1] + ' projects blocked)');
+      lines.push('');
+
+      // 4. RFP Readiness
+      lines.push('4. RFP READINESS');
+      lines.push('─'.repeat(40));
+      lines.push('Knowledge modules available: ' + rfp.length);
+      const cats = {};
+      rfp.forEach(r => cats[r.category] = (cats[r.category]||0)+1);
+      lines.push('Coverage: ' + Object.entries(cats).map(([k,v])=>k+': '+v).join(' | '));
+      lines.push('');
+
+      // 5. Products & Models
+      lines.push('5. PRODUCTS & MODELS');
+      lines.push('─'.repeat(40));
+      const prodActive = products.filter(r => r.stage !== 'Live' && r.stage !== 'Retired');
+      const prodLive   = products.filter(r => r.stage === 'Live');
+      const prodHigh   = prodActive.filter(r => r.priority === 'High');
+      const avgProg    = prodActive.length ? Math.round(prodActive.reduce((a,r) => a + (r.progress||0), 0) / prodActive.length) : 0;
+      lines.push('Active products in development: ' + prodActive.length + ' | Live: ' + prodLive.length);
+      lines.push('Average progress (excl. Live): ' + avgProg + '%');
+      if (prodHigh.length) {
+        lines.push('High-priority items:');
+        prodHigh.forEach(r => lines.push('  • ' + r.name + ' — ' + r.stage + ' — ' + r.progress + '% — Target: ' + r.target));
+      }
+      const blocked = products.filter(r => r.blockers && r.blockers.trim() && r.stage !== 'Live' && r.stage !== 'Retired');
+      if (blocked.length) {
+        lines.push('Products with active blockers: ' + blocked.length);
+        blocked.forEach(r => lines.push('  • ' + r.name + ': ' + r.blockers));
+      }
+      lines.push('');
+
+      // 6. Client Sweet Spot
+      const cmap = loadData('clientmap', INITIAL_CLIENT_MAP);
+      const sweet = cmap.filter(c => c.zone === 'sweet-spot');
+      const edge  = cmap.filter(c => c.zone === 'near-edge');
+      const off   = cmap.filter(c => c.zone === 'off-target');
+      lines.push('6. CLIENT POSITIONING');
+      lines.push('─'.repeat(40));
+      lines.push('Sweet spot: ' + sweet.length + ' | Near edge: ' + edge.length + ' | Off target: ' + off.length);
+      if (off.length) lines.push('Off-target clients requiring review: ' + off.map(c => c.client).join(', '));
+      lines.push('');
+
+      // 7. Risk Summary
+      lines.push('7. RISK SUMMARY');
+      lines.push('─'.repeat(40));
+      const riskLevel = redPipe.length > 2 ? 'HIGH' : redPipe.length > 0 ? 'MEDIUM' : 'LOW';
+      lines.push('Overall risk level: ' + riskLevel);
+      if (leaking.length) lines.push('Revenue risk: ' + leaking.length + ' client' + (leaking.length!==1?'s':'') + ' flagged for leakage');
+      if (overdue.length) lines.push('Pricing risk: ' + overdue.length + ' fee review' + (overdue.length!==1?'s':'') + ' overdue');
+      if (redPipe.length) lines.push('Delivery risk: ' + redPipe.length + ' critical blocker' + (redPipe.length!==1?'s':''));
+      lines.push('');
+      lines.push('═'.repeat(56));
+      lines.push('Generated: ' + now.toLocaleString('en-IE'));
+
+      this.output = lines.join('\n');
+      this.lastGenerated = now.toLocaleTimeString('en-IE', { hour:'2-digit', minute:'2-digit' });
+    },
+
+    copyText(t) { navigator.clipboard.writeText(t); window.dispatchEvent(new CustomEvent('show-toast')); },
+    init() { this.$nextTick(() => lucide.createIcons()); }
+  };
+}
+
+// ─── GLOBAL TOAST HANDLER ────────────────────────────────────────────────────
+window.addEventListener('show-toast', () => {
+  const el = document.querySelector('[x-data="commandCenter()"]');
+  if (el && el._x_dataStack) { const d = el._x_dataStack[0]; d.toast = true; setTimeout(()=>d.toast=false, 2000); }
+});
+
+// ─── LUCIDE: ensure icons render on all DOM changes ──────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
+  new MutationObserver(() => lucide.createIcons()).observe(document.body, { childList: true, subtree: true });
+});
+</script>
+
+</body>
+</html>
