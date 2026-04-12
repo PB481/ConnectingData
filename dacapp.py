@@ -1,8 +1,8 @@
 """
 ╔══════════════════════════════════════════════════════════════════════╗
-║  S110 DAC SPV — Interactive Learning Tool for Fund Accountants       ║
-║  Tech: Streamlit · Pandas · Plotly                                   ║
-║  Theme: Dark Financial Terminal (.streamlit/config.toml)             ║
+║  S110 DAC SPV — Interactive Learning Tool for Fund Accountants      ║
+║  Tech: Streamlit · Pandas · Plotly                                  ║
+║  Theme: Dark Financial Terminal (.streamlit/config.toml)            ║
 ║                                                                      ║
 ║  Run:  streamlit run app.py                                          ║
 ║  Deps: pip install streamlit pandas plotly openpyxl                  ║
@@ -60,6 +60,7 @@ BOND_NAMES = [
 BOND_COUPONS = [2.5, 1.75, 3.25, 2.0, 2.875, 3.5, 3.0, 2.625, 2.25, 3.125]
 BOND_RATINGS = ["AAA", "AAA", "BBB+", "A-", "A", "A-", "BBB", "BBB+", "A-", "BBB+"]
 
+
 @st.cache_data
 def generate_loan_portfolio():
     loans = []
@@ -85,6 +86,7 @@ def generate_loan_portfolio():
         })
     return pd.DataFrame(loans)
 
+
 @st.cache_data
 def generate_bond_portfolio():
     bonds = []
@@ -108,14 +110,16 @@ def generate_bond_portfolio():
         })
     return pd.DataFrame(bonds)
 
+
 def teach(private_credit_term, traditional_term, explanation):
-    """Render a teaching callout mapping PC term -> trad term."""
+    """Render a teaching callout mapping PC term → trad term."""
     st.markdown(
         f"**🔄 Term Translation** | "
         f"*Private Credit:* **{private_credit_term}** → "
         f"*Traditional Fund:* **{traditional_term}**"
     )
     st.caption(explanation)
+
 
 # ──────────────────────────────────────────────────────────────
 # Page Config
@@ -260,7 +264,7 @@ if page == "🏠 Structure Overview":
 # ══════════════════════════════════════════════════════════════
 elif page == "📖 Terminology Map":
     st.title("Private Credit ↔ Traditional Fund Terminology")
-    st.markdown("*When you see a private credit term, here’s what it means in your language*")
+    st.markdown("*When you see a private credit term, here's what it means in your language*")
 
     search = st.text_input("🔍 Search terms", placeholder="e.g. PPN, coupon, waterfall...")
 
@@ -315,7 +319,7 @@ elif page == "📖 Terminology Map":
 elif page == "📊 Portfolio Holdings":
     st.title("DAC Portfolio — 100 Synthetic Loans + 10 Bonds")
     teach("Collateral Pool", "Fund Portfolio",
-          "This is the portfolio you’re administering. Loans are priced daily by Markit; bonds by Bloomberg/vendor.")
+          "This is the portfolio you're administering. Loans are priced daily by Markit; bonds by Bloomberg/vendor.")
 
     # Summary metrics
     total_par_loans = loans_df["Par Value (€)"].sum()
@@ -380,7 +384,7 @@ elif page == "📊 Portfolio Holdings":
             st.markdown("""
             **What the happy path doesn't tell you:**
 
-            **Stale Price Protocol** — When a Markit price hasn't moved in >5 days (common for illiquid tranches), 
+            **Stale Price Protocol** — When a Markit price hasn't moved in >5 days (common for illiquid tranches), "
             you cannot simply flag it and move on. The OM typically mandates a specific escalation protocol:
             source 2-3 independent broker quotes, apply matrix pricing based on comparable credits, or fall back to
             the IM's internal mark — each requiring documented justification and ManCo sign-off.
@@ -545,27 +549,6 @@ elif page == "💰 NAV Calculation":
         handled by your pricing vendor — you must calculate it from the credit agreement terms.
         """)
 
-    # ── Real-World Friction: Discount Accretion (OID) ──
-    with st.expander("⚠️ REAL-WORLD FRICTION: Discount Accretion (OID) vs MTM", expanded=False):
-        st.error(
-            "**Loans purchased at a discount (e.g., 97.50) will naturally pull to par over their life.** "
-            "While FRS 102 FVTPL captures this in unrealised gains, tax neutrality often requires splitting it out."
-        )
-        st.markdown("""
-        **The Problem:** If you buy a loan at 97.50, the 2.50 discount is effectively additional economic yield. 
-        Under straight Mark-to-Market (MTM) accounting, this shows up as an "Unrealised Gain" when the price rises.
-        However, for S110 distributable income (and to calculate the correct PPN coupon), the tax adviser may 
-        require the FA to separate true market fluctuations from the systemic accretion of Original Issue Discount (OID).
-
-        **The FA Burden:** You cannot just rely on Markit's daily MTM. Your system must run a parallel 
-        Effective Interest Rate (EIR) or straight-line amortization model to calculate how much of that 2.50 
-        discount accretes into the income pool daily. 
-
-        **The Entries:** - DR Loan Cost Basis | CR Discount Accretion Income
-        - This effectively reclassifies part of your "Unrealised Gain" into "Interest Income," driving up the 
-          PPN coupon to ensure full S110 tax neutrality on the total economic return of the loan.
-        """)
-
     st.subheader("Liabilities & Accrued Expenses")
 
     liab_data = [
@@ -628,7 +611,7 @@ elif page == "💰 NAV Calculation":
           "Unlike a traditional fund, there is NO daily capital activity.")
 
     ppn_col1, ppn_col2, ppn_col3 = st.columns(3)
-    inception_fv = total_fv_loans + total_mv_bonds
+    inception_fv = total_fv_loans + total_fv_bonds
     with ppn_col1:
         ppn_inception = st.number_input("PPN Face Value at Inception (€)", value=int(inception_fv), step=100000, format="%d")
     with ppn_col2:
@@ -878,7 +861,7 @@ elif page == "📜 PPN Lifecycle":
     st.title("Profit Participating Note (PPN) — Full Lifecycle")
     teach("Profit Participating Note", "Share Class",
           "The PPN is the instrument the investor holds. Instead of buying shares/units, "
-          "the AUT buys a debt note that participates in the DAC’s profits. This is the critical difference.")
+          "the AUT buys a debt note that participates in the DAC's profits. This is the critical difference.")
 
     tab1, tab2, tab3, tab4 = st.tabs(["📦 Issuance", "📈 Valuation", "💸 Distribution", "🏛 S110 Tax"])
 
@@ -1030,7 +1013,8 @@ elif page == "💸 Cash Flow & Waterfall":
     ))
     fig_int.update_layout(**PLOTLY_LAYOUT, title="Interest Waterfall — Income Proceeds Only",
                          title_font_color=THEME["text"], showlegend=False,
-                         xaxis_tickangle=-45, margin=dict(b=120))
+                         xaxis_tickangle=-45)
+    fig_int.update_layout(margin=dict(l=20, r=20, t=40, b=120))
     st.plotly_chart(fig_int, use_container_width=True)
 
     # ── Principal Waterfall ──
@@ -1487,11 +1471,10 @@ elif page == "🏦 ATAD & GL Structure":
     with col2:
         interest_income = st.number_input("Gross Interest Income (annual, €)", value=gross_interest_income, step=100000, format="%d")
 
-    # FIXED CALCULATION
     net_interest = ppn_input - interest_income
     ebitda = interest_income + 500000 + 100000 + 15000 - operating_expenses
     threshold_30 = ebitda * 0.3
-    de_minimis = net_interest <= 3000000
+    de_minimis = ppn_input < 3000000
 
     calc_data = pd.DataFrame([
         {"Item": "(A) Gross Interest Income", "Amount (€)": interest_income},
@@ -1503,9 +1486,9 @@ elif page == "🏦 ATAD & GL Structure":
     st.dataframe(calc_data.style.format({"Amount (€)": "€{:,.0f}"}), use_container_width=True, hide_index=True)
 
     if de_minimis:
-        st.success(f"✅ **De Minimis Check: Net Interest Expense (€{max(0, net_interest):,.0f}) is BELOW €3,000,000 — ILR likely does NOT apply.** Full deduction available.")
+        st.success(f"✅ **De Minimis Check: PPN coupon (€{ppn_input:,.0f}) is BELOW €3,000,000 — ILR likely does NOT apply.** Full deduction available.")
     else:
-        st.error(f"⚠️ **Net Interest Expense (€{net_interest:,.0f}) EXCEEDS €3,000,000 — tax adviser must assess ILR applicability.** Standalone entity or single-group exemption may still apply.")
+        st.error(f"⚠️ **PPN coupon (€{ppn_input:,.0f}) EXCEEDS €3,000,000 — tax adviser must assess ILR applicability.** Standalone entity or single-group exemption may still apply.")
 
     with st.expander("📝 Notes for Fund Accountants"):
         st.markdown("""
@@ -1513,8 +1496,8 @@ elif page == "🏦 ATAD & GL Structure":
         2. **The KEY requirement:** every GL line must be tagged as 'interest equivalent' or 'non-interest'.
         3. **The PPN coupon is the critical item** — it is the primary deduction achieving S110 tax neutrality.
         4. **Unrealised gains/losses from Markit** are NOT interest equivalents — keep them separate.
-        5. **If Net Interest Expense < €3m annually**, the de minimis exemption likely applies.
-        6. **If Net Interest Expense > €3m**, the tax adviser must determine if standalone entity or single-group exemption applies.
+        5. **If PPN coupon < €3m annually**, the de minimis exemption likely applies.
+        6. **If PPN coupon > €3m**, the tax adviser must determine if standalone entity or single-group exemption applies.
         """)
 
 # ══════════════════════════════════════════════════════════════
@@ -1602,21 +1585,6 @@ elif page == "🛡 WHT & DTT":
     ])
     st.dataframe(wht_data, use_container_width=True, hide_index=True)
 
-    # ── Real-World Friction: WHT on Inflows ──
-    with st.expander("⚠️ REAL-WORLD FRICTION: WHT on Inflows (Trapped Cash)", expanded=False):
-        st.warning(
-            "**The above assumes WHT is only an issue on OUTFLOWS. In reality, you face WHT on INFLOWS too.** "
-            "European borrowers (e.g., a Spanish SA or Italian SpA) will often apply domestic withholding tax "
-            "on the interest they pay *to* the Irish DAC."
-        )
-        st.markdown("""
-        **The FA Burden:**
-        - **Accrual vs. Cash:** You must accrue the Gross Interest, but your agent bank will only deliver the Net Cash.
-        - **WHT Receivable:** The withheld amount must be booked as a "WHT Receivable" asset on your balance sheet, reducing your available cash but maintaining your NAV.
-        - **DTT Relief Forms:** The FA team must coordinate with the tax adviser to file local Double Taxation Treaty relief forms in the borrower's jurisdiction (e.g., Spanish Form 210) to reclaim the trapped cash.
-        - **Impairment:** If the forms are not filed, or relief is denied, the WHT Receivable becomes uncollectible. You must eventually write off this asset, hitting the P&L and permanently losing that yield.
-        """)
-
     st.subheader("Documentation Checklist")
     st.markdown("All documents must be on file **before the first distribution**.")
 
@@ -1652,7 +1620,7 @@ elif page == "🛡 WHT & DTT":
 # ══════════════════════════════════════════════════════════════
 elif page == "⚠️ Friction & Exceptions":
     st.title("Real-World Friction & Operational Exceptions")
-    st.markdown("*The harsh reality that the happy path doesn’t show you*")
+    st.markdown("*The harsh reality that the happy path doesn't show you*")
 
     st.error(
         "**This page exists because the rest of this tool shows the conceptual framework — the 'what.'** "
@@ -1927,7 +1895,7 @@ elif page == "⚡ Quick Reference":
         ("WHT exemption needed", "Hard compliance gate", "Ireland charges 20% WHT on interest to non-residents. NEVER wire the PPN coupon without confirmed DTT/Eurobond exemption."),
         ("Irrecoverable VAT", "Hidden cost in your NAV", "VAT on audit/legal fees that you can't reclaim. Must be accrued as a real cost or your NAV is overstated."),
         ("FRS 102 Section 12", "Accounting classification", "Synthetic loans are 'non-basic'. Fair value through P&L — NO separate impairment. Markit prices already embed credit risk. Impairment only relevant if amortised cost loans are ever added."),
-        ("De minimis EUR 3m", "ATAD safety threshold", "If Net Interest Expense is under EUR 3m/year, the ILR likely doesn't bite. Tax adviser confirms, but you provide the data."),
+        ("De minimis EUR 3m", "ATAD safety threshold", "If PPN coupon is under EUR 3m/year, the ILR likely doesn't bite. Tax adviser confirms, but you provide the data."),
     ]
 
     search_qr = st.text_input("🔍 Search quick reference", placeholder="e.g. coupon, waterfall, markit...")
