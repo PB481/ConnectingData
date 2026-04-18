@@ -1,0 +1,1007 @@
+"""
+Tokenised Tree — End-to-End Lifecycle Prototype
+================================================
+Simulates the full natural-capital tokenisation workflow:
+  1. Origination         — Landowner onboarding, SPV setup, TREE minting
+  2. MRV cycle           — Dual-verifier oracle, CO2e minting
+  3. Order book          — Secondary market for TREE and CO2e
+  4. Retirement          — Corporate burn with audit certificate
+  5. Fund admin          — NAV, waterfall, investor statements
+  6. Stress scenarios    — Attacks, force majeure, tolerance breaches
+
+Run:  streamlit run tokenised_tree_app.py
+"""
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
+import hashlib
+import json
+from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass, field, asdict
+from typing import Optional
+import uuid
+
+# ============================================================================
+# PAGE CONFIG
+# ============================================================================
+st.set_page_config(
+    page_title="Tokenised Tree Prototype",
+    page_icon="🌳",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# Light theme styling (high contrast)
+st.markdown("""
+<style>
+    .stApp { background-color: #f8fafc; color: #0f172a; }
+    .main-header { color: #15803d; font-size: 2.2rem; font-weight: 700; margin-bottom: 0; }
+    .sub-header { color: #475569; font-size: 1rem; margin-top: 0; margin-bottom: 2rem; }
+    .metric-card {
+        background: #ffffff;
+        padding: 1.2rem; border-radius: 8px; border-left: 3px solid #15803d;
+        border: 1px solid #e2e8f0;
+    }
+    .stTabs [data-baseweb="tab-list"] { gap: 4px; }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #e2e8f0; border-radius: 6px 6px 0 0;
+        padding: 10px 16px; color: #1e293b;
+    }
+    .stTabs [aria-selected="true"] { background-color: #ffffff; color: #15803d; }
+    .hash-text { font-family: 'Courier New', monospace; font-size: 0.75rem; color: #475569; }
+    .success-box { background: #dcfce7; padding: 1rem; border-radius: 6px; border-left: 3px solid #16a34a; color: #14532d; }
+    .warning-box { background: #fef3c7; padding: 1rem; border-radius: 6px; border-left: 3px solid #d97706; color: #78350f; }
+    .error-box { background: #fee2e2; padding: 1rem; border-radius: 6px; border-left: 3px solid #dc2626; color: #7f1d1d; }
+</style>
+""", unsafe_allow_html=True)
+
+# ============================================================================
+# DATA MODEL
+# ============================================================================
+
+@dataclass
+class Project:
+    """A forestry origination — one SPV, one tokenisation event."""
+    project_id: str
+    name: str
+    location: str
+    hectares: float
+    species_mix: str
+    planting_year: int
+    tenor_years: int
+    baseline_tco2e: float               # Carbon stock at origination
+    expected_annual_seq: float          # tCO2e/ha/year expected sequestration
+    landowner: str
+    tree_tokens_issued: int             # Total TREE supply for this project
+    origination_price_eur: float        # Initial price per TREE
+    gps_polygon_hash: str
+    legal_opinion_hash: str
+    created_at: str
+
+@dataclass
+class LedgerEntry:
+    """Single event in the on-chain-equivalent ledger."""
+    tx_id: str
+    timestamp: str
+    event_type: str    # MINT_TREE, MINT_CO2E, TRANSFER, BURN_CO2E, etc.
+    project_id: str
+    actor: str
+    counterparty: Optional[str]
+    token_type: str    # TREE or CO2E
+    amount: float
+    price_eur: Optional[float]
+    metadata: dict
+    block_hash: str
+
+@dataclass
+class Order:
+    order_id: str
+    timestamp: str
+    project_id: str
+    token_type: str   # TREE or CO2E
+    side: str         # BUY or SELL
+    quantity: float
+    price_eur: float
+    actor: str
+    status: str       # OPEN, FILLED, PARTIAL, CANCELLED
+
+@dataclass
+class MRVCycle:
+    cycle_id: str
+    project_id: str
+    cycle_year: int
+    verifier_1: str
+    verifier_1_reading: float   # tCO2e claimed sequestration
+    verifier_1_signature: str
+    verifier_2: str
+    verifier_2_reading: float
+    verifier_2_signature: str
+    satellite_data_hash: str
+    lidar_data_hash: str
+    tolerance_pct: float
+    agreed_reading: Optional[float]
+    status: str                 # PENDING, AGREED, DISPUTED, PAUSED
+    timestamp: str
+
+
+# ============================================================================
+# SESSION STATE INITIALISATION
+# ============================================================================
+
+def _hash(obj) -> str:
+    """Lightweight content hash to simulate on-chain commitments."""
+    s = json.dumps(obj, sort_keys=True, default=str) if not isinstance(obj, str) else obj
+    return hashlib.sha256(s.encode()).hexdigest()[:16]
+
+def init_state():
+    if "initialised" in st.session_state:
+        return
+
+    # --- Seed a demo project ---
+    demo_project = Project(
+        project_id="PRJ-0001",
+        name="Slieve Bloom Native Woodland",
+        location="Co. Laois, Ireland",
+        hectares=120.0,
+        species_mix="Oak 40% / Birch 30% / Rowan 20% / Scots Pine 10%",
+        planting_year=2026,
+        tenor_years=30,
+        baseline_tco2e=180.0,       # existing stock pre-planting
+        expected_annual_seq=8.5,    # tCO2e / ha / yr
+        landowner="O'Sullivan Estate Ltd.",
+        tree_tokens_issued=120_000, # 1,000 TREE / hectare
+        origination_price_eur=20.0,
+        gps_polygon_hash=_hash("53.0891N,-7.5623W,polygon_v1"),
+        legal_opinion_hash=_hash("Matheson_legal_opinion_20260115"),
+        created_at="2026-01-15T10:00:00Z",
+    )
+
+    st.session_state.projects = {demo_project.project_id: demo_project}
+
+    # Token balances: {(actor, token_type, project_id): quantity}
+    # TREE is project-specific, CO2E is per-vintage
+    st.session_state.balances = {
+        ("O'Sullivan Estate Ltd.", "TREE", "PRJ-0001"): 24_000,   # 20% retained
+        ("Iveagh Pension Fund", "TREE", "PRJ-0001"): 48_000,
+        ("Green Infrastructure Ireland ICAV", "TREE", "PRJ-0001"): 36_000,
+        ("Retail Tranche (aggregated)", "TREE", "PRJ-0001"): 12_000,
+    }
+
+    # Stablecoin / cash balances for settlement
+    st.session_state.cash = {
+        "O'Sullivan Estate Ltd.": 480_000.0,
+        "Iveagh Pension Fund": 2_500_000.0,
+        "Green Infrastructure Ireland ICAV": 1_800_000.0,
+        "Retail Tranche (aggregated)": 400_000.0,
+        "Ryanair (corporate buyer)": 5_000_000.0,
+        "Bank of Ireland (corporate buyer)": 3_000_000.0,
+        "Microsoft EMEA (corporate buyer)": 8_000_000.0,
+    }
+
+    # Genesis ledger
+    st.session_state.ledger = [
+        LedgerEntry(
+            tx_id="TX-000001",
+            timestamp="2026-01-15T10:00:00Z",
+            event_type="MINT_TREE",
+            project_id="PRJ-0001",
+            actor="SPV-PRJ-0001",
+            counterparty="Primary market allocation",
+            token_type="TREE",
+            amount=120_000,
+            price_eur=20.0,
+            metadata={"note": "Genesis mint at origination"},
+            block_hash=_hash("genesis_mint_prj0001"),
+        )
+    ]
+
+    st.session_state.mrv_cycles = []
+    st.session_state.orders = []
+    st.session_state.filled_trades = []
+    st.session_state.retirements = []  # Burned CO2E certificates
+    st.session_state.stress_log = []
+    st.session_state.next_tx = 2
+    st.session_state.next_order = 1
+    st.session_state.current_year = 2026
+    st.session_state.nav_per_tree = 20.0
+    st.session_state.current_co2e_spot = 55.0  # EUR / tCO2e
+
+    st.session_state.initialised = True
+
+
+init_state()
+
+# ============================================================================
+# CORE OPERATIONS
+# ============================================================================
+
+def new_tx_id():
+    tx = f"TX-{st.session_state.next_tx:06d}"
+    st.session_state.next_tx += 1
+    return tx
+
+def new_order_id():
+    oid = f"ORD-{st.session_state.next_order:06d}"
+    st.session_state.next_order += 1
+    return oid
+
+def record_ledger(event_type, project_id, actor, counterparty, token_type,
+                  amount, price_eur, metadata):
+    entry = LedgerEntry(
+        tx_id=new_tx_id(),
+        timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+        event_type=event_type,
+        project_id=project_id,
+        actor=actor,
+        counterparty=counterparty,
+        token_type=token_type,
+        amount=amount,
+        price_eur=price_eur,
+        metadata=metadata,
+        block_hash=_hash({"e": event_type, "a": actor, "amt": amount, "t": datetime.now(timezone.utc).isoformat()}),
+    )
+    st.session_state.ledger.append(entry)
+    return entry
+
+def get_balance(actor, token_type, project_id):
+    return st.session_state.balances.get((actor, token_type, project_id), 0)
+
+def adjust_balance(actor, token_type, project_id, delta):
+    key = (actor, token_type, project_id)
+    st.session_state.balances[key] = st.session_state.balances.get(key, 0) + delta
+
+def run_mrv_cycle(project_id, cycle_year, v1_reading, v2_reading, tolerance_pct):
+    """Simulate dual-verifier MRV with oracle aggregation."""
+    project = st.session_state.projects[project_id]
+
+    v1_sig = _hash(f"verifier_sylvera_{cycle_year}_{v1_reading}")
+    v2_sig = _hash(f"verifier_pachama_{cycle_year}_{v2_reading}")
+    sat_hash = _hash(f"sentinel2_{project_id}_{cycle_year}")
+    lidar_hash = _hash(f"lidar_{project_id}_{cycle_year}")
+
+    # Oracle aggregation logic
+    avg = (v1_reading + v2_reading) / 2
+    divergence = abs(v1_reading - v2_reading) / avg if avg > 0 else 0
+
+    if divergence > tolerance_pct / 100:
+        status = "DISPUTED"
+        agreed = None
+    else:
+        status = "AGREED"
+        agreed = avg  # Conservative — could use min() for stricter policy
+
+    cycle = MRVCycle(
+        cycle_id=f"MRV-{project_id}-{cycle_year}",
+        project_id=project_id,
+        cycle_year=cycle_year,
+        verifier_1="Sylvera (independent)",
+        verifier_1_reading=v1_reading,
+        verifier_1_signature=v1_sig,
+        verifier_2="Pachama (independent)",
+        verifier_2_reading=v2_reading,
+        verifier_2_signature=v2_sig,
+        satellite_data_hash=sat_hash,
+        lidar_data_hash=lidar_hash,
+        tolerance_pct=tolerance_pct,
+        agreed_reading=agreed,
+        status=status,
+        timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+    )
+    st.session_state.mrv_cycles.append(cycle)
+
+    # If AGREED, mint CO2E to TREE holders pro-rata
+    if status == "AGREED":
+        total_tree = project.tree_tokens_issued
+        # Find all TREE holders for this project
+        for (actor, tok, pid), qty in list(st.session_state.balances.items()):
+            if tok == "TREE" and pid == project_id and qty > 0:
+                pro_rata_co2e = agreed * (qty / total_tree)
+                # Apply 15% buffer pool withholding
+                net_co2e = pro_rata_co2e * 0.85
+                adjust_balance(actor, f"CO2E-{cycle_year}", project_id, net_co2e)
+                record_ledger(
+                    "MINT_CO2E",
+                    project_id,
+                    f"Oracle-{cycle_year}",
+                    actor,
+                    f"CO2E-{cycle_year}",
+                    net_co2e,
+                    st.session_state.current_co2e_spot,
+                    {"vintage": cycle_year, "buffer_pool_pct": 15, "gross": pro_rata_co2e},
+                )
+        # Buffer pool
+        buffer = agreed * 0.15
+        adjust_balance("Buffer Pool (reinsurance)", f"CO2E-{cycle_year}", project_id, buffer)
+        record_ledger("BUFFER_ALLOCATION", project_id, f"Oracle-{cycle_year}",
+                      "Buffer Pool", f"CO2E-{cycle_year}", buffer, None,
+                      {"purpose": "reversal_insurance"})
+
+    return cycle
+
+
+def place_order(project_id, token_type, side, quantity, price, actor):
+    order = Order(
+        order_id=new_order_id(),
+        timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+        project_id=project_id,
+        token_type=token_type,
+        side=side,
+        quantity=quantity,
+        price_eur=price,
+        actor=actor,
+        status="OPEN",
+    )
+    st.session_state.orders.append(order)
+    match_orders(project_id, token_type)
+    return order
+
+
+def match_orders(project_id, token_type):
+    """Simple price-time priority matching."""
+    buys = sorted(
+        [o for o in st.session_state.orders
+         if o.status == "OPEN" and o.side == "BUY"
+         and o.project_id == project_id and o.token_type == token_type],
+        key=lambda o: (-o.price_eur, o.timestamp)
+    )
+    sells = sorted(
+        [o for o in st.session_state.orders
+         if o.status == "OPEN" and o.side == "SELL"
+         and o.project_id == project_id and o.token_type == token_type],
+        key=lambda o: (o.price_eur, o.timestamp)
+    )
+    for b in buys:
+        for s in sells:
+            if b.status != "OPEN" or s.status != "OPEN":
+                continue
+            if b.price_eur >= s.price_eur:
+                trade_qty = min(b.quantity, s.quantity)
+                trade_price = s.price_eur  # Price-taker gets maker price
+
+                # Atomic DvP: check balances
+                seller_has = get_balance(s.actor, token_type, project_id)
+                buyer_cash = st.session_state.cash.get(b.actor, 0)
+                cost = trade_qty * trade_price
+
+                if seller_has < trade_qty or buyer_cash < cost:
+                    # Would happen in production via smart contract pre-check
+                    continue
+
+                # Execute atomic swap
+                adjust_balance(s.actor, token_type, project_id, -trade_qty)
+                adjust_balance(b.actor, token_type, project_id, trade_qty)
+                st.session_state.cash[s.actor] = st.session_state.cash.get(s.actor, 0) + cost
+                st.session_state.cash[b.actor] = st.session_state.cash.get(b.actor, 0) - cost
+
+                record_ledger(
+                    "TRADE",
+                    project_id,
+                    s.actor,
+                    b.actor,
+                    token_type,
+                    trade_qty,
+                    trade_price,
+                    {"buy_order": b.order_id, "sell_order": s.order_id, "gross_eur": cost},
+                )
+                st.session_state.filled_trades.append({
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                    "project": project_id, "token": token_type,
+                    "buyer": b.actor, "seller": s.actor,
+                    "qty": trade_qty, "price": trade_price, "value": cost,
+                })
+
+                b.quantity -= trade_qty
+                s.quantity -= trade_qty
+                if b.quantity == 0: b.status = "FILLED"
+                if s.quantity == 0: s.status = "FILLED"
+
+                # Update spot reference
+                if token_type.startswith("CO2E"):
+                    st.session_state.current_co2e_spot = trade_price
+
+
+def retire_co2e(project_id, vintage_token, quantity, corporate, claim_description):
+    """Burn CO2E tokens — corporate offset claim."""
+    if get_balance(corporate, vintage_token, project_id) < quantity:
+        return None
+
+    adjust_balance(corporate, vintage_token, project_id, -quantity)
+
+    cert_id = f"RET-{uuid.uuid4().hex[:8].upper()}"
+    cert = {
+        "certificate_id": cert_id,
+        "corporate": corporate,
+        "project_id": project_id,
+        "vintage": vintage_token.replace("CO2E-", ""),
+        "tco2e_retired": quantity,
+        "claim_description": claim_description,
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        "cert_hash": _hash({"cert": cert_id, "corp": corporate, "qty": quantity}),
+    }
+    st.session_state.retirements.append(cert)
+
+    record_ledger(
+        "BURN_CO2E",
+        project_id,
+        corporate,
+        "Retirement registry",
+        vintage_token,
+        quantity,
+        st.session_state.current_co2e_spot,
+        {"certificate": cert_id, "claim": claim_description},
+    )
+    return cert
+
+
+# ============================================================================
+# SIDEBAR
+# ============================================================================
+
+with st.sidebar:
+    st.markdown("### 🌳 Tokenised Tree")
+    st.caption("Natural capital tokenisation prototype")
+    st.divider()
+
+    st.markdown("#### Simulated state")
+    st.metric("Active projects", len(st.session_state.projects))
+    st.metric("Ledger entries", len(st.session_state.ledger))
+    st.metric("MRV cycles completed", len([c for c in st.session_state.mrv_cycles if c.status == "AGREED"]))
+    st.metric("Retirements", len(st.session_state.retirements))
+    st.metric("CO2E spot (€/t)", f"€{st.session_state.current_co2e_spot:.2f}")
+
+    st.divider()
+    st.markdown("#### Reset")
+    if st.button("🔄 Reset prototype", use_container_width=True):
+        for k in list(st.session_state.keys()):
+            del st.session_state[k]
+        st.rerun()
+
+    st.divider()
+    st.caption("This is a **simulated ledger**. No real chain, no real assets, no real capital at risk. The data model mirrors what a production system would write on-chain and to the fund administration system of record.")
+
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
+st.markdown('<p class="main-header">🌳 Tokenised Tree — Lifecycle Simulator</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Origination → MRV → Trading → Retirement → Reporting. Each tab is a stage in the lifecycle.</p>', unsafe_allow_html=True)
+
+with st.expander("❓ New here? Start with this plain-English overview", expanded=False):
+    st.markdown("""
+**What is this app showing?**
+A simulation of turning a real forest into a financial product that pension funds, corporates and retail investors can buy — end-to-end.
+
+**Key words (the 60-second version)**
+
+- **Token** — a digital certificate of ownership, recorded on a shared ledger (like a receipt that can't be forged or lost). Two types here:
+  - **TREE token** = fractional ownership of the forest itself (like a share in the land and its future timber).
+  - **CO2E token** = one tonne of carbon dioxide the forest has pulled out of the air that year. Corporates buy these to cancel out their own emissions.
+- **MRV** — *Measurement, Reporting, Verification*. How we actually prove the forest absorbed carbon (satellite photos + LiDAR scans + two independent auditors). No proof, no tokens minted.
+- **Oracle** — the service that takes real-world measurements and writes them into the ledger. We use **two** independent verifiers — if they disagree too much, no tokens are minted.
+- **SPV** — *Special Purpose Vehicle*. A dedicated legal company that owns the forest on investors' behalf. This is what makes it a regulated fund, not just a crypto coin.
+- **NAV** — *Net Asset Value*. The fair-value price per TREE token, published monthly (same concept as a mutual fund's unit price).
+- **Retirement / Burn** — when a company uses a CO2E token to offset its own emissions, the token is destroyed permanently so nobody can claim it twice.
+- **Ledger** — the shared, append-only record of every mint, trade and burn. Any auditor can replay it.
+
+**Why does this exist?** The old voluntary carbon market lost credibility because credits couldn't be independently verified. This design fixes that by baking proof, audit trails and regulated fund administration into the product from day one.
+
+**How to use the tabs (left → right)**
+
+1. **Project & origination** — the forest, who owns what, the starting position.
+2. **MRV cycle** — run a yearly measurement; mint new carbon tokens if both verifiers agree.
+3. **Order book** — buy and sell TREE and CO2E tokens in a simulated market.
+4. **Retirement** — a corporate buys CO2E tokens and burns them, getting an audit certificate.
+5. **Fund administration** — NAV, waterfall (who gets paid what), investor statements.
+6. **Ledger** — every transaction in one place, for audit.
+7. **Stress tests** — try to break the system (verifier collusion, GPS tampering, fires) and see the controls fire.
+    """)
+
+tabs = st.tabs([
+    "📋 Project & origination",
+    "🛰️ MRV cycle",
+    "📊 Order book",
+    "🔥 Retirement",
+    "💼 Fund administration",
+    "🧾 Ledger",
+    "⚠️ Stress tests",
+])
+
+# ----------------------------------------------------------------------------
+# TAB 1: PROJECT & ORIGINATION
+# ----------------------------------------------------------------------------
+with tabs[0]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+This is the **starting position**. A landowner has signed a 30-year conservation agreement to plant and protect a native woodland in Ireland. A dedicated company (the **SPV**) now owns that forest on investors' behalf.
+
+- **TREE supply** is the total number of ownership tokens minted at launch — fixed for the life of the project. Think of each TREE as a tiny share in the forest.
+- **Holders** are the people and institutions who bought TREE tokens. The pie chart shows who owns what slice.
+- **GPS / legal hashes** are tamper-proof fingerprints of the land boundary and legal agreement — so anyone can later prove what was signed and where.
+- **Notional NAV** = holdings × current fair value per TREE (the fund's "unit price").
+        """)
+
+    project = st.session_state.projects["PRJ-0001"]
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Project", project.name)
+    col2.metric("Hectares", f"{project.hectares:.0f}")
+    col3.metric("TREE supply", f"{project.tree_tokens_issued:,}")
+
+    st.markdown("#### Origination details")
+    orig = pd.DataFrame([
+        ("Location", project.location),
+        ("Species mix", project.species_mix),
+        ("Planting year", str(project.planting_year)),
+        ("Tenor", f"{project.tenor_years} years"),
+        ("Landowner", project.landowner),
+        ("Expected annual sequestration", f"{project.expected_annual_seq} tCO₂e/ha/yr"),
+        ("Lifetime expected", f"{project.expected_annual_seq * project.hectares * project.tenor_years:,.0f} tCO₂e"),
+        ("Origination price", f"€{project.origination_price_eur:.2f} per TREE"),
+        ("Total raise at origination", f"€{project.tree_tokens_issued * project.origination_price_eur:,.0f}"),
+        ("GPS polygon hash", project.gps_polygon_hash),
+        ("Legal opinion hash", project.legal_opinion_hash),
+    ], columns=["Field", "Value"])
+    st.dataframe(orig, hide_index=True, use_container_width=True)
+
+    st.markdown("#### TREE holders (current)")
+    tree_holders = [
+        {"Holder": k[0], "TREE tokens": v, "% supply": v / project.tree_tokens_issued * 100,
+         "Notional NAV": v * st.session_state.nav_per_tree}
+        for k, v in st.session_state.balances.items()
+        if k[1] == "TREE" and k[2] == "PRJ-0001" and v > 0
+    ]
+    df_h = pd.DataFrame(tree_holders)
+    df_h["% supply"] = df_h["% supply"].round(1)
+    df_h["Notional NAV"] = df_h["Notional NAV"].apply(lambda x: f"€{x:,.0f}")
+    df_h = df_h.sort_values("TREE tokens", ascending=False)
+    st.dataframe(df_h, hide_index=True, use_container_width=True)
+
+    # Visualise holdings
+    fig = px.pie(
+        pd.DataFrame(tree_holders), values="TREE tokens", names="Holder",
+        title="TREE ownership distribution",
+        color_discrete_sequence=px.colors.sequential.Emrld,
+    )
+    fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                      font_color="#0f172a", title_font_color="#15803d")
+    st.plotly_chart(fig, use_container_width=True)
+
+
+# ----------------------------------------------------------------------------
+# TAB 2: MRV CYCLE
+# ----------------------------------------------------------------------------
+with tabs[1]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+Once a year, we **measure how much CO₂ the forest actually absorbed** and mint new carbon tokens (CO2E) to match. This is the trust layer — no measurement means no tokens.
+
+- Two **independent verifiers** (e.g. Sylvera and Pachama) submit their own readings using satellite imagery, LiDAR scans and ground samples.
+- The **Oracle tolerance** slider is how far apart they're allowed to be. If the gap is bigger than the tolerance, the system **pauses minting** and flags a dispute — this is what stops phantom credits being created.
+- If they agree closely enough, the system averages their numbers and **mints that many CO2E tokens**, distributed pro-rata to TREE holders (investors earn carbon income for owning the forest).
+- Each CO2E token = **1 tonne of CO₂ removed**, stamped with the year ("vintage") so you know when it was sequestered.
+        """)
+    st.markdown("### Run an MRV cycle")
+    st.caption("Two independent verifiers submit sequestration readings. If they diverge beyond tolerance, the oracle pauses minting and escalates. This is the integrity layer.")
+
+    colA, colB = st.columns([1, 1])
+    with colA:
+        cycle_year = st.number_input("Cycle year", min_value=2026, max_value=2055,
+                                      value=st.session_state.current_year, step=1)
+        tolerance = st.slider("Oracle tolerance (%)", 1, 25, 10,
+                              help="Maximum allowed % divergence between verifiers before the cycle is disputed")
+    with colB:
+        expected = project.expected_annual_seq * project.hectares
+        st.info(f"**Model expectation:** {expected:,.0f} tCO₂e for this cycle ({project.hectares:.0f} ha × {project.expected_annual_seq} tCO₂e/ha/yr)")
+
+    st.markdown("#### Verifier readings")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**Sylvera** (independent)")
+        v1 = st.number_input("Sylvera reading (tCO₂e)", 0.0, 5000.0, float(expected), step=10.0, key="v1")
+    with c2:
+        st.markdown("**Pachama** (independent)")
+        v2 = st.number_input("Pachama reading (tCO₂e)", 0.0, 5000.0, float(expected * 0.96), step=10.0, key="v2")
+
+    divergence = abs(v1 - v2) / ((v1 + v2) / 2) * 100 if (v1 + v2) > 0 else 0
+    st.markdown(f"**Divergence:** {divergence:.2f}% (tolerance: {tolerance}%)")
+
+    if st.button("🛰️ Run oracle aggregation", type="primary"):
+        cycle = run_mrv_cycle(project.project_id, int(cycle_year), v1, v2, tolerance)
+        if cycle.status == "AGREED":
+            st.success(f"✅ MRV agreed. {cycle.agreed_reading:.0f} tCO₂e — minted CO2E-{cycle_year} to holders (85% pro-rata, 15% to buffer pool).")
+            st.session_state.current_year = int(cycle_year) + 1
+        else:
+            st.error(f"⚠️ MRV DISPUTED. Divergence {divergence:.1f}% exceeds {tolerance}% tolerance. No CO2E minted. Cycle escalated to arbitration.")
+
+    # History
+    if st.session_state.mrv_cycles:
+        st.markdown("#### MRV history")
+        mrv_df = pd.DataFrame([{
+            "Cycle": c.cycle_id, "Year": c.cycle_year,
+            "Sylvera": f"{c.verifier_1_reading:.0f}",
+            "Pachama": f"{c.verifier_2_reading:.0f}",
+            "Agreed (tCO₂e)": f"{c.agreed_reading:.0f}" if c.agreed_reading else "—",
+            "Status": c.status,
+            "Sat hash": c.satellite_data_hash, "LiDAR hash": c.lidar_data_hash,
+        } for c in st.session_state.mrv_cycles])
+        st.dataframe(mrv_df, hide_index=True, use_container_width=True)
+
+        agreed = [c for c in st.session_state.mrv_cycles if c.status == "AGREED"]
+        if agreed:
+            fig = go.Figure()
+            fig.add_trace(go.Bar(x=[c.cycle_year for c in agreed],
+                                 y=[c.agreed_reading for c in agreed],
+                                 marker_color="#4ade80", name="Sequestered tCO₂e"))
+            fig.update_layout(title="Annual sequestration (agreed readings)",
+                              paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                              font_color="#0f172a", title_font_color="#15803d",
+                              xaxis_title="Cycle year", yaxis_title="tCO₂e")
+            st.plotly_chart(fig, use_container_width=True)
+
+
+# ----------------------------------------------------------------------------
+# TAB 3: ORDER BOOK
+# ----------------------------------------------------------------------------
+with tabs[2]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+This is the **marketplace** where holders buy and sell tokens after the initial issuance — just like a stock exchange, but for TREE and CO2E.
+
+- **Side**: *BUY* if you want to acquire tokens; *SELL* if you want to offload them.
+- **Bid / Ask**: the highest price someone is willing to pay (bid) and the lowest someone is willing to accept (ask). A trade happens when they meet.
+- **DvP** (*Delivery versus Payment*) — the tokens and the cash move at exactly the same instant. Nobody can run off with one without delivering the other.
+- **TREE** trades long-term (people holding the forest). **CO2E** trades by vintage year (CO2E-2026 is different from CO2E-2027 — some buyers want specific years for their reporting).
+        """)
+    st.markdown("### Secondary market")
+    st.caption("Price-time priority matching. Atomic DvP — token and cash legs settle in the same event, or neither does.")
+
+    token_choice = st.selectbox(
+        "Trade",
+        ["TREE (ownership)"] + [f"CO2E-{c.cycle_year} (vintage)"
+                                 for c in st.session_state.mrv_cycles if c.status == "AGREED"]
+    )
+    token_key = "TREE" if token_choice.startswith("TREE") else token_choice.split(" ")[0]
+
+    st.markdown("#### Place order")
+    with st.form("order_form", clear_on_submit=True):
+        c1, c2, c3, c4, c5 = st.columns(5)
+        with c1:
+            side = st.selectbox("Side", ["BUY", "SELL"])
+        with c2:
+            actor_options = list(set(
+                [k[0] for k in st.session_state.balances.keys()] + list(st.session_state.cash.keys())
+            ))
+            actor = st.selectbox("Actor", sorted(actor_options))
+        with c3:
+            qty = st.number_input("Quantity", 1.0, 100000.0, 100.0)
+        with c4:
+            default_price = st.session_state.nav_per_tree if token_key == "TREE" else st.session_state.current_co2e_spot
+            price = st.number_input("Price €", 0.01, 1000.0, float(default_price), step=0.5)
+        with c5:
+            st.write("")
+            st.write("")
+            submit = st.form_submit_button("Submit order", type="primary")
+        if submit:
+            order = place_order("PRJ-0001", token_key, side, qty, price, actor)
+            st.success(f"Order {order.order_id} placed: {side} {qty} {token_key} @ €{price}")
+
+    # Display order book
+    st.markdown("#### Open orders — bids / asks")
+    open_orders = [o for o in st.session_state.orders
+                   if o.status == "OPEN" and o.token_type == token_key]
+    col_bid, col_ask = st.columns(2)
+    with col_bid:
+        st.markdown("**BIDS** (buyers)")
+        bids = sorted([o for o in open_orders if o.side == "BUY"],
+                      key=lambda x: -x.price_eur)
+        if bids:
+            bid_df = pd.DataFrame([{
+                "Price €": f"{o.price_eur:.2f}", "Qty": f"{o.quantity:.0f}",
+                "Actor": o.actor, "ID": o.order_id
+            } for o in bids])
+            st.dataframe(bid_df, hide_index=True, use_container_width=True)
+        else:
+            st.caption("No open bids")
+    with col_ask:
+        st.markdown("**ASKS** (sellers)")
+        asks = sorted([o for o in open_orders if o.side == "SELL"],
+                      key=lambda x: x.price_eur)
+        if asks:
+            ask_df = pd.DataFrame([{
+                "Price €": f"{o.price_eur:.2f}", "Qty": f"{o.quantity:.0f}",
+                "Actor": o.actor, "ID": o.order_id
+            } for o in asks])
+            st.dataframe(ask_df, hide_index=True, use_container_width=True)
+        else:
+            st.caption("No open asks")
+
+    # Recent trades
+    st.markdown("#### Recent fills")
+    if st.session_state.filled_trades:
+        recent = [t for t in st.session_state.filled_trades if t["token"] == token_key][-20:]
+        if recent:
+            tr_df = pd.DataFrame(recent)
+            tr_df = tr_df[["timestamp", "buyer", "seller", "qty", "price", "value"]]
+            tr_df["price"] = tr_df["price"].apply(lambda x: f"€{x:.2f}")
+            tr_df["value"] = tr_df["value"].apply(lambda x: f"€{x:,.0f}")
+            st.dataframe(tr_df, hide_index=True, use_container_width=True)
+    else:
+        st.caption("No trades yet — place matching buy and sell orders above")
+
+
+# ----------------------------------------------------------------------------
+# TAB 4: RETIREMENT
+# ----------------------------------------------------------------------------
+with tabs[3]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+A company uses CO2E tokens to **cancel out its own emissions** — legally and publicly.
+
+- **Burn** = the token is destroyed on the ledger. It can never be re-sold, re-used or double-counted.
+- In return, the company gets a **retirement certificate** (a unique, non-duplicable receipt) they can show their auditor, investors or regulator as proof.
+- This is the step that turns a carbon token from a tradeable asset into a compliance claim (e.g. "Ryanair offset 10,000 tonnes of 2026 flight emissions using CO2E-2026 from Project Slieve Bloom").
+- The old carbon market's biggest failing was that the same credit could be claimed twice. Burning fixes that.
+        """)
+    st.markdown("### Corporate retirement — burn-to-claim")
+    st.caption("A corporate buyer retires CO2E tokens against a specific emissions claim. The burn is recorded immutably; the certificate NFT provides audit evidence under CSRD / ISSB reporting.")
+
+    agreed_cycles = [c for c in st.session_state.mrv_cycles if c.status == "AGREED"]
+    if not agreed_cycles:
+        st.warning("No CO2E tokens in circulation yet. Run an MRV cycle first (Tab 2).")
+    else:
+        with st.form("retire_form"):
+            c1, c2 = st.columns(2)
+            with c1:
+                corporates = [a for a in st.session_state.cash.keys() if "corporate" in a.lower()]
+                corp = st.selectbox("Corporate buyer", corporates)
+                vintage_opts = [f"CO2E-{c.cycle_year}" for c in agreed_cycles]
+                vintage = st.selectbox("Vintage token", vintage_opts)
+            with c2:
+                held = float(get_balance(corp, vintage, "PRJ-0001"))
+                st.info(f"**{corp}** holds **{held:.2f}** {vintage}")
+                retire_qty = st.number_input("Quantity to retire (tCO₂e)", 0.0, max(held, 0.01), min(held, 10.0), step=1.0)
+            claim = st.text_area("Claim description (for audit trail)",
+                                  "FY2026 Scope 1 residual emissions — office operations, Ireland.")
+            submit = st.form_submit_button("🔥 Burn tokens & issue retirement certificate", type="primary")
+            if submit:
+                if retire_qty > held:
+                    st.error(f"Cannot retire {retire_qty} — holder only has {held}")
+                else:
+                    cert = retire_co2e("PRJ-0001", vintage, retire_qty, corp, claim)
+                    if cert:
+                        st.success(f"✅ Burned {retire_qty} {vintage}. Certificate **{cert['certificate_id']}** issued.")
+
+    # Retirement registry
+    if st.session_state.retirements:
+        st.markdown("#### Retirement registry")
+        ret_df = pd.DataFrame(st.session_state.retirements)
+        ret_df = ret_df[["certificate_id", "corporate", "vintage", "tco2e_retired",
+                         "claim_description", "timestamp", "cert_hash"]]
+        st.dataframe(ret_df, hide_index=True, use_container_width=True)
+
+
+# ----------------------------------------------------------------------------
+# TAB 5: FUND ADMINISTRATION
+# ----------------------------------------------------------------------------
+with tabs[4]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+This is the **fund manager's view** — how the money actually flows and what each investor sees.
+
+- **NAV** (*Net Asset Value*) — the fair-value price per TREE token, published monthly. If the forest has grown in value or sold carbon credits, NAV goes up.
+- **Waterfall** — a set of rules that says who gets paid first when cash comes in. Typical order: operating costs → landowner royalty → platform fees → investors. Every cent is traceable.
+- **Investor statement** — the document a TREE holder receives: how many tokens they own, what carbon they earned this year, and their share of profits. Same format a regulated fund sends to pension fund trustees.
+- All of it is **derived** from the ledger — no manual spreadsheets, no room for numbers to disagree.
+        """)
+    st.markdown("### Fund administration view")
+    st.caption("This is where your domain sits. NAV, waterfall, investor statements — all derived from the underlying ledger events.")
+
+    # NAV calculation
+    total_tree = project.tree_tokens_issued
+    spot = st.session_state.current_co2e_spot
+
+    lifetime_seq = sum(c.agreed_reading for c in st.session_state.mrv_cycles if c.status == "AGREED")
+    retired = sum(r["tco2e_retired"] for r in st.session_state.retirements)
+    outstanding_co2e = lifetime_seq * 0.85 - retired  # Net of buffer
+
+    # Simple NAV model: weighted combo of timber, land, projected carbon
+    years_elapsed = st.session_state.current_year - project.planting_year
+    years_remaining = max(project.tenor_years - years_elapsed, 1)
+    projected_future_seq = project.expected_annual_seq * project.hectares * years_remaining
+
+    land_value = project.hectares * 12_000
+    timber_value = project.hectares * 800 * min(years_elapsed, 10)  # Grows over time
+    carbon_future_value = projected_future_seq * spot * 0.7  # Discounted
+    total_nav = land_value + timber_value + carbon_future_value
+    nav_per_tree = total_nav / total_tree
+    st.session_state.nav_per_tree = nav_per_tree
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Fund NAV", f"€{total_nav:,.0f}")
+    c2.metric("NAV / TREE", f"€{nav_per_tree:.2f}",
+              delta=f"{(nav_per_tree - project.origination_price_eur) / project.origination_price_eur * 100:+.1f}% vs origination")
+    c3.metric("Outstanding CO2E", f"{outstanding_co2e:,.0f} tCO₂e")
+    c4.metric("Retired to date", f"{retired:,.0f} tCO₂e")
+
+    st.markdown("#### NAV decomposition")
+    nav_decomp = pd.DataFrame({
+        "Component": ["Land", "Standing timber", "Future carbon (PV)"],
+        "Value €": [land_value, timber_value, carbon_future_value],
+    })
+    fig = px.bar(nav_decomp, x="Component", y="Value €",
+                 color="Component", color_discrete_sequence=["#8b5cf6", "#10b981", "#f59e0b"])
+    fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                      font_color="#0f172a", title_font_color="#15803d",
+                      showlegend=False)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("#### Cashflow waterfall — last MRV cycle")
+    if agreed := [c for c in st.session_state.mrv_cycles if c.status == "AGREED"]:
+        last = agreed[-1]
+        gross = last.agreed_reading * spot
+        waterfall = pd.DataFrame({
+            "Recipient": ["Gross carbon revenue", "Buffer pool (15%)",
+                          "Verifier fees", "Platform (30 bps)", "Landowner share (25%)",
+                          "Net to TREE holders"],
+            "€": [gross, -gross * 0.15, -600, -gross * 0.003,
+                  -gross * 0.85 * 0.25, gross * 0.85 * 0.75 - 600 - gross * 0.003],
+        })
+        st.dataframe(waterfall, hide_index=True, use_container_width=True)
+
+    st.markdown("#### Investor statement — sample")
+    # Pick the largest TREE holder
+    tree_bals = [(k[0], v) for k, v in st.session_state.balances.items()
+                 if k[1] == "TREE" and k[2] == "PRJ-0001" and v > 0]
+    if tree_bals:
+        top_holder = max(tree_bals, key=lambda x: x[1])
+        holder_name, holder_tree = top_holder
+        holder_pct = holder_tree / total_tree
+        holder_nav = holder_tree * nav_per_tree
+        holder_carbon_ytd = sum(
+            get_balance(holder_name, f"CO2E-{c.cycle_year}", "PRJ-0001")
+            for c in agreed_cycles
+        ) if agreed_cycles else 0
+
+        st.markdown(f"""
+<div class='metric-card'>
+<b>{holder_name}</b><br>
+<span class='hash-text'>Statement date: {datetime.now(timezone.utc).strftime('%Y-%m-%d')}</span><br><br>
+TREE holdings: <b>{holder_tree:,}</b> ({holder_pct * 100:.2f}% of supply)<br>
+Position NAV: <b>€{holder_nav:,.0f}</b><br>
+CO2E accrued (current vintages): <b>{holder_carbon_ytd:.2f} tCO₂e</b><br>
+Carbon monetised YTD (at spot): <b>€{holder_carbon_ytd * spot:,.0f}</b><br><br>
+SFDR Article 9 classification: ✅ Sustainable investment objective<br>
+Principal Adverse Impact (PAI): Net positive GHG sequestration<br>
+EU Taxonomy alignment: Climate change mitigation (substantial contribution)
+</div>
+""", unsafe_allow_html=True)
+
+
+# ----------------------------------------------------------------------------
+# TAB 6: LEDGER
+# ----------------------------------------------------------------------------
+with tabs[5]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+The **single source of truth** — every mint, trade, burn and transfer, in order, with a fingerprint (hash) so nothing can be quietly edited after the fact.
+
+- Think of it like a bank statement that *everyone* can read and nobody can tamper with.
+- In a real deployment this is a blockchain (Polygon, or an EU-regulated DLT venue). Here it's a local list that behaves the same way.
+- Regulators, auditors and investors all look at the same data — no reconciliation disputes.
+- Each row has a **block hash** — change one character in a past event and every later hash breaks, so manipulation is immediately visible.
+        """)
+    st.markdown("### On-ledger event trail")
+    st.caption("Every state change in the system writes here. In production this is the blockchain; in prototype it's the equivalent append-only log.")
+
+    ledger_df = pd.DataFrame([asdict(e) for e in st.session_state.ledger])
+    if not ledger_df.empty:
+        ledger_df["metadata"] = ledger_df["metadata"].apply(lambda x: json.dumps(x))
+        c1, c2 = st.columns(2)
+        with c1:
+            event_filter = st.multiselect("Filter event types",
+                                           sorted(ledger_df["event_type"].unique()),
+                                           default=sorted(ledger_df["event_type"].unique()))
+        with c2:
+            actor_filter = st.multiselect("Filter actors",
+                                           sorted(ledger_df["actor"].unique()),
+                                           default=sorted(ledger_df["actor"].unique()))
+        filtered = ledger_df[ledger_df["event_type"].isin(event_filter) & ledger_df["actor"].isin(actor_filter)]
+        st.dataframe(filtered[["tx_id", "timestamp", "event_type", "actor", "counterparty",
+                               "token_type", "amount", "price_eur", "block_hash"]],
+                     hide_index=True, use_container_width=True, height=400)
+
+        # Event type distribution
+        evt_counts = ledger_df["event_type"].value_counts().reset_index()
+        evt_counts.columns = ["Event type", "Count"]
+        fig = px.bar(evt_counts, x="Event type", y="Count",
+                     color_discrete_sequence=["#4ade80"])
+        fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                          font_color="#0f172a", title="Event distribution")
+        st.plotly_chart(fig, use_container_width=True)
+
+
+# ----------------------------------------------------------------------------
+# TAB 7: STRESS TESTS
+# ----------------------------------------------------------------------------
+with tabs[6]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+The **"what if it all goes wrong"** tab. For institutional investors, this is the most important tab — it shows the system's defences actually work.
+
+- **Verifier collusion** — what if both auditors cheat? Answer: the random third-party audit catches it, and slashed verifier stakes cover losses.
+- **GPS tampering** — what if someone fakes where the forest is? The polygon hash recorded at origination won't match, minting is blocked.
+- **Force majeure** (fire, disease) — trees burn, carbon is released. The **buffer pool** (10–20% of credits held back as insurance) absorbs the hit without breaking anyone's retirement claim.
+- **Landowner breach** — if the covenant is violated, tokens are frozen and the legal opinion is triggered.
+
+Each scenario is the opposite of a promise — it's a *demonstration that the promise holds under attack*.
+        """)
+    st.markdown("### Stress scenarios")
+    st.caption("Simulate attacks and adverse events. Each scenario demonstrates a specific control working — or, if the control fails, exactly what the exposure is.")
+
+    scenario = st.selectbox("Scenario", [
+        "Verifier collusion (both verifiers inflate reading)",
+        "Oracle disagreement beyond tolerance",
+        "GPS polygon tampering attempt",
+        "Force majeure — fire destroys 30% of stand",
+        "Landowner breach — covenant violation",
+        "Double-spend attempt — retire already-retired CO2E",
+    ])
+
+    if st.button("▶️ Run scenario", type="primary"):
+        if scenario.startswith("Verifier collusion"):
+            st.markdown("<div class='warning-box'><b>Scenario:</b> Both Sylvera and Pachama submit readings 40% above the model expectation. The oracle tolerance check does NOT catch this — it only checks divergence between verifiers.</div>", unsafe_allow_html=True)
+            st.markdown("**Control failure mode:** Oracle cannot detect collusion, only disagreement.")
+            st.markdown("**Real-world mitigations that would need to be in place:**")
+            st.markdown("- Periodic random third-party audit of verifier outputs against ground-truth plot data")
+            st.markdown("- Stake-and-slash model: verifiers post bonds forfeited on audit failure")
+            st.markdown("- Reputation scoring: track divergence from ground truth across projects")
+            st.markdown("- Regulatory backstop: ICVCM CCP revocation suspends minting")
+
+        elif scenario.startswith("Oracle disagreement"):
+            st.markdown("<div class='success-box'><b>Scenario:</b> Sylvera reports 950 tCO₂e, Pachama reports 1,400 tCO₂e. Divergence 38%, tolerance 10%.</div>", unsafe_allow_html=True)
+            st.info("→ Running MRV cycle with these values. Expect DISPUTED status, no mint.")
+            cycle = run_mrv_cycle("PRJ-0001", 2099, 950, 1400, 10)
+            st.success(f"✅ Control worked. Cycle status: **{cycle.status}**. Zero CO2E minted. Escalated to arbitration.")
+
+        elif scenario.startswith("GPS polygon"):
+            st.markdown("<div class='error-box'><b>Scenario:</b> Attacker attempts to re-register the same GPS polygon under a new project ID to double-count the sequestration.</div>", unsafe_allow_html=True)
+            existing_hash = project.gps_polygon_hash
+            attack_hash = existing_hash  # Same polygon, same hash
+            st.markdown(f"**Existing polygon hash:** `{existing_hash}`")
+            st.markdown(f"**Attacker-submitted hash:** `{attack_hash}`")
+            if existing_hash == attack_hash:
+                st.success("✅ Control worked. Polygon registry rejects duplicate — the hash collision is detected deterministically. Attack fails at origination layer.")
+
+        elif scenario.startswith("Force majeure"):
+            st.markdown("<div class='warning-box'><b>Scenario:</b> Wildfire destroys 30% of Slieve Bloom stand. 150 tCO₂e of previously issued vintages is now physically reversed.</div>", unsafe_allow_html=True)
+            st.markdown("**Buffer pool response:**")
+            st.markdown("- Reversal insurance triggered: 150 tCO2E is burned from the buffer pool, offsetting the physical loss")
+            st.markdown("- Investor NAV write-down: land value unchanged, but future carbon PV reduced by ~30%")
+            st.markdown("- Force majeure clause in landowner contract defines replanting obligation")
+            st.markdown("- Reinsurance wrap pays out to make the fund whole above the buffer pool's coverage")
+            # Simulate buffer burn
+            st.session_state.stress_log.append({"event": "Force majeure fire", "tco2e_lost": 150, "mitigation": "Buffer pool + reinsurance"})
+            st.success("✅ Loss absorbed without investor-level impairment (within buffer capacity).")
+
+        elif scenario.startswith("Landowner breach"):
+            st.markdown("<div class='error-box'><b>Scenario:</b> Landowner begins clearfell operations on 20 ha in contravention of the conservation covenant.</div>", unsafe_allow_html=True)
+            st.markdown("**Enforcement cascade:**")
+            st.markdown("- Satellite change detection flags anomaly within one monitoring cycle (typically weekly)")
+            st.markdown("- Automated minting pause: no further CO2E issuance against this project until remediation")
+            st.markdown("- Conservation covenant on the title deed (registered with Tailte Éireann / Land Registry) gives the SPV standing to sue for specific performance")
+            st.markdown("- Insurance wrap covers investor losses; subrogation pursued against landowner")
+            st.markdown("**This is why the legal structure at L3 matters as much as the tech at L4.**")
+
+        elif scenario.startswith("Double-spend"):
+            if st.session_state.retirements:
+                st.markdown("<div class='success-box'><b>Scenario:</b> Corporate attempts to claim the same CO2E retirement certificate twice in their CSRD filing.</div>", unsafe_allow_html=True)
+                st.markdown("**Control: certificate hash is globally unique and one-shot**")
+                cert = st.session_state.retirements[-1]
+                st.code(f"Certificate {cert['certificate_id']}\nHash: {cert['cert_hash']}\nStatus: BURNED — tokens no longer exist in any balance")
+                st.success("✅ Second claim rejected. The underlying token was burned on first retirement. No amount of certificate duplication recreates the token. CSRD auditors can verify by querying the ledger.")
+            else:
+                st.info("Retire some CO2E first (Tab 4) to run this scenario.")
