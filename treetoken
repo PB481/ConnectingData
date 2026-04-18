@@ -7,7 +7,10 @@ Simulates the full natural-capital tokenisation workflow:
   3. Order book          — Secondary market for TREE and CO2e
   4. Retirement          — Corporate burn with audit certificate
   5. Fund admin          — NAV, waterfall, investor statements
-  6. Stress scenarios    — Attacks, force majeure, tolerance breaches
+  6. NAV engine          — Configurable assumptions, sensitivity, mark-to-model
+  7. SFDR disclosure     — Article 9 periodic disclosure + PAI statement (Word)
+  8. Ledger              — Immutable event trail
+  9. Stress scenarios    — Attacks, force majeure, tolerance breaches
 
 Run:  streamlit run tokenised_tree_app.py
 """
@@ -19,10 +22,23 @@ import plotly.graph_objects as go
 import plotly.express as px
 import hashlib
 import json
-from datetime import datetime, timedelta, timezone
+import io
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field, asdict
 from typing import Optional
 import uuid
+
+# Word doc generation for SFDR disclosure
+try:
+    from docx import Document as DocxDocument
+    from docx.shared import Pt, Cm, RGBColor, Inches
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.table import WD_ALIGN_VERTICAL
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
 
 # ============================================================================
 # PAGE CONFIG
@@ -34,27 +50,225 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Light theme styling (high contrast)
+# Light theme — warm cream palette inspired by Anthropic's brand and Frog's restraint
 st.markdown("""
 <style>
-    .stApp { background-color: #f8fafc; color: #0f172a; }
-    .main-header { color: #15803d; font-size: 2.2rem; font-weight: 700; margin-bottom: 0; }
-    .sub-header { color: #475569; font-size: 1rem; margin-top: 0; margin-bottom: 2rem; }
+    /* Page background — warm cream, easy on the eye */
+    .stApp {
+        background-color: #F4F1EA;
+        color: #2B2925;
+    }
+
+    /* Sidebar — slightly darker cream for gentle separation */
+    section[data-testid="stSidebar"] {
+        background-color: #EDE8DD;
+        border-right: 1px solid #D8D1C4;
+    }
+    section[data-testid="stSidebar"] * {
+        color: #2B2925 !important;
+    }
+
+    /* Typography — serif headers feel editorial/institutional, sans body stays readable */
+    h1, h2, h3, h4, h5 {
+        font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif !important;
+        color: #2B2925 !important;
+        letter-spacing: -0.01em;
+    }
+    .stApp, p, div, span, label, li {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Main headers */
+    .main-header {
+        color: #2B2925;
+        font-family: Georgia, 'Iowan Old Style', serif !important;
+        font-size: 2.4rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        letter-spacing: -0.015em;
+    }
+    .sub-header {
+        color: #6B655C;
+        font-size: 1.05rem;
+        margin-top: 0.4rem;
+        margin-bottom: 2rem;
+        line-height: 1.5;
+    }
+
+    /* Metric cards — restrained, single accent stripe */
     .metric-card {
-        background: #ffffff;
-        padding: 1.2rem; border-radius: 8px; border-left: 3px solid #15803d;
-        border: 1px solid #e2e8f0;
+        background: #FFFFFF;
+        padding: 1.25rem 1.4rem;
+        border-radius: 4px;
+        border: 1px solid #D8D1C4;
+        border-left: 3px solid #C15F3C;
+        color: #2B2925;
     }
-    .stTabs [data-baseweb="tab-list"] { gap: 4px; }
+
+    /* Tabs — clean, active tab uses the terracotta accent */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0;
+        border-bottom: 1px solid #D8D1C4;
+        background-color: transparent;
+    }
     .stTabs [data-baseweb="tab"] {
-        background-color: #e2e8f0; border-radius: 6px 6px 0 0;
-        padding: 10px 16px; color: #1e293b;
+        background-color: transparent;
+        border-radius: 0;
+        padding: 12px 18px;
+        color: #6B655C;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        margin-right: 4px;
     }
-    .stTabs [aria-selected="true"] { background-color: #ffffff; color: #15803d; }
-    .hash-text { font-family: 'Courier New', monospace; font-size: 0.75rem; color: #475569; }
-    .success-box { background: #dcfce7; padding: 1rem; border-radius: 6px; border-left: 3px solid #16a34a; color: #14532d; }
-    .warning-box { background: #fef3c7; padding: 1rem; border-radius: 6px; border-left: 3px solid #d97706; color: #78350f; }
-    .error-box { background: #fee2e2; padding: 1rem; border-radius: 6px; border-left: 3px solid #dc2626; color: #7f1d1d; }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #2B2925;
+        background-color: rgba(193, 95, 60, 0.05);
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: transparent !important;
+        color: #C15F3C !important;
+        border-bottom: 2px solid #C15F3C !important;
+        font-weight: 600;
+    }
+
+    /* Status boxes — soft backgrounds rather than heavy blocks */
+    .hash-text {
+        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        font-size: 0.78rem;
+        color: #6B655C;
+    }
+    .success-box {
+        background: #EAEFE7;
+        padding: 1rem 1.2rem;
+        border-radius: 4px;
+        border-left: 3px solid #5F8A5A;
+        color: #2B2925;
+    }
+    .warning-box {
+        background: #F5EBD7;
+        padding: 1rem 1.2rem;
+        border-radius: 4px;
+        border-left: 3px solid #C8932A;
+        color: #2B2925;
+    }
+    .error-box {
+        background: #F2E0DC;
+        padding: 1rem 1.2rem;
+        border-radius: 4px;
+        border-left: 3px solid #B54B37;
+        color: #2B2925;
+    }
+
+    /* Buttons — terracotta primary, understated secondary */
+    .stButton > button {
+        border-radius: 4px;
+        border: 1px solid #D8D1C4;
+        background-color: #FFFFFF;
+        color: #2B2925;
+        font-weight: 500;
+        transition: all 0.15s ease;
+    }
+    .stButton > button:hover {
+        border-color: #C15F3C;
+        color: #C15F3C;
+    }
+    .stButton > button[kind="primary"] {
+        background-color: #C15F3C;
+        color: #FFFFFF;
+        border-color: #C15F3C;
+    }
+    .stButton > button[kind="primary"]:hover {
+        background-color: #A84F2F;
+        border-color: #A84F2F;
+        color: #FFFFFF;
+    }
+
+    /* Download buttons follow the same pattern */
+    .stDownloadButton > button {
+        border-radius: 4px;
+        background-color: #C15F3C;
+        color: #FFFFFF;
+        border: 1px solid #C15F3C;
+        font-weight: 500;
+    }
+    .stDownloadButton > button:hover {
+        background-color: #A84F2F;
+        border-color: #A84F2F;
+    }
+
+    /* Inputs — off-white on cream, subtle borders */
+    .stTextInput input, .stNumberInput input, .stTextArea textarea,
+    .stSelectbox > div > div, .stMultiSelect > div > div {
+        background-color: #FFFFFF !important;
+        color: #2B2925 !important;
+        border: 1px solid #D8D1C4 !important;
+        border-radius: 4px !important;
+    }
+    .stTextInput input:focus, .stNumberInput input:focus, .stTextArea textarea:focus {
+        border-color: #C15F3C !important;
+        box-shadow: 0 0 0 2px rgba(193, 95, 60, 0.15) !important;
+    }
+
+    /* Data tables — clean, high contrast */
+    .stDataFrame {
+        border: 1px solid #D8D1C4;
+        border-radius: 4px;
+    }
+
+    /* Sliders — terracotta track */
+    .stSlider [data-baseweb="slider"] > div:nth-child(3) {
+        background: #C15F3C !important;
+    }
+
+    /* Expanders — subtle chrome */
+    .streamlit-expanderHeader {
+        background-color: #FFFFFF !important;
+        border: 1px solid #D8D1C4 !important;
+        border-radius: 4px !important;
+        color: #2B2925 !important;
+        font-weight: 500 !important;
+    }
+    .streamlit-expanderHeader:hover {
+        border-color: #C15F3C !important;
+    }
+
+    /* Dividers */
+    hr {
+        border-color: #D8D1C4 !important;
+    }
+
+    /* Metric components */
+    [data-testid="stMetricValue"] {
+        color: #2B2925 !important;
+        font-family: Georgia, serif !important;
+        font-weight: 600 !important;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #6B655C !important;
+    }
+    [data-testid="stMetricDelta"] {
+        color: #5F8A5A !important;
+    }
+
+    /* Info/success/warning/error Streamlit alerts — softer */
+    .stAlert {
+        border-radius: 4px !important;
+        border-left-width: 3px !important;
+    }
+
+    /* Code blocks — keep them readable */
+    code {
+        background-color: #EDE8DD !important;
+        color: #C15F3C !important;
+        padding: 0.15em 0.35em !important;
+        border-radius: 3px !important;
+        font-size: 0.9em !important;
+    }
+    pre code {
+        background-color: #EDE8DD !important;
+        color: #2B2925 !important;
+        padding: 1em !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -209,6 +423,46 @@ def init_state():
     st.session_state.nav_per_tree = 20.0
     st.session_state.current_co2e_spot = 55.0  # EUR / tCO2e
 
+    # NAV engine — configurable assumptions (fair value committee inputs)
+    st.session_state.nav_assumptions = {
+        "land_value_per_ha": 12_000.0,
+        "land_appreciation_pct": 2.0,           # annual % appreciation
+        "timber_yield_per_ha_at_maturity": 15_000.0,
+        "timber_growth_model": "Sigmoid",       # Sigmoid / Linear / Empirical Irish
+        "carbon_price_curve": "Flat",           # Flat / Linear trend / User scenario
+        "carbon_price_start": 55.0,
+        "carbon_price_end": 120.0,              # for Linear trend
+        "discount_rate_pct": 6.5,               # DR for future cashflow PV
+        "buffer_coverage_ratio": 0.15,          # % of carbon withheld
+        "reversal_probability_pct": 3.0,        # annual % chance of reversal
+        "management_cost_per_ha": 100.0,        # annual
+        "mrv_cost_per_ha": 20.0,                # annual
+        "platform_fee_bps": 30.0,               # bps on NAV
+        "landowner_carbon_share_pct": 25.0,     # share of carbon revenue
+        "nav_frequency": "Monthly",
+    }
+
+    # NAV history for audit trail
+    st.session_state.nav_history = []
+
+    # Second scenario for side-by-side comparison
+    st.session_state.nav_assumptions_alt = dict(st.session_state.nav_assumptions)
+    st.session_state.nav_assumptions_alt["carbon_price_curve"] = "Linear trend"
+    st.session_state.nav_assumptions_alt["discount_rate_pct"] = 8.0
+
+    # SFDR metadata
+    st.session_state.sfdr_metadata = {
+        "fund_name": "Slieve Bloom Natural Capital ICAV",
+        "fund_lei": "635400SBNCPRJ0001XXXX",
+        "manager_name": "Green Infrastructure Ireland Advisors Ltd.",
+        "manager_lei": "635400GIIALTD202601XXXX",
+        "article_classification": "Article 9",
+        "reporting_period_start": "2026-01-15",
+        "reporting_period_end": "2026-12-31",
+        "benchmark_designated": False,
+        "reference_date": "2026-12-31",
+    }
+
     st.session_state.initialised = True
 
 
@@ -232,7 +486,7 @@ def record_ledger(event_type, project_id, actor, counterparty, token_type,
                   amount, price_eur, metadata):
     entry = LedgerEntry(
         tx_id=new_tx_id(),
-        timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+        timestamp=datetime.utcnow().isoformat() + "Z",
         event_type=event_type,
         project_id=project_id,
         actor=actor,
@@ -241,7 +495,7 @@ def record_ledger(event_type, project_id, actor, counterparty, token_type,
         amount=amount,
         price_eur=price_eur,
         metadata=metadata,
-        block_hash=_hash({"e": event_type, "a": actor, "amt": amount, "t": datetime.now(timezone.utc).isoformat()}),
+        block_hash=_hash({"e": event_type, "a": actor, "amt": amount, "t": datetime.utcnow().isoformat()}),
     )
     st.session_state.ledger.append(entry)
     return entry
@@ -288,7 +542,7 @@ def run_mrv_cycle(project_id, cycle_year, v1_reading, v2_reading, tolerance_pct)
         tolerance_pct=tolerance_pct,
         agreed_reading=agreed,
         status=status,
-        timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+        timestamp=datetime.utcnow().isoformat() + "Z",
     )
     st.session_state.mrv_cycles.append(cycle)
 
@@ -325,7 +579,7 @@ def run_mrv_cycle(project_id, cycle_year, v1_reading, v2_reading, tolerance_pct)
 def place_order(project_id, token_type, side, quantity, price, actor):
     order = Order(
         order_id=new_order_id(),
-        timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+        timestamp=datetime.utcnow().isoformat() + "Z",
         project_id=project_id,
         token_type=token_type,
         side=side,
@@ -387,7 +641,7 @@ def match_orders(project_id, token_type):
                     {"buy_order": b.order_id, "sell_order": s.order_id, "gross_eur": cost},
                 )
                 st.session_state.filled_trades.append({
-                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
                     "project": project_id, "token": token_type,
                     "buyer": b.actor, "seller": s.actor,
                     "qty": trade_qty, "price": trade_price, "value": cost,
@@ -418,7 +672,7 @@ def retire_co2e(project_id, vintage_token, quantity, corporate, claim_descriptio
         "vintage": vintage_token.replace("CO2E-", ""),
         "tco2e_retired": quantity,
         "claim_description": claim_description,
-        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
         "cert_hash": _hash({"cert": cert_id, "corp": corporate, "qty": quantity}),
     }
     st.session_state.retirements.append(cert)
@@ -434,6 +688,158 @@ def retire_co2e(project_id, vintage_token, quantity, corporate, claim_descriptio
         {"certificate": cert_id, "claim": claim_description},
     )
     return cert
+
+
+# ============================================================================
+# NAV ENGINE — configurable, auditable fair value calculation
+# ============================================================================
+
+def timber_growth_factor(years_elapsed: float, tenor: float, model: str) -> float:
+    """
+    Returns 0..1 representing % of mature timber value accumulated.
+    Sigmoid reflects real forestry — slow early, fast mid-cycle, plateau late.
+    """
+    if years_elapsed <= 0:
+        return 0.0
+    if years_elapsed >= tenor:
+        return 1.0
+    if model == "Linear":
+        return years_elapsed / tenor
+    if model == "Empirical Irish":
+        # Based on Teagasc native broadleaf yield curves (approximation)
+        # Slow early because broadleaves establish gradually
+        t = years_elapsed / tenor
+        return min(1.0, t ** 1.4)
+    # Sigmoid (default) — inflection at 0.6 of tenor (later than linear mid)
+    # Reflects real forestry: slow early establishment, fast mid-cycle growth,
+    # plateau as canopy closes
+    t = years_elapsed / tenor
+    k = 6.0          # steepness
+    mid = 0.6        # inflection later than linear midpoint
+    raw = 1 / (1 + np.exp(-k * (t - mid)))
+    # Normalise endpoints to 0 and 1
+    raw_0 = 1 / (1 + np.exp(-k * (0 - mid)))
+    raw_1 = 1 / (1 + np.exp(-k * (1 - mid)))
+    return float((raw - raw_0) / (raw_1 - raw_0))
+
+
+def carbon_price_path(year_from_origination: int, tenor: int, assumptions: dict) -> float:
+    """Forward curve for carbon price €/tCO2e at a given year."""
+    curve = assumptions["carbon_price_curve"]
+    start = assumptions["carbon_price_start"]
+    if curve == "Flat":
+        return start
+    if curve == "Linear trend":
+        end = assumptions["carbon_price_end"]
+        if tenor <= 0:
+            return start
+        return start + (end - start) * (year_from_origination / tenor)
+    return start
+
+
+def calculate_nav(project, assumptions: dict, mrv_cycles: list,
+                  retirements: list, current_year: int,
+                  current_spot: float) -> dict:
+    """
+    Full NAV calculation with component decomposition and audit trail.
+    Returns a dict with every intermediate number — this is the mark-to-model
+    methodology that a fund administrator or depositary would need to validate.
+    """
+    tenor = project.tenor_years
+    years_elapsed = current_year - project.planting_year
+    years_remaining = max(tenor - years_elapsed, 0)
+
+    # --- 1. LAND VALUE ---
+    land_base = assumptions["land_value_per_ha"] * project.hectares
+    land_appreciation = (1 + assumptions["land_appreciation_pct"] / 100) ** years_elapsed
+    land_value = land_base * land_appreciation
+
+    # --- 2. STANDING TIMBER VALUE ---
+    mature_timber = assumptions["timber_yield_per_ha_at_maturity"] * project.hectares
+    growth = timber_growth_factor(years_elapsed, tenor, assumptions["timber_growth_model"])
+    timber_value = mature_timber * growth
+
+    # --- 3. CARBON — REALISED (sequestered but not retired) ---
+    agreed_cycles = [c for c in mrv_cycles if c.status == "AGREED"]
+    total_sequestered = sum(c.agreed_reading for c in agreed_cycles)
+    net_sequestered = total_sequestered * (1 - assumptions["buffer_coverage_ratio"])
+    total_retired = sum(r["tco2e_retired"] for r in retirements)
+    outstanding_co2e = max(net_sequestered - total_retired, 0)
+    realised_carbon_value = outstanding_co2e * current_spot
+
+    # --- 4. CARBON — FUTURE (projected, present-valued) ---
+    expected_annual = project.expected_annual_seq * project.hectares
+    future_carbon_pv = 0.0
+    reversal_rate = assumptions["reversal_probability_pct"] / 100
+    discount = assumptions["discount_rate_pct"] / 100
+    for t in range(1, years_remaining + 1):
+        year_index = years_elapsed + t
+        price_t = carbon_price_path(year_index, tenor, assumptions)
+        net_annual = expected_annual * (1 - assumptions["buffer_coverage_ratio"])
+        gross_revenue = net_annual * price_t
+        # Landowner share reduces investor revenue
+        investor_share = gross_revenue * (1 - assumptions["landowner_carbon_share_pct"] / 100)
+        # Probability adjustment for reversal
+        survival = (1 - reversal_rate) ** t
+        # Discount to PV
+        pv = (investor_share * survival) / ((1 + discount) ** t)
+        future_carbon_pv += pv
+
+    # --- 5. OPERATING COSTS (future, discounted) ---
+    annual_ops = (assumptions["management_cost_per_ha"]
+                  + assumptions["mrv_cost_per_ha"]) * project.hectares
+    ops_pv = sum(annual_ops / ((1 + discount) ** t) for t in range(1, years_remaining + 1))
+
+    # --- 6. PLATFORM FEES (future, discounted) ---
+    # Simple approximation — bps on gross carbon revenue
+    fees_pv = future_carbon_pv * (assumptions["platform_fee_bps"] / 10_000) * years_remaining
+
+    # --- 7. GROSS NAV ---
+    gross_nav = land_value + timber_value + realised_carbon_value + future_carbon_pv
+    net_nav = gross_nav - ops_pv - fees_pv
+    nav_per_tree = net_nav / project.tree_tokens_issued if project.tree_tokens_issued else 0
+
+    return {
+        "land_value": land_value,
+        "timber_value": timber_value,
+        "realised_carbon_value": realised_carbon_value,
+        "future_carbon_pv": future_carbon_pv,
+        "ops_pv": ops_pv,
+        "fees_pv": fees_pv,
+        "gross_nav": gross_nav,
+        "net_nav": net_nav,
+        "nav_per_tree": nav_per_tree,
+        "outstanding_co2e": outstanding_co2e,
+        "total_sequestered": total_sequestered,
+        "total_retired": total_retired,
+        "years_elapsed": years_elapsed,
+        "years_remaining": years_remaining,
+        "timber_growth_pct": growth * 100,
+        "assumptions_hash": _hash(assumptions),
+        "calculation_timestamp": datetime.utcnow().isoformat() + "Z",
+    }
+
+
+def run_sensitivity(project, base_assumptions: dict, mrv_cycles: list,
+                    retirements: list, current_year: int, current_spot: float,
+                    variable: str, shock_pct: float) -> dict:
+    """Returns NAV under ±shock for a single assumption variable."""
+    shocked_up = dict(base_assumptions)
+    shocked_down = dict(base_assumptions)
+
+    if isinstance(base_assumptions[variable], (int, float)):
+        shocked_up[variable] = base_assumptions[variable] * (1 + shock_pct / 100)
+        shocked_down[variable] = base_assumptions[variable] * (1 - shock_pct / 100)
+
+    nav_up = calculate_nav(project, shocked_up, mrv_cycles, retirements, current_year, current_spot)
+    nav_down = calculate_nav(project, shocked_down, mrv_cycles, retirements, current_year, current_spot)
+
+    return {
+        "variable": variable,
+        "shock_pct": shock_pct,
+        "nav_up": nav_up["net_nav"],
+        "nav_down": nav_down["net_nav"],
+    }
 
 
 # ============================================================================
@@ -470,42 +876,14 @@ with st.sidebar:
 st.markdown('<p class="main-header">🌳 Tokenised Tree — Lifecycle Simulator</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Origination → MRV → Trading → Retirement → Reporting. Each tab is a stage in the lifecycle.</p>', unsafe_allow_html=True)
 
-with st.expander("❓ New here? Start with this plain-English overview", expanded=False):
-    st.markdown("""
-**What is this app showing?**
-A simulation of turning a real forest into a financial product that pension funds, corporates and retail investors can buy — end-to-end.
-
-**Key words (the 60-second version)**
-
-- **Token** — a digital certificate of ownership, recorded on a shared ledger (like a receipt that can't be forged or lost). Two types here:
-  - **TREE token** = fractional ownership of the forest itself (like a share in the land and its future timber).
-  - **CO2E token** = one tonne of carbon dioxide the forest has pulled out of the air that year. Corporates buy these to cancel out their own emissions.
-- **MRV** — *Measurement, Reporting, Verification*. How we actually prove the forest absorbed carbon (satellite photos + LiDAR scans + two independent auditors). No proof, no tokens minted.
-- **Oracle** — the service that takes real-world measurements and writes them into the ledger. We use **two** independent verifiers — if they disagree too much, no tokens are minted.
-- **SPV** — *Special Purpose Vehicle*. A dedicated legal company that owns the forest on investors' behalf. This is what makes it a regulated fund, not just a crypto coin.
-- **NAV** — *Net Asset Value*. The fair-value price per TREE token, published monthly (same concept as a mutual fund's unit price).
-- **Retirement / Burn** — when a company uses a CO2E token to offset its own emissions, the token is destroyed permanently so nobody can claim it twice.
-- **Ledger** — the shared, append-only record of every mint, trade and burn. Any auditor can replay it.
-
-**Why does this exist?** The old voluntary carbon market lost credibility because credits couldn't be independently verified. This design fixes that by baking proof, audit trails and regulated fund administration into the product from day one.
-
-**How to use the tabs (left → right)**
-
-1. **Project & origination** — the forest, who owns what, the starting position.
-2. **MRV cycle** — run a yearly measurement; mint new carbon tokens if both verifiers agree.
-3. **Order book** — buy and sell TREE and CO2E tokens in a simulated market.
-4. **Retirement** — a corporate buys CO2E tokens and burns them, getting an audit certificate.
-5. **Fund administration** — NAV, waterfall (who gets paid what), investor statements.
-6. **Ledger** — every transaction in one place, for audit.
-7. **Stress tests** — try to break the system (verifier collusion, GPS tampering, fires) and see the controls fire.
-    """)
-
 tabs = st.tabs([
     "📋 Project & origination",
     "🛰️ MRV cycle",
     "📊 Order book",
     "🔥 Retirement",
     "💼 Fund administration",
+    "⚙️ NAV engine",
+    "📑 SFDR disclosure",
     "🧾 Ledger",
     "⚠️ Stress tests",
 ])
@@ -564,10 +942,10 @@ This is the **starting position**. A landowner has signed a 30-year conservation
     fig = px.pie(
         pd.DataFrame(tree_holders), values="TREE tokens", names="Holder",
         title="TREE ownership distribution",
-        color_discrete_sequence=px.colors.sequential.Emrld,
+        color_discrete_sequence=["#C15F3C", "#5F7A8F", "#7A9E7E", "#C8932A", "#8F6B9A"],
     )
-    fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
-                      font_color="#0f172a", title_font_color="#15803d")
+    fig.update_layout(paper_bgcolor="#F4F1EA", plot_bgcolor="#F4F1EA",
+                      font_color="#2B2925", title_font_color="#2B2925")
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -584,6 +962,7 @@ Once a year, we **measure how much CO₂ the forest actually absorbed** and mint
 - If they agree closely enough, the system averages their numbers and **mints that many CO2E tokens**, distributed pro-rata to TREE holders (investors earn carbon income for owning the forest).
 - Each CO2E token = **1 tonne of CO₂ removed**, stamped with the year ("vintage") so you know when it was sequestered.
         """)
+
     st.markdown("### Run an MRV cycle")
     st.caption("Two independent verifiers submit sequestration readings. If they diverge beyond tolerance, the oracle pauses minting and escalates. This is the integrity layer.")
 
@@ -635,10 +1014,10 @@ Once a year, we **measure how much CO₂ the forest actually absorbed** and mint
             fig = go.Figure()
             fig.add_trace(go.Bar(x=[c.cycle_year for c in agreed],
                                  y=[c.agreed_reading for c in agreed],
-                                 marker_color="#4ade80", name="Sequestered tCO₂e"))
+                                 marker_color="#C15F3C", name="Sequestered tCO₂e"))
             fig.update_layout(title="Annual sequestration (agreed readings)",
-                              paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
-                              font_color="#0f172a", title_font_color="#15803d",
+                              paper_bgcolor="#F4F1EA", plot_bgcolor="#F4F1EA",
+                              font_color="#2B2925", title_font_color="#2B2925",
                               xaxis_title="Cycle year", yaxis_title="tCO₂e")
             st.plotly_chart(fig, use_container_width=True)
 
@@ -656,6 +1035,7 @@ This is the **marketplace** where holders buy and sell tokens after the initial 
 - **DvP** (*Delivery versus Payment*) — the tokens and the cash move at exactly the same instant. Nobody can run off with one without delivering the other.
 - **TREE** trades long-term (people holding the forest). **CO2E** trades by vintage year (CO2E-2026 is different from CO2E-2027 — some buyers want specific years for their reporting).
         """)
+
     st.markdown("### Secondary market")
     st.caption("Price-time priority matching. Atomic DvP — token and cash legs settle in the same event, or neither does.")
 
@@ -746,6 +1126,7 @@ A company uses CO2E tokens to **cancel out its own emissions** — legally and p
 - This is the step that turns a carbon token from a tradeable asset into a compliance claim (e.g. "Ryanair offset 10,000 tonnes of 2026 flight emissions using CO2E-2026 from Project Slieve Bloom").
 - The old carbon market's biggest failing was that the same credit could be claimed twice. Burning fixes that.
         """)
+
     st.markdown("### Corporate retirement — burn-to-claim")
     st.caption("A corporate buyer retires CO2E tokens against a specific emissions claim. The burn is recorded immutably; the certificate NFT provides audit evidence under CSRD / ISSB reporting.")
 
@@ -761,7 +1142,7 @@ A company uses CO2E tokens to **cancel out its own emissions** — legally and p
                 vintage_opts = [f"CO2E-{c.cycle_year}" for c in agreed_cycles]
                 vintage = st.selectbox("Vintage token", vintage_opts)
             with c2:
-                held = float(get_balance(corp, vintage, "PRJ-0001"))
+                held = get_balance(corp, vintage, "PRJ-0001")
                 st.info(f"**{corp}** holds **{held:.2f}** {vintage}")
                 retire_qty = st.number_input("Quantity to retire (tCO₂e)", 0.0, max(held, 0.01), min(held, 10.0), step=1.0)
             claim = st.text_area("Claim description (for audit trail)",
@@ -797,60 +1178,71 @@ This is the **fund manager's view** — how the money actually flows and what ea
 - **Investor statement** — the document a TREE holder receives: how many tokens they own, what carbon they earned this year, and their share of profits. Same format a regulated fund sends to pension fund trustees.
 - All of it is **derived** from the ledger — no manual spreadsheets, no room for numbers to disagree.
         """)
-    st.markdown("### Fund administration view")
-    st.caption("This is where your domain sits. NAV, waterfall, investor statements — all derived from the underlying ledger events.")
 
-    # NAV calculation
+    st.markdown("### Fund administration view")
+    st.caption("This is where your domain sits. NAV, waterfall, investor statements — all derived from the underlying ledger events via the NAV engine.")
+
     total_tree = project.tree_tokens_issued
     spot = st.session_state.current_co2e_spot
 
-    lifetime_seq = sum(c.agreed_reading for c in st.session_state.mrv_cycles if c.status == "AGREED")
-    retired = sum(r["tco2e_retired"] for r in st.session_state.retirements)
-    outstanding_co2e = lifetime_seq * 0.85 - retired  # Net of buffer
-
-    # Simple NAV model: weighted combo of timber, land, projected carbon
-    years_elapsed = st.session_state.current_year - project.planting_year
-    years_remaining = max(project.tenor_years - years_elapsed, 1)
-    projected_future_seq = project.expected_annual_seq * project.hectares * years_remaining
-
-    land_value = project.hectares * 12_000
-    timber_value = project.hectares * 800 * min(years_elapsed, 10)  # Grows over time
-    carbon_future_value = projected_future_seq * spot * 0.7  # Discounted
-    total_nav = land_value + timber_value + carbon_future_value
-    nav_per_tree = total_nav / total_tree
+    # Delegate to the NAV engine (same methodology as the NAV tab)
+    nav = calculate_nav(project, st.session_state.nav_assumptions,
+                        st.session_state.mrv_cycles, st.session_state.retirements,
+                        st.session_state.current_year, spot)
+    total_nav = nav["net_nav"]
+    nav_per_tree = nav["nav_per_tree"]
+    outstanding_co2e = nav["outstanding_co2e"]
+    retired = nav["total_retired"]
+    land_value = nav["land_value"]
+    timber_value = nav["timber_value"]
+    carbon_future_value = nav["future_carbon_pv"]
     st.session_state.nav_per_tree = nav_per_tree
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Fund NAV", f"€{total_nav:,.0f}")
-    c2.metric("NAV / TREE", f"€{nav_per_tree:.2f}",
-              delta=f"{(nav_per_tree - project.origination_price_eur) / project.origination_price_eur * 100:+.1f}% vs origination")
+    c2.metric("NAV / TREE", f"€{nav_per_tree:.3f}",
+              delta=f"{(nav_per_tree - project.origination_price_eur) / project.origination_price_eur * 100:+.2f}% vs origination")
     c3.metric("Outstanding CO2E", f"{outstanding_co2e:,.0f} tCO₂e")
     c4.metric("Retired to date", f"{retired:,.0f} tCO₂e")
 
+    st.info("💡 NAV methodology is configurable in the **NAV engine** tab. The number here updates automatically when you change assumptions.")
+
     st.markdown("#### NAV decomposition")
     nav_decomp = pd.DataFrame({
-        "Component": ["Land", "Standing timber", "Future carbon (PV)"],
-        "Value €": [land_value, timber_value, carbon_future_value],
+        "Component": ["Land", "Standing timber", "Realised carbon", "Future carbon (PV)"],
+        "Value €": [land_value, timber_value, nav["realised_carbon_value"], carbon_future_value],
     })
     fig = px.bar(nav_decomp, x="Component", y="Value €",
-                 color="Component", color_discrete_sequence=["#8b5cf6", "#10b981", "#f59e0b"])
-    fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
-                      font_color="#0f172a", title_font_color="#15803d",
+                 color="Component", color_discrete_sequence=["#5F7A8F", "#7A9E7E", "#C15F3C", "#C8932A"])
+    fig.update_layout(paper_bgcolor="#F4F1EA", plot_bgcolor="#F4F1EA",
+                      font_color="#2B2925", title_font_color="#2B2925",
                       showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("#### Cashflow waterfall — last MRV cycle")
     if agreed := [c for c in st.session_state.mrv_cycles if c.status == "AGREED"]:
         last = agreed[-1]
+        A = st.session_state.nav_assumptions
         gross = last.agreed_reading * spot
+        buffer_cost = gross * A["buffer_coverage_ratio"]
+        mrv_cost = A["mrv_cost_per_ha"] * project.hectares
+        platform_fee = gross * (A["platform_fee_bps"] / 10_000)
+        post_buffer = gross - buffer_cost
+        landowner_share = post_buffer * (A["landowner_carbon_share_pct"] / 100)
+        net_to_holders = post_buffer - landowner_share - mrv_cost - platform_fee
         waterfall = pd.DataFrame({
-            "Recipient": ["Gross carbon revenue", "Buffer pool (15%)",
-                          "Verifier fees", "Platform (30 bps)", "Landowner share (25%)",
+            "Recipient": ["Gross carbon revenue",
+                          f"Buffer pool ({A['buffer_coverage_ratio']*100:.0f}%)",
+                          "MRV / verifier fees",
+                          f"Platform ({A['platform_fee_bps']:.0f} bps)",
+                          f"Landowner share ({A['landowner_carbon_share_pct']:.0f}%)",
                           "Net to TREE holders"],
-            "€": [gross, -gross * 0.15, -600, -gross * 0.003,
-                  -gross * 0.85 * 0.25, gross * 0.85 * 0.75 - 600 - gross * 0.003],
+            "€": [gross, -buffer_cost, -mrv_cost, -platform_fee,
+                  -landowner_share, net_to_holders],
         })
-        st.dataframe(waterfall, hide_index=True, use_container_width=True)
+        waterfall["€ formatted"] = waterfall["€"].apply(lambda x: f"€{x:,.2f}")
+        st.dataframe(waterfall[["Recipient", "€ formatted"]].rename(columns={"€ formatted": "€"}),
+                     hide_index=True, use_container_width=True)
 
     st.markdown("#### Investor statement — sample")
     # Pick the largest TREE holder
@@ -869,7 +1261,7 @@ This is the **fund manager's view** — how the money actually flows and what ea
         st.markdown(f"""
 <div class='metric-card'>
 <b>{holder_name}</b><br>
-<span class='hash-text'>Statement date: {datetime.now(timezone.utc).strftime('%Y-%m-%d')}</span><br><br>
+<span class='hash-text'>Statement date: {datetime.utcnow().strftime('%Y-%m-%d')}</span><br><br>
 TREE holdings: <b>{holder_tree:,}</b> ({holder_pct * 100:.2f}% of supply)<br>
 Position NAV: <b>€{holder_nav:,.0f}</b><br>
 CO2E accrued (current vintages): <b>{holder_carbon_ytd:.2f} tCO₂e</b><br>
@@ -882,9 +1274,713 @@ EU Taxonomy alignment: Climate change mitigation (substantial contribution)
 
 
 # ----------------------------------------------------------------------------
-# TAB 6: LEDGER
+# TAB 6: NAV ENGINE — configurable fair value methodology
 # ----------------------------------------------------------------------------
 with tabs[5]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+This is the **fair-value engine** — the rules and assumptions that decide how much each TREE token is actually worth at any moment.
+
+- Every assumption you'd normally hide in a spreadsheet is **out in the open** here: land value, timber growth curve, carbon price forecast, discount rate, buffer pool, reversal probability.
+- **Sensitivity tornado chart** — shows which assumption moves the NAV the most. Carbon price usually wins, which tells you where to spend due diligence time.
+- **Scenario A vs Scenario B** — run the same forest under two different assumption sets (e.g. optimistic vs conservative). The spread between them is the **fair-value reserve** a depositary would require you to hold back.
+- **Methodology hash** — every calculation gets a unique fingerprint, so an auditor can pin a specific NAV and reproduce it exactly years later. No "trust me" valuations.
+        """)
+
+    st.markdown("### NAV engine — configurable fair value methodology")
+    st.caption("Every assumption surfaced as an input, every number traceable to a source. This is the mark-to-model methodology a fair value committee would approve and a depositary would validate.")
+
+    A = st.session_state.nav_assumptions
+
+    # --- Assumptions panel ---
+    with st.expander("📐 Valuation assumptions (edit freely)", expanded=True):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("**Land & timber**")
+            A["land_value_per_ha"] = st.number_input(
+                "Land value €/ha", 1000.0, 100000.0, float(A["land_value_per_ha"]), 500.0,
+                help="Base land value at origination")
+            A["land_appreciation_pct"] = st.number_input(
+                "Land appreciation %/yr", -5.0, 10.0, float(A["land_appreciation_pct"]), 0.5)
+            A["timber_yield_per_ha_at_maturity"] = st.number_input(
+                "Timber yield €/ha at maturity", 0.0, 50000.0,
+                float(A["timber_yield_per_ha_at_maturity"]), 500.0)
+            A["timber_growth_model"] = st.selectbox(
+                "Growth model",
+                ["Sigmoid", "Linear", "Empirical Irish"],
+                index=["Sigmoid", "Linear", "Empirical Irish"].index(A["timber_growth_model"]),
+                help="Sigmoid reflects real forestry: slow early, fast mid-cycle, plateau late")
+
+        with c2:
+            st.markdown("**Carbon**")
+            A["carbon_price_curve"] = st.selectbox(
+                "Carbon price curve",
+                ["Flat", "Linear trend"],
+                index=["Flat", "Linear trend"].index(A["carbon_price_curve"]))
+            A["carbon_price_start"] = st.number_input(
+                "Carbon price today €/t", 5.0, 500.0, float(A["carbon_price_start"]), 1.0)
+            if A["carbon_price_curve"] == "Linear trend":
+                A["carbon_price_end"] = st.number_input(
+                    "Carbon price at tenor €/t", 5.0, 1000.0,
+                    float(A["carbon_price_end"]), 5.0)
+            A["buffer_coverage_ratio"] = st.slider(
+                "Buffer pool %", 0.05, 0.30, float(A["buffer_coverage_ratio"]), 0.01,
+                help="Fraction of minted CO2E withheld as reversal insurance")
+            A["reversal_probability_pct"] = st.slider(
+                "Annual reversal prob %", 0.0, 15.0, float(A["reversal_probability_pct"]), 0.5,
+                help="Annual probability sequestered carbon is physically reversed")
+
+        with c3:
+            st.markdown("**Discounting & costs**")
+            A["discount_rate_pct"] = st.slider(
+                "Discount rate %", 3.0, 15.0, float(A["discount_rate_pct"]), 0.25,
+                help="Applied to future carbon cashflows and opex")
+            A["management_cost_per_ha"] = st.number_input(
+                "Management cost €/ha/yr", 0.0, 1000.0,
+                float(A["management_cost_per_ha"]), 10.0)
+            A["mrv_cost_per_ha"] = st.number_input(
+                "MRV cost €/ha/yr", 0.0, 200.0, float(A["mrv_cost_per_ha"]), 5.0)
+            A["platform_fee_bps"] = st.number_input(
+                "Platform fee (bps)", 0.0, 200.0, float(A["platform_fee_bps"]), 5.0)
+            A["landowner_carbon_share_pct"] = st.slider(
+                "Landowner carbon share %", 0.0, 50.0,
+                float(A["landowner_carbon_share_pct"]), 1.0)
+
+    # --- Run NAV ---
+    st.session_state.nav_assumptions = A
+    nav = calculate_nav(project, A, st.session_state.mrv_cycles,
+                        st.session_state.retirements,
+                        st.session_state.current_year,
+                        st.session_state.current_co2e_spot)
+    st.session_state.nav_per_tree = nav["nav_per_tree"]
+
+    # Snapshot history
+    if (not st.session_state.nav_history or
+        st.session_state.nav_history[-1]["assumptions_hash"] != nav["assumptions_hash"]):
+        st.session_state.nav_history.append({
+            "timestamp": nav["calculation_timestamp"],
+            "net_nav": nav["net_nav"],
+            "nav_per_tree": nav["nav_per_tree"],
+            "assumptions_hash": nav["assumptions_hash"],
+            "year": st.session_state.current_year,
+        })
+
+    # --- Headline metrics ---
+    st.markdown("#### Fair value result")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Net NAV", f"€{nav['net_nav']:,.0f}")
+    m2.metric("NAV per TREE", f"€{nav['nav_per_tree']:.3f}",
+              delta=f"{(nav['nav_per_tree'] - project.origination_price_eur) / project.origination_price_eur * 100:+.2f}%")
+    m3.metric("Timber growth", f"{nav['timber_growth_pct']:.1f}% mature")
+    m4.metric("Outstanding CO₂E", f"{nav['outstanding_co2e']:,.1f} t")
+
+    # --- Component decomposition ---
+    st.markdown("#### NAV decomposition — waterfall from gross to net")
+    decomp = pd.DataFrame({
+        "Component": ["Land", "Standing timber", "Realised carbon (held)",
+                      "Future carbon (PV)", "Opex (PV)", "Platform fees (PV)", "NET NAV"],
+        "€": [nav["land_value"], nav["timber_value"], nav["realised_carbon_value"],
+              nav["future_carbon_pv"], -nav["ops_pv"], -nav["fees_pv"], nav["net_nav"]],
+        "Type": ["Asset", "Asset", "Asset", "Asset", "Liability", "Liability", "Result"],
+    })
+
+    fig = go.Figure()
+    colors = {"Asset": "#7A9E7E", "Liability": "#B54B37", "Result": "#C15F3C"}
+    fig.add_trace(go.Bar(
+        x=decomp["Component"], y=decomp["€"],
+        marker_color=[colors[t] for t in decomp["Type"]],
+        text=[f"€{v:,.0f}" for v in decomp["€"]], textposition="outside",
+    ))
+    fig.update_layout(
+        paper_bgcolor="#F4F1EA", plot_bgcolor="#F4F1EA",
+        font_color="#2B2925", title="NAV waterfall (€)", title_font_color="#2B2925",
+        yaxis_title="€", showlegend=False, height=450,
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    # --- Sensitivity analysis ---
+    st.markdown("#### Sensitivity — NAV under ±20% shock to each assumption")
+    shock_vars = [
+        "carbon_price_start", "discount_rate_pct", "land_value_per_ha",
+        "timber_yield_per_ha_at_maturity", "buffer_coverage_ratio",
+        "reversal_probability_pct",
+    ]
+    sens_results = [
+        run_sensitivity(project, A, st.session_state.mrv_cycles,
+                        st.session_state.retirements,
+                        st.session_state.current_year,
+                        st.session_state.current_co2e_spot, v, 20.0)
+        for v in shock_vars
+    ]
+    base_nav = nav["net_nav"]
+    sens_df = pd.DataFrame([{
+        "Variable": r["variable"],
+        "NAV at -20%": r["nav_down"],
+        "NAV at +20%": r["nav_up"],
+        "Impact -20%": r["nav_down"] - base_nav,
+        "Impact +20%": r["nav_up"] - base_nav,
+        "Range": abs(r["nav_up"] - r["nav_down"]),
+    } for r in sens_results])
+    sens_df = sens_df.sort_values("Range", ascending=True)
+
+    fig_sens = go.Figure()
+    fig_sens.add_trace(go.Bar(
+        y=sens_df["Variable"], x=sens_df["Impact -20%"] + sens_df["Impact +20%"].abs(),
+        base=sens_df["Impact -20%"],
+        orientation="h", marker_color="#C15F3C",
+        text=[f"±€{r:,.0f}" for r in sens_df["Range"] / 2], textposition="auto",
+    ))
+    fig_sens.add_vline(x=0, line_dash="dash", line_color="#8A8780")
+    fig_sens.update_layout(
+        paper_bgcolor="#F4F1EA", plot_bgcolor="#F4F1EA",
+        font_color="#2B2925", title="Tornado chart — NAV sensitivity (€)",
+        title_font_color="#2B2925", height=400,
+    )
+    st.plotly_chart(fig_sens, use_container_width=True)
+
+    # --- Dual scenario comparison ---
+    st.markdown("#### Side-by-side — two assumption sets")
+    st.caption("How fair value committees actually work: run the same asset under two defensible methodology sets and make an explicit reserve against the spread.")
+
+    with st.expander("Edit scenario B assumptions"):
+        B = st.session_state.nav_assumptions_alt
+        b1, b2, b3 = st.columns(3)
+        with b1:
+            B["carbon_price_curve"] = st.selectbox(
+                "B: Carbon price curve", ["Flat", "Linear trend"],
+                index=["Flat", "Linear trend"].index(B["carbon_price_curve"]),
+                key="b_curve")
+            if B["carbon_price_curve"] == "Linear trend":
+                B["carbon_price_end"] = st.number_input(
+                    "B: Carbon price at tenor", 5.0, 1000.0,
+                    float(B["carbon_price_end"]), 5.0, key="b_cend")
+        with b2:
+            B["discount_rate_pct"] = st.slider(
+                "B: Discount rate %", 3.0, 15.0, float(B["discount_rate_pct"]), 0.25, key="b_dr")
+            B["reversal_probability_pct"] = st.slider(
+                "B: Reversal prob %", 0.0, 15.0,
+                float(B["reversal_probability_pct"]), 0.5, key="b_rev")
+        with b3:
+            B["buffer_coverage_ratio"] = st.slider(
+                "B: Buffer %", 0.05, 0.30, float(B["buffer_coverage_ratio"]), 0.01, key="b_buf")
+        st.session_state.nav_assumptions_alt = B
+
+    nav_b = calculate_nav(project, st.session_state.nav_assumptions_alt,
+                          st.session_state.mrv_cycles, st.session_state.retirements,
+                          st.session_state.current_year, st.session_state.current_co2e_spot)
+    comp_df = pd.DataFrame({
+        "Component": ["Land", "Timber", "Realised carbon", "Future carbon PV",
+                      "Opex PV", "Fees PV", "NET NAV", "NAV per TREE"],
+        "Scenario A (€)": [nav["land_value"], nav["timber_value"], nav["realised_carbon_value"],
+                           nav["future_carbon_pv"], -nav["ops_pv"], -nav["fees_pv"],
+                           nav["net_nav"], nav["nav_per_tree"]],
+        "Scenario B (€)": [nav_b["land_value"], nav_b["timber_value"], nav_b["realised_carbon_value"],
+                           nav_b["future_carbon_pv"], -nav_b["ops_pv"], -nav_b["fees_pv"],
+                           nav_b["net_nav"], nav_b["nav_per_tree"]],
+    })
+    comp_df["Spread (€)"] = comp_df["Scenario B (€)"] - comp_df["Scenario A (€)"]
+    comp_df["Spread %"] = (comp_df["Spread (€)"] / comp_df["Scenario A (€)"].replace(0, 1)) * 100
+    # Formatting
+    display_df = comp_df.copy()
+    for col in ["Scenario A (€)", "Scenario B (€)", "Spread (€)"]:
+        display_df[col] = display_df[col].apply(lambda x: f"€{x:,.2f}" if abs(x) < 100 else f"€{x:,.0f}")
+    display_df["Spread %"] = display_df["Spread %"].apply(lambda x: f"{x:+.2f}%")
+    st.dataframe(display_df, hide_index=True, use_container_width=True)
+
+    reserve = abs(nav["net_nav"] - nav_b["net_nav"]) * 0.5
+    st.info(f"**Implied fair value reserve** (50% of spread between scenarios): €{reserve:,.0f} — the amount a depositary would typically require held back against methodology uncertainty.")
+
+    # --- NAV history ---
+    if len(st.session_state.nav_history) > 1:
+        st.markdown("#### NAV history — every recalculation logged")
+        hist_df = pd.DataFrame(st.session_state.nav_history)
+        fig_h = go.Figure()
+        fig_h.add_trace(go.Scatter(
+            x=hist_df["timestamp"], y=hist_df["nav_per_tree"],
+            mode="lines+markers", line_color="#C15F3C",
+            marker=dict(size=8), name="NAV/TREE",
+        ))
+        fig_h.update_layout(
+            paper_bgcolor="#F4F1EA", plot_bgcolor="#F4F1EA", font_color="#2B2925",
+            title="NAV per TREE — calculation history",
+            title_font_color="#2B2925", height=300,
+        )
+        st.plotly_chart(fig_h, use_container_width=True)
+
+    # --- Audit trail ---
+    st.markdown("#### Mark-to-model audit trail")
+    st.caption("Every NAV snapshot is hashed with its assumption set. A depositary or auditor can reproduce the calculation exactly by pinning the hash.")
+    audit = pd.DataFrame([{
+        "Input": k, "Value": v, "Type": type(v).__name__,
+    } for k, v in A.items()])
+    c1, c2 = st.columns([2, 1])
+    with c1:
+        st.dataframe(audit, hide_index=True, use_container_width=True, height=300)
+    with c2:
+        st.markdown(f"**Methodology hash**")
+        st.code(nav["assumptions_hash"])
+        st.markdown(f"**Calculated at**")
+        st.code(nav["calculation_timestamp"])
+        st.markdown(f"**Project tenor:** {project.tenor_years} yrs")
+        st.markdown(f"**Years elapsed:** {nav['years_elapsed']}")
+        st.markdown(f"**Years remaining:** {nav['years_remaining']}")
+
+
+# ----------------------------------------------------------------------------
+# TAB 7: SFDR DISCLOSURE — Article 9 periodic disclosure + PAI statement
+# ----------------------------------------------------------------------------
+with tabs[6]:
+    with st.expander("ℹ️ What's happening on this tab?", expanded=False):
+        st.markdown("""
+This is the **regulatory disclosure** that a Financial Conduct Authority or Central Bank would expect the fund to publish every year.
+
+- **SFDR Article 9** is the EU's most demanding category — reserved for funds whose *main point* is sustainability (not just "ESG-aware"). The disclosure proves the fund actually did what it said it would.
+- **Annex II** = the periodic report: did we hit our objective, by how much, how did we measure it, what data did we use?
+- **PAI statement** (Principal Adverse Impact) = the flip side: what negative impacts did our investments have? (For a forest, mostly "none" — but we still have to report it.)
+- Click **Generate** and it builds a full Word document — same sections, same language, same tables a real Article 9 fund uses. Editable, reviewable by counsel, not a black box.
+- Numbers come live from the ledger and NAV engine, so the disclosure reflects the state of the simulation right now.
+        """)
+
+    st.markdown("### SFDR Article 9 disclosure — periodic report generator")
+    st.caption("Generates a draft Annex II periodic disclosure and an Annex I Principal Adverse Impact statement, populated from the live ledger events and current NAV engine state.")
+
+    M = st.session_state.sfdr_metadata
+
+    # --- Editable fund metadata ---
+    with st.expander("📋 Fund metadata (edit before export)", expanded=True):
+        c1, c2 = st.columns(2)
+        with c1:
+            M["fund_name"] = st.text_input("Fund name", M["fund_name"])
+            M["fund_lei"] = st.text_input("Fund LEI", M["fund_lei"])
+            M["manager_name"] = st.text_input("Manager (AIFM)", M["manager_name"])
+            M["manager_lei"] = st.text_input("Manager LEI", M["manager_lei"])
+        with c2:
+            M["article_classification"] = st.selectbox(
+                "SFDR classification", ["Article 9", "Article 8"],
+                index=["Article 9", "Article 8"].index(M["article_classification"]))
+            M["reporting_period_start"] = st.text_input(
+                "Reporting period start", M["reporting_period_start"])
+            M["reporting_period_end"] = st.text_input(
+                "Reporting period end", M["reporting_period_end"])
+            M["reference_date"] = st.text_input("Reference date", M["reference_date"])
+    st.session_state.sfdr_metadata = M
+
+    # --- Compute disclosure data from ledger ---
+    agreed_cycles = [c for c in st.session_state.mrv_cycles if c.status == "AGREED"]
+    total_seq = sum(c.agreed_reading for c in agreed_cycles)
+    total_retired = sum(r["tco2e_retired"] for r in st.session_state.retirements)
+    total_buffer = total_seq * st.session_state.nav_assumptions["buffer_coverage_ratio"]
+    total_minted_to_investors = total_seq - total_buffer
+
+    trades_in_period = len([t for t in st.session_state.filled_trades])
+    num_holders = len([k for k, v in st.session_state.balances.items()
+                       if k[1] == "TREE" and v > 0])
+
+    nav_current = calculate_nav(project, st.session_state.nav_assumptions,
+                                 st.session_state.mrv_cycles,
+                                 st.session_state.retirements,
+                                 st.session_state.current_year,
+                                 st.session_state.current_co2e_spot)
+
+    # --- Preview ---
+    st.markdown("#### Disclosure preview")
+
+    st.markdown("##### A. Sustainable investment objective")
+    st.write(
+        f"**{M['fund_name']}** is classified as a financial product falling under "
+        f"{M['article_classification']} of Regulation (EU) 2019/2088 (SFDR). Its sustainable investment "
+        f"objective is the removal of atmospheric carbon dioxide through the establishment and stewardship "
+        f"of native broadleaf woodland in {project.location}, with measured contributions to biodiversity "
+        f"uplift and avoided deforestation. The objective contributes substantially to the climate change "
+        f"mitigation objective under Regulation (EU) 2020/852 (EU Taxonomy)."
+    )
+
+    st.markdown("##### B. Attainment of the objective — reporting period")
+    attain_df = pd.DataFrame([
+        ("Total tCO₂e sequestered (gross, verified)", f"{total_seq:,.2f}"),
+        ("Buffer pool allocation (reversal insurance)", f"{total_buffer:,.2f}"),
+        ("Net tCO₂e credited to investors", f"{total_minted_to_investors:,.2f}"),
+        ("tCO₂e retired by corporate buyers (real-world claim)", f"{total_retired:,.2f}"),
+        ("Hectares under conservation covenant", f"{project.hectares:.0f}"),
+        ("Number of independent verifiers per MRV cycle", "2 (Sylvera, Pachama)"),
+        ("MRV methodology alignment", "EU CRCF; ICVCM CCP compliant"),
+    ], columns=["Indicator", "Value"])
+    st.dataframe(attain_df, hide_index=True, use_container_width=True)
+
+    st.markdown("##### C. EU Taxonomy alignment")
+    st.write(
+        "The fund's economic activity — afforestation and forest management — is eligible under the "
+        "climate change mitigation objective (Delegated Regulation (EU) 2021/2139, Section 1.1 Afforestation "
+        "and 1.3 Forest management). The activity substantially contributes through quantified net GHG "
+        "removals, meets the Do No Significant Harm (DNSH) criteria, and complies with minimum safeguards "
+        "under OECD Guidelines and UN Guiding Principles. Alignment as a percentage of fund assets: "
+        "**≈100% (single-asset ICAV)**."
+    )
+
+    st.markdown("##### D. Principal Adverse Impact (PAI) indicators — summary")
+    st.caption("Summary view; full table in the downloadable Word document.")
+    pai_summary = pd.DataFrame([
+        ("GHG emissions (Scope 1+2+3)", "Net negative — removal activity", "Sequestered > emitted"),
+        ("Carbon footprint", "Net negative", "Below benchmark"),
+        ("GHG intensity of investee companies", "Not applicable", "Fund holds natural asset, not corporate issuers"),
+        ("Exposure to fossil fuel sector", "0%", "Compliant"),
+        ("Activities negatively affecting biodiversity-sensitive areas", "None", "Native broadleaf planting on previously agricultural land"),
+        ("Hazardous waste ratio", "Not applicable", "—"),
+        ("Investments in companies without carbon reduction initiatives", "Not applicable", "—"),
+    ], columns=["PAI indicator", "Status", "Note"])
+    st.dataframe(pai_summary, hide_index=True, use_container_width=True)
+
+    # --- Export ---
+    st.markdown("---")
+    st.markdown("#### 📥 Download the full draft disclosure (Word)")
+    st.caption("Generates an editable Word document with the full Annex II periodic disclosure and Annex I PAI statement. Intended for internal review and counsel mark-up before publication.")
+
+    if not DOCX_AVAILABLE:
+        st.error("python-docx is not installed. Add `python-docx` to requirements.txt to enable Word export.")
+    else:
+        if st.button("📄 Generate SFDR disclosure (Word)", type="primary"):
+            doc = DocxDocument()
+
+            # Default font
+            styles = doc.styles
+            normal = styles["Normal"]
+            normal.font.name = "Calibri"
+            normal.font.size = Pt(11)
+
+            # --- Title page ---
+            title = doc.add_paragraph()
+            title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = title.add_run(M["fund_name"])
+            run.bold = True
+            run.font.size = Pt(22)
+            run.font.color.rgb = RGBColor(0x1F, 0x38, 0x64)
+
+            sub = doc.add_paragraph()
+            sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            srun = sub.add_run("Sustainable Finance Disclosure Regulation — Periodic Disclosure")
+            srun.font.size = Pt(14)
+            srun.italic = True
+            srun.font.color.rgb = RGBColor(0x2E, 0x75, 0xB6)
+
+            sub2 = doc.add_paragraph()
+            sub2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            sub2.add_run(f"{M['article_classification']} of Regulation (EU) 2019/2088\n"
+                        f"Annex II to Delegated Regulation (EU) 2022/1288").font.size = Pt(11)
+
+            doc.add_paragraph()
+            meta = doc.add_paragraph()
+            meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            meta.add_run(f"Reporting period: {M['reporting_period_start']} to {M['reporting_period_end']}\n"
+                        f"Reference date: {M['reference_date']}").italic = True
+
+            doc.add_paragraph()
+            disc = doc.add_paragraph()
+            disc_run = disc.add_run("DRAFT — FOR INTERNAL REVIEW")
+            disc_run.bold = True
+            disc_run.font.color.rgb = RGBColor(0xC0, 0x39, 0x2B)
+            disc.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+            doc.add_page_break()
+
+            # --- Fund metadata table ---
+            h = doc.add_heading("Fund identification", level=1)
+            h.runs[0].font.color.rgb = RGBColor(0x1F, 0x38, 0x64)
+            tbl = doc.add_table(rows=0, cols=2)
+            tbl.style = "Light Grid Accent 1"
+            for label, val in [
+                ("Fund name", M["fund_name"]),
+                ("Fund LEI", M["fund_lei"]),
+                ("Manager (AIFM)", M["manager_name"]),
+                ("Manager LEI", M["manager_lei"]),
+                ("SFDR classification", M["article_classification"]),
+                ("Reporting period", f"{M['reporting_period_start']} to {M['reporting_period_end']}"),
+                ("Designated reference benchmark", "None"),
+            ]:
+                row = tbl.add_row().cells
+                row[0].text = label
+                row[1].text = str(val)
+                for p in row[0].paragraphs:
+                    for r in p.runs: r.bold = True
+
+            # --- Section A: Objective ---
+            doc.add_heading("A. Sustainable investment objective of the financial product", level=1)
+            doc.add_paragraph(
+                f"{M['fund_name']} (the \"Fund\") is classified as a financial product falling under "
+                f"{M['article_classification']} of Regulation (EU) 2019/2088 (SFDR). Its sustainable "
+                f"investment objective, in accordance with Article 2(17) SFDR, is the removal of atmospheric "
+                f"carbon dioxide through the establishment and long-term stewardship of native broadleaf "
+                f"woodland in {project.location}, with quantified secondary contributions to biodiversity "
+                f"uplift and the prevention of deforestation."
+            )
+            doc.add_paragraph(
+                "The objective substantially contributes to the climate change mitigation environmental "
+                "objective as defined in Article 9(a) of Regulation (EU) 2020/852 (EU Taxonomy). The Fund's "
+                "activity is eligible under the following Taxonomy activities:"
+            )
+            for item in [
+                "1.1 Afforestation (Annex I, Delegated Regulation (EU) 2021/2139)",
+                "1.3 Forest management",
+            ]:
+                p = doc.add_paragraph(item, style="List Bullet")
+
+            doc.add_paragraph(
+                "The Fund does not designate a reference benchmark for the purpose of attaining its "
+                "sustainable investment objective, as the objective is measured directly in tonnes of "
+                "CO₂-equivalent removals independently verified by accredited third parties."
+            )
+
+            # --- Section B: Attainment ---
+            doc.add_heading("B. Extent to which the sustainable investment objective was attained", level=1)
+            doc.add_paragraph(
+                "The following table summarises the Fund's performance against its sustainable investment "
+                "objective during the reporting period. All figures are derived from the independently "
+                "verified Measurement, Reporting and Verification (MRV) process described in Section D."
+            )
+
+            tbl_b = doc.add_table(rows=1, cols=2)
+            tbl_b.style = "Light Grid Accent 1"
+            hdr = tbl_b.rows[0].cells
+            hdr[0].text = "Indicator"
+            hdr[1].text = "Value (reporting period)"
+            for c in hdr:
+                for p in c.paragraphs:
+                    for r in p.runs: r.bold = True
+
+            for lbl, val in [
+                ("Total tCO₂e sequestered (gross, verified)", f"{total_seq:,.2f}"),
+                ("Buffer pool allocation (reversal insurance)", f"{total_buffer:,.2f} ({st.session_state.nav_assumptions['buffer_coverage_ratio']*100:.0f}% of gross)"),
+                ("Net tCO₂e credited to investors", f"{total_minted_to_investors:,.2f}"),
+                ("tCO₂e retired by corporate buyers", f"{total_retired:,.2f}"),
+                ("Hectares under conservation covenant", f"{project.hectares:.0f}"),
+                ("Independent verifiers per MRV cycle", "2 (Sylvera, Pachama)"),
+                ("MRV methodology alignment", "EU CRCF-aligned; ICVCM CCP-compliant"),
+                ("Buffer pool events drawn during period", "None"),
+                ("Reversal events (fire, disease, clearfell)", "None"),
+            ]:
+                row = tbl_b.add_row().cells
+                row[0].text = lbl
+                row[1].text = str(val)
+
+            # --- Section C: Methodology ---
+            doc.add_heading("C. Methodology used to measure attainment", level=1)
+            doc.add_paragraph(
+                "The attainment of the Fund's sustainable investment objective is measured using a dual "
+                "independent verification framework:"
+            )
+            for item in [
+                "Primary verifier (Sylvera): satellite imagery analysis (Sentinel-2, Landsat), biomass estimation using species-specific allometric models aligned to IPCC Tier 2 methodology, quarterly update cycle.",
+                "Secondary verifier (Pachama): airborne LiDAR inventory on a three-year rotation, ground-truth sample plot measurement by accredited foresters, independent reporting chain.",
+                "Oracle aggregation: verifier outputs are cryptographically signed and aggregated; a divergence exceeding the defined tolerance (currently 10%) pauses token issuance and escalates to the arbitration panel.",
+                "Buffer pool: 15% of each vintage's verified sequestration is withheld in a reversal-insurance reserve, available to offset any physical reversal event.",
+                "Chain of custody: all raw measurement data and allometric model outputs are stored on IPFS with content hashes committed on-chain, permitting full re-verification by any third party.",
+            ]:
+                doc.add_paragraph(item, style="List Bullet")
+
+            # --- Section D: Data sources and limitations ---
+            doc.add_heading("D. Data sources, limitations, and due diligence", level=1)
+            doc.add_paragraph(
+                "Primary data sources comprise: (i) remote-sensing imagery from ESA Sentinel-2 and NASA "
+                "Landsat missions; (ii) commercial high-resolution satellite imagery for sub-hectare "
+                "precision monitoring; (iii) airborne LiDAR surveys with ±10% biomass error at stand level; "
+                "(iv) in-person forester inventory measurements on sample plots refreshed on a three-year "
+                "cycle; (v) soil organic carbon sampling for below-ground stock verification."
+            )
+            doc.add_paragraph(
+                "Limitations: biomass estimation carries inherent measurement error, mitigated through "
+                "the buffer pool and dual-verifier framework. Climate-driven reversal risk (fire, disease, "
+                "storm) is modelled on a precautionary basis and further mitigated by reinsurance coverage "
+                "above the buffer pool's capacity."
+            )
+
+            # --- Section E: DNSH ---
+            doc.add_heading("E. Do No Significant Harm (DNSH) assessment", level=1)
+            doc.add_paragraph(
+                "The Fund's sustainable investments comply with the Do No Significant Harm principle "
+                "under Article 2(17) SFDR and the criteria of the EU Taxonomy Delegated Regulation. "
+                "Assessment against each environmental objective:"
+            )
+            dnsh_items = [
+                ("Climate change mitigation", "Positive contribution — this is the Fund's primary objective"),
+                ("Climate change adaptation", "Woodland expansion increases landscape resilience to heat and flood; native species selection enhances long-term climate adaptation"),
+                ("Sustainable use of water and marine resources", "No significant harm — planting prescriptions respect riparian buffer zones; no irrigation dependency"),
+                ("Transition to a circular economy", "No significant harm — timber residuals at harvest cascade through recognised wood-product hierarchy"),
+                ("Pollution prevention and control", "No significant harm — organic management only; no synthetic fertilisers or pesticides post-establishment"),
+                ("Protection and restoration of biodiversity and ecosystems", "Positive contribution — native species mix restores habitat; measured species-richness uplift recorded"),
+            ]
+            tbl_d = doc.add_table(rows=1, cols=2)
+            tbl_d.style = "Light Grid Accent 1"
+            hdr = tbl_d.rows[0].cells
+            hdr[0].text = "Environmental objective"
+            hdr[1].text = "Assessment"
+            for c in hdr:
+                for p in c.paragraphs:
+                    for r in p.runs: r.bold = True
+            for obj, assess in dnsh_items:
+                row = tbl_d.add_row().cells
+                row[0].text = obj
+                row[1].text = assess
+
+            # --- Section F: Minimum safeguards ---
+            doc.add_heading("F. Minimum safeguards", level=1)
+            doc.add_paragraph(
+                "The Fund observes the minimum safeguards set out in Article 18 of the EU Taxonomy "
+                "Regulation. The Manager has established policies and procedures to ensure alignment with "
+                "the OECD Guidelines for Multinational Enterprises and the UN Guiding Principles on "
+                "Business and Human Rights, including the eight fundamental conventions identified in the "
+                "Declaration of the International Labour Organisation on Fundamental Principles and Rights "
+                "at Work, and the International Bill of Human Rights. Land use is subject to free, prior, "
+                "and informed consent principles where any indigenous or customary rights arise; in the "
+                "Irish context, the Fund's covenants are registered with Tailte Éireann (Land Registry) "
+                "and comply with the Forestry Act 2014."
+            )
+
+            # --- PAI STATEMENT ---
+            doc.add_page_break()
+            h = doc.add_heading("Principal Adverse Impact Statement", level=1)
+            h.runs[0].font.color.rgb = RGBColor(0x1F, 0x38, 0x64)
+            doc.add_paragraph(
+                "Statement on the principal adverse impacts of investment decisions on sustainability "
+                "factors, prepared in accordance with Article 4 SFDR and Annex I of Commission Delegated "
+                "Regulation (EU) 2022/1288."
+            )
+            doc.add_paragraph(
+                "Note: the Fund holds a single real-asset exposure (native woodland) rather than a "
+                "portfolio of corporate investees. Several PAI indicators that are defined at the "
+                "investee-company level are not applicable and are disclosed as such, consistent with "
+                "ESMA guidance on single-asset product PAI reporting."
+            )
+
+            doc.add_heading("Table 1 — Climate and other environment-related indicators", level=2)
+            pai_climate = [
+                ("1", "GHG emissions (Scope 1, 2, 3)",
+                 f"Net negative: -{total_minted_to_investors:,.0f} tCO₂e removed"),
+                ("2", "Carbon footprint",
+                 "Net negative; the Fund's activity is GHG removal, not emission"),
+                ("3", "GHG intensity of investee companies", "N/A — real-asset fund, no corporate issuers"),
+                ("4", "Exposure to companies active in the fossil fuel sector", "0%"),
+                ("5", "Share of non-renewable energy consumption and production", "0% — no energy-intensive operations"),
+                ("6", "Energy consumption intensity per high-impact climate sector", "N/A"),
+                ("7", "Activities negatively affecting biodiversity-sensitive areas",
+                 "None — planting on previously agricultural land; no Natura 2000 encroachment"),
+                ("8", "Emissions to water", "None — no industrial effluent"),
+                ("9", "Hazardous waste and radioactive waste ratio", "None"),
+            ]
+            tbl_c = doc.add_table(rows=1, cols=3)
+            tbl_c.style = "Light Grid Accent 1"
+            hdr = tbl_c.rows[0].cells
+            hdr[0].text = "#"
+            hdr[1].text = "Indicator"
+            hdr[2].text = "Reporting period value"
+            for c in hdr:
+                for p in c.paragraphs:
+                    for r in p.runs: r.bold = True
+            for n, i, v in pai_climate:
+                row = tbl_c.add_row().cells
+                row[0].text = n
+                row[1].text = i
+                row[2].text = v
+
+            doc.add_heading("Table 2 — Social and employee, respect for human rights, anti-corruption indicators", level=2)
+            pai_social = [
+                ("10", "Violations of UN Global Compact / OECD Guidelines", "None identified"),
+                ("11", "Lack of processes to monitor UNGC / OECD compliance", "Manager has policies in place"),
+                ("12", "Unadjusted gender pay gap of investee companies", "N/A — real-asset fund"),
+                ("13", "Board gender diversity", "N/A — real-asset fund"),
+                ("14", "Exposure to controversial weapons", "0%"),
+            ]
+            tbl_s = doc.add_table(rows=1, cols=3)
+            tbl_s.style = "Light Grid Accent 1"
+            hdr = tbl_s.rows[0].cells
+            hdr[0].text = "#"
+            hdr[1].text = "Indicator"
+            hdr[2].text = "Reporting period value"
+            for c in hdr:
+                for p in c.paragraphs:
+                    for r in p.runs: r.bold = True
+            for n, i, v in pai_social:
+                row = tbl_s.add_row().cells
+                row[0].text = n
+                row[1].text = i
+                row[2].text = v
+
+            doc.add_heading("Additional voluntary indicators (climate and environment)", level=2)
+            pai_vol = [
+                ("Net GHG removals (tCO₂e, verified)", f"{total_minted_to_investors:,.2f}"),
+                ("Hectares of native broadleaf woodland under covenant", f"{project.hectares:.0f}"),
+                ("Species diversity uplift vs. pre-planting baseline", "Measured annually; see MRV addendum"),
+                ("Area contributing to Natura 2000 corridor connectivity", "Under assessment with NPWS"),
+            ]
+            tbl_v = doc.add_table(rows=1, cols=2)
+            tbl_v.style = "Light Grid Accent 1"
+            hdr = tbl_v.rows[0].cells
+            hdr[0].text = "Indicator"
+            hdr[1].text = "Value"
+            for c in hdr:
+                for p in c.paragraphs:
+                    for r in p.runs: r.bold = True
+            for i, v in pai_vol:
+                row = tbl_v.add_row().cells
+                row[0].text = i
+                row[1].text = v
+
+            # --- Appendix: Calculation hash ---
+            doc.add_page_break()
+            doc.add_heading("Appendix — Calculation integrity", level=1)
+            doc.add_paragraph(
+                "The figures in this disclosure are derived programmatically from the Fund's underlying "
+                "event ledger and NAV engine. Reproducibility is anchored by the methodology hash below; "
+                "a third-party auditor or depositary can pin this hash to verify that calculations can be "
+                "reproduced exactly from the same underlying data and assumptions."
+            )
+            tbl_a = doc.add_table(rows=0, cols=2)
+            tbl_a.style = "Light Grid Accent 1"
+            for lbl, val in [
+                ("NAV methodology hash", nav_current["assumptions_hash"]),
+                ("NAV calculation timestamp", nav_current["calculation_timestamp"]),
+                ("Net NAV at reference date", f"€{nav_current['net_nav']:,.2f}"),
+                ("NAV per TREE at reference date", f"€{nav_current['nav_per_tree']:,.4f}"),
+                ("Ledger entries referenced", f"{len(st.session_state.ledger)}"),
+                ("MRV cycles referenced", f"{len(st.session_state.mrv_cycles)}"),
+                ("Retirement certificates referenced", f"{len(st.session_state.retirements)}"),
+            ]:
+                row = tbl_a.add_row().cells
+                row[0].text = lbl
+                row[1].text = str(val)
+                for p in row[0].paragraphs:
+                    for r in p.runs: r.bold = True
+
+            # Footer disclaimer
+            doc.add_paragraph()
+            footer = doc.add_paragraph()
+            footer_run = footer.add_run(
+                "This is a draft disclosure generated from a discovery prototype. It has not been "
+                "reviewed by counsel, auditors, or the relevant National Competent Authority. Figures "
+                "may reflect simulated rather than real-world sequestration events. Not for distribution."
+            )
+            footer_run.italic = True
+            footer_run.font.size = Pt(9)
+            footer_run.font.color.rgb = RGBColor(0x80, 0x80, 0x80)
+
+            # Serialise
+            bio = io.BytesIO()
+            doc.save(bio)
+            bio.seek(0)
+
+            filename = f"SFDR_Disclosure_{M['fund_name'].replace(' ', '_')}_{M['reference_date']}.docx"
+            st.download_button(
+                label="⬇️ Download Word document",
+                data=bio.getvalue(),
+                file_name=filename,
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                type="primary",
+            )
+            st.success(f"Draft disclosure generated ({len(bio.getvalue()) / 1024:.1f} KB). Click above to download.")
+
+
+# ----------------------------------------------------------------------------
+# TAB 8: LEDGER
+# ----------------------------------------------------------------------------
+with tabs[7]:
     with st.expander("ℹ️ What's happening on this tab?", expanded=False):
         st.markdown("""
 The **single source of truth** — every mint, trade, burn and transfer, in order, with a fingerprint (hash) so nothing can be quietly edited after the fact.
@@ -894,6 +1990,7 @@ The **single source of truth** — every mint, trade, burn and transfer, in orde
 - Regulators, auditors and investors all look at the same data — no reconciliation disputes.
 - Each row has a **block hash** — change one character in a past event and every later hash breaks, so manipulation is immediately visible.
         """)
+
     st.markdown("### On-ledger event trail")
     st.caption("Every state change in the system writes here. In production this is the blockchain; in prototype it's the equivalent append-only log.")
 
@@ -918,16 +2015,16 @@ The **single source of truth** — every mint, trade, burn and transfer, in orde
         evt_counts = ledger_df["event_type"].value_counts().reset_index()
         evt_counts.columns = ["Event type", "Count"]
         fig = px.bar(evt_counts, x="Event type", y="Count",
-                     color_discrete_sequence=["#4ade80"])
-        fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
-                          font_color="#0f172a", title="Event distribution")
+                     color_discrete_sequence=["#C15F3C"])
+        fig.update_layout(paper_bgcolor="#F4F1EA", plot_bgcolor="#F4F1EA",
+                          font_color="#2B2925", title="Event distribution")
         st.plotly_chart(fig, use_container_width=True)
 
 
 # ----------------------------------------------------------------------------
-# TAB 7: STRESS TESTS
+# TAB 9: STRESS TESTS
 # ----------------------------------------------------------------------------
-with tabs[6]:
+with tabs[8]:
     with st.expander("ℹ️ What's happening on this tab?", expanded=False):
         st.markdown("""
 The **"what if it all goes wrong"** tab. For institutional investors, this is the most important tab — it shows the system's defences actually work.
@@ -937,8 +2034,9 @@ The **"what if it all goes wrong"** tab. For institutional investors, this is th
 - **Force majeure** (fire, disease) — trees burn, carbon is released. The **buffer pool** (10–20% of credits held back as insurance) absorbs the hit without breaking anyone's retirement claim.
 - **Landowner breach** — if the covenant is violated, tokens are frozen and the legal opinion is triggered.
 
-Each scenario is the opposite of a promise — it's a *demonstration that the promise holds under attack*.
+Each scenario here runs the attack and shows you exactly what the control does — or, where a control *fails*, what the residual exposure is. Being honest about failure modes is what makes the prototype institutional-grade, not marketing copy.
         """)
+
     st.markdown("### Stress scenarios")
     st.caption("Simulate attacks and adverse events. Each scenario demonstrates a specific control working — or, if the control fails, exactly what the exposure is.")
 
