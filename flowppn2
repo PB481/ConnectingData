@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S110 DAC — Mid-Quarter Drawdown Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #FDFAF5;
+  --warm-white: #FFFFFF;
+  --sand: #F5F0E8;
+  --stone: #E8E2D8;
+  --ink: #2C2825;
+  --charcoal: #4A4541;
+  --muted: #8A837A;
+  --teal: #1A7A6D;
+  --teal-light: #E8F5F2;
+  --teal-dark: #0F5C52;
+  --amber: #C4841D;
+  --amber-light: #FFF4E0;
+  --coral: #C44D3F;
+  --coral-light: #FDE8E5;
+  --sage: #5B8A72;
+  --sage-light: #E8F2EC;
+  --blue: #3668A7;
+  --blue-light: #E8EFF8;
+}
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+font-family: ‘Source Sans 3’, sans-serif;
+background: var(–cream);
+color: var(–ink);
+line-height: 1.65;
+-webkit-font-smoothing: antialiased;
+}
+
+.container { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem; }
+
+/* ── Header ── */
+.header {
+text-align: center;
+margin-bottom: 3.5rem;
+animation: fadeDown 0.8s ease-out;
+}
+.header h1 {
+font-family: ‘Playfair Display’, serif;
+font-size: 2.6rem;
+font-weight: 700;
+color: var(–ink);
+letter-spacing: -0.02em;
+margin-bottom: 0.5rem;
+}
+.header .subtitle {
+font-size: 1.15rem;
+color: var(–muted);
+font-weight: 300;
+max-width: 650px;
+margin: 0 auto;
+}
+.header .tag {
+display: inline-block;
+margin-top: 1rem;
+padding: 0.35rem 1.2rem;
+background: var(–teal-light);
+color: var(–teal-dark);
+border-radius: 100px;
+font-size: 0.82rem;
+font-weight: 600;
+letter-spacing: 0.04em;
+text-transform: uppercase;
+}
+
+/* ── Timeline ── */
+.timeline {
+position: relative;
+padding-left: 3.5rem;
+}
+.timeline::before {
+content: ‘’;
+position: absolute;
+left: 1.2rem;
+top: 0;
+bottom: 0;
+width: 3px;
+background: linear-gradient(180deg, var(–teal) 0%, var(–stone) 40%, var(–amber) 60%, var(–stone) 80%, var(–sage) 100%);
+border-radius: 3px;
+}
+
+.phase {
+position: relative;
+margin-bottom: 2.5rem;
+opacity: 0;
+transform: translateY(20px);
+animation: fadeUp 0.6s ease-out forwards;
+}
+.phase:nth-child(1) { animation-delay: 0.2s; }
+.phase:nth-child(2) { animation-delay: 0.4s; }
+.phase:nth-child(3) { animation-delay: 0.6s; }
+.phase:nth-child(4) { animation-delay: 0.8s; }
+.phase:nth-child(5) { animation-delay: 1.0s; }
+.phase:nth-child(6) { animation-delay: 1.2s; }
+.phase:nth-child(7) { animation-delay: 1.4s; }
+.phase:nth-child(8) { animation-delay: 1.6s; }
+.phase:nth-child(9) { animation-delay: 1.8s; }
+
+.phase-dot {
+position: absolute;
+left: -2.85rem;
+top: 1.3rem;
+width: 18px;
+height: 18px;
+border-radius: 50%;
+border: 3px solid var(–teal);
+background: var(–warm-white);
+z-index: 2;
+}
+.phase-dot.amber { border-color: var(–amber); }
+.phase-dot.sage { border-color: var(–sage); }
+.phase-dot.coral { border-color: var(–coral); }
+.phase-dot.blue { border-color: var(–blue); }
+
+.phase-day {
+font-family: ‘Playfair Display’, serif;
+font-size: 0.78rem;
+font-weight: 700;
+color: var(–muted);
+text-transform: uppercase;
+letter-spacing: 0.08em;
+margin-bottom: 0.35rem;
+}
+
+.card {
+background: var(–warm-white);
+border-radius: 12px;
+padding: 1.5rem 1.8rem;
+box-shadow: 0 1px 3px rgba(44,40,37,0.06), 0 6px 16px rgba(44,40,37,0.04);
+border-left: 4px solid var(–teal);
+transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.card:hover {
+box-shadow: 0 2px 8px rgba(44,40,37,0.08), 0 12px 28px rgba(44,40,37,0.06);
+transform: translateY(-2px);
+}
+.card.amber-border { border-left-color: var(–amber); }
+.card.sage-border { border-left-color: var(–sage); }
+.card.coral-border { border-left-color: var(–coral); }
+.card.blue-border { border-left-color: var(–blue); }
+
+.card h3 {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.25rem;
+font-weight: 700;
+color: var(–ink);
+margin-bottom: 0.6rem;
+}
+
+.card p {
+font-size: 0.95rem;
+color: var(–charcoal);
+margin-bottom: 0.6rem;
+}
+
+/* ── Numbers ── */
+.numbers-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+gap: 0.8rem;
+margin: 1rem 0;
+}
+.num-box {
+padding: 0.8rem 1rem;
+border-radius: 8px;
+text-align: center;
+}
+.num-box.teal { background: var(–teal-light); }
+.num-box.amber { background: var(–amber-light); }
+.num-box.sage { background: var(–sage-light); }
+.num-box.coral { background: var(–coral-light); }
+.num-box.blue { background: var(–blue-light); }
+.num-box .value {
+font-family: ‘Playfair Display’, serif;
+font-size: 1.4rem;
+font-weight: 700;
+color: var(–ink);
+}
+.num-box .label {
+font-size: 0.72rem;
+font-weight: 600;
+color: var(–muted);
+text-transform: uppercase;
+letter-spacing: 0.06em;
+margin-top: 0.15rem;
+}
+
+/* ── Arrows ── */
+.flow-arrow {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+margin: 0.8rem 0;
+padding: 0.6rem 1rem;
+background: var(–sand);
+border-radius: 8px;
+font-size: 0.88rem;
+font-weight: 500;
+color: var(–charcoal);
+}
+.flow-arrow .arrow {
+font-size: 1.1rem;
+color: var(–teal);
+flex-shrink: 0;
+}
+.flow-arrow.cash .arrow { color: var(–amber); }
+.flow-arrow.note .arrow { color: var(–sage); }
+
+/* ── Journal entries ── */
+.journal {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0;
+margin: 0.8rem 0;
+border-radius: 8px;
+overflow: hidden;
+border: 1px solid var(–stone);
+}
+.journal-side {
+padding: 0.8rem 1rem;
+font-size: 0.88rem;
+}
+.journal-side.dr { background: var(–teal-light); }
+.journal-side.cr { background: var(–coral-light); }
+.journal-side .journal-label {
+font-weight: 700;
+font-size: 0.72rem;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+color: var(–muted);
+margin-bottom: 0.25rem;
+}
+.journal-side .journal-entry {
+font-weight: 600;
+color: var(–ink);
+}
+
+/* ── Callout ── */
+.callout {
+margin: 1rem 0;
+padding: 1rem 1.2rem;
+border-radius: 8px;
+font-size: 0.9rem;
+}
+.callout.info { background: var(–teal-light); border-left: 3px solid var(–teal); color: var(–teal-dark); }
+.callout.warn { background: var(–amber-light); border-left: 3px solid var(–amber); color: #8B6914; }
+.callout.danger { background: var(–coral-light); border-left: 3px solid var(–coral); color: #8B2E23; }
+.callout strong { font-weight: 700; }
+
+/* ── Parties ── */
+.party-badge {
+display: inline-block;
+padding: 0.15rem 0.55rem;
+border-radius: 4px;
+font-size: 0.72rem;
+font-weight: 700;
+letter-spacing: 0.03em;
+text-transform: uppercase;
+margin-right: 0.3rem;
+}
+.party-badge.kkr { background: #FDE8C8; color: #8B5A00; }
+.party-badge.maples { background: #E8D8F0; color: #5B2D8C; }
+.party-badge.fa { background: var(–teal-light); color: var(–teal-dark); }
+.party-badge.aut { background: var(–coral-light); color: #8B2E23; }
+
+/* ── Summary table ── */
+.summary-table {
+width: 100%;
+border-collapse: collapse;
+margin: 1rem 0;
+font-size: 0.9rem;
+}
+.summary-table th {
+background: var(–ink);
+color: var(–warm-white);
+padding: 0.6rem 1rem;
+text-align: left;
+font-weight: 600;
+font-size: 0.78rem;
+text-transform: uppercase;
+letter-spacing: 0.06em;
+}
+.summary-table td {
+padding: 0.55rem 1rem;
+border-bottom: 1px solid var(–stone);
+}
+.summary-table tr:nth-child(even) td { background: var(–sand); }
+.summary-table .highlight { font-weight: 700; color: var(–teal-dark); }
+.summary-table .changed { color: var(–amber); font-weight: 700; }
+
+/* ── Footer ── */
+.footer {
+text-align: center;
+margin-top: 3rem;
+padding-top: 2rem;
+border-top: 2px solid var(–stone);
+color: var(–muted);
+font-size: 0.82rem;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeDown {
+from { opacity: 0; transform: translateY(-15px); }
+to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+
+  <div class="header">
+    <h1>Mid-Quarter Drawdown</h1>
+    <p class="subtitle">How &euro;10m of additional capital flows into a &euro;20m S110 DAC when the AUT is the sole investor and there is no Transfer Agent</p>
+    <span class="tag">Single Investor &middot; In-Specie + Cash &middot; No TA Function</span>
+  </div>
+
+  <!-- Timeline -->
+
+  <div class="timeline">
+
+```
+<!-- Phase 1: Inception -->
+<div class="phase">
+  <div class="phase-dot"></div>
+  <div class="phase-day">Day 1 &mdash; Inception</div>
+  <div class="card">
+    <h3>In-Kind Subscription: &euro;20m</h3>
+    <p>The AUT transfers 100 synthetic loans + 10 bonds to the DAC. No cash moves. The PPN is issued at the aggregate fair value of the transferred assets.</p>
+
+    <div class="numbers-grid">
+      <div class="num-box teal"><div class="value">&euro;20m</div><div class="label">Portfolio FV</div></div>
+      <div class="num-box sage"><div class="value">&euro;20m</div><div class="label">PPN Face Value</div></div>
+      <div class="num-box teal"><div class="value">&euro;20m</div><div class="label">NAV</div></div>
+      <div class="num-box blue"><div class="value">&euro;0</div><div class="label">Cash at Bank</div></div>
+    </div>
+
+    <div class="journal">
+      <div class="journal-side dr">
+        <div class="journal-label">Debit</div>
+        <div class="journal-entry">Loan Portfolio &euro;17.5m<br>Bond Portfolio &euro;2.5m</div>
+      </div>
+      <div class="journal-side cr">
+        <div class="journal-label">Credit</div>
+        <div class="journal-entry">PPN Liability &euro;20m</div>
+      </div>
+    </div>
+
+    <div class="callout info"><strong>No TA involved.</strong> Maples Fiduciary Services updates the Register of Noteholders. KKR provided the asset schedule. The FA team books the opening NAV.</div>
+
+    <div style="margin-top:0.5rem">
+      <span class="party-badge kkr">KKR</span> selects portfolio
+      <span class="party-badge maples">Maples</span> approves + issues PPN
+      <span class="party-badge fa">FA Team</span> books opening NAV
+      <span class="party-badge aut">AUT</span> transfers assets
+    </div>
+  </div>
+</div>
+
+<!-- Phase 2: Days 1-44 -->
+<div class="phase">
+  <div class="phase-dot"></div>
+  <div class="phase-day">Days 1&ndash;44 &mdash; Normal Operations</div>
+  <div class="card">
+    <h3>Daily NAV Production on &euro;20m Portfolio</h3>
+    <p>The FA team downloads Markit prices daily, accrues EURIBOR + spread interest on each loan, accrues bond coupons, accrues daily expenses, and publishes the NAV to the AUT administrator.</p>
+
+    <div class="flow-arrow"><span class="arrow">&rarr;</span> Interest accrues at ~&euro;33k/day across the 100 loan + 10 bond portfolio</div>
+    <div class="flow-arrow"><span class="arrow">&rarr;</span> Expenses accrue at ~&euro;6k/day (admin, ManCo, IM, trustee, audit, legal)</div>
+    <div class="flow-arrow"><span class="arrow">&rarr;</span> Net daily income contribution: ~&euro;27k/day</div>
+
+    <div class="numbers-grid">
+      <div class="num-box teal"><div class="value">~&euro;21.2m</div><div class="label">NAV at Day 44</div></div>
+      <div class="num-box sage"><div class="value">&euro;20m</div><div class="label">PPN Face Value</div></div>
+      <div class="num-box amber"><div class="value">~&euro;1.5m</div><div class="label">Accrued Interest</div></div>
+    </div>
+
+    <div class="callout info"><strong>PPN face value is unchanged.</strong> The NAV moves daily due to Markit repricing and accruals, but the PPN face value stays at &euro;20m. The Stability Check shows &ldquo;NO &mdash; Unchanged.&rdquo;</div>
+  </div>
+</div>
+
+<!-- Phase 3: Drawdown notice -->
+<div class="phase">
+  <div class="phase-dot amber"></div>
+  <div class="phase-day">Day 40 &mdash; Drawdown Notice</div>
+  <div class="card amber-border">
+    <h3>KKR Issues Drawdown Notice</h3>
+    <p>KKR notifies the FA team that the AUT will contribute an additional &euro;10m in cash on Day 45. This is not a surprise &mdash; the minimum 5 business days&rsquo; notice gives the FA team time to prepare.</p>
+
+    <div class="flow-arrow"><span class="arrow">&rarr;</span> KKR sends drawdown notice with amount, expected date, and deployment plan</div>
+    <div class="flow-arrow cash"><span class="arrow">&rarr;</span> This is a CASH subscription, not in-kind &mdash; the AUT will wire &euro;10m EUR</div>
+
+    <div style="margin-top:0.8rem">
+      <span class="party-badge kkr">KKR</span> sends drawdown notice<br><br>
+      <span class="party-badge fa">FA Team</span> actions:<br>
+      &bull; Confirm receipt of drawdown notice<br>
+      &bull; Flag to ManCo and Trustee for approval<br>
+      &bull; Prepare for special NAV on Day 45<br>
+      &bull; No new positions to set up yet (cash, not loans)
+    </div>
+  </div>
+</div>
+
+<!-- Phase 4: Governance approvals -->
+<div class="phase">
+  <div class="phase-dot amber"></div>
+  <div class="phase-day">Days 40&ndash;44 &mdash; Governance Chain</div>
+  <div class="card amber-border">
+    <h3>ManCo + Trustee Approvals</h3>
+    <p>Both Maples ManCo and Maples Trustee must approve the drawdown in writing before Day 45. The FA team verifies both approvals are on file before processing.</p>
+
+    <div class="flow-arrow"><span class="arrow">&rarr;</span> <span class="party-badge maples">ManCo</span> approves drawdown &mdash; confirms consistent with OM terms</div>
+    <div class="flow-arrow"><span class="arrow">&rarr;</span> <span class="party-badge maples">Trustee</span> approves drawdown &mdash; confirms security extends to new capital</div>
+    <div class="flow-arrow"><span class="arrow">&rarr;</span> <span class="party-badge fa">FA Team</span> verifies both written approvals on file</div>
+
+    <div class="callout warn"><strong>HARD STOP:</strong> Do not book the &euro;10m or adjust PPN face value until both ManCo AND Trustee approvals are confirmed on file. This is a governance gate, not a suggestion.</div>
+  </div>
+</div>
+
+<!-- Phase 5: Drawdown day -->
+<div class="phase">
+  <div class="phase-dot coral"></div>
+  <div class="phase-day">Day 45 &mdash; Drawdown Execution</div>
+  <div class="card coral-border">
+    <h3>AUT Wires &euro;10m &mdash; PPN Face Value Increases</h3>
+    <p>The AUT wires &euro;10m EUR to the DAC&rsquo;s bank account. The DAC&rsquo;s assets immediately increase. Maples issues a supplemental note, increasing the PPN face value from &euro;20m to &euro;30m.</p>
+
+    <div class="journal">
+      <div class="journal-side dr">
+        <div class="journal-label">Debit</div>
+        <div class="journal-entry">Cash at Bank &euro;10m</div>
+      </div>
+      <div class="journal-side cr">
+        <div class="journal-label">Credit</div>
+        <div class="journal-entry">PPN Liability &euro;10m</div>
+      </div>
+    </div>
+
+    <div class="numbers-grid">
+      <div class="num-box teal"><div class="value">~&euro;31.2m</div><div class="label">Post-Drawdown NAV</div></div>
+      <div class="num-box coral"><div class="value">&euro;30m</div><div class="label">New PPN Face Value</div></div>
+      <div class="num-box blue"><div class="value">&euro;10m</div><div class="label">Cash at Bank</div></div>
+      <div class="num-box amber"><div class="value">~&euro;1.5m</div><div class="label">Accrued Interest</div></div>
+    </div>
+
+    <div style="margin-top:0.8rem">
+      <span class="party-badge fa">FA Team</span> actions:<br>
+      &bull; Run <strong>special NAV</strong> on Day 45 (before &amp; after snapshot for audit trail)<br>
+      &bull; Book DR Cash &euro;10m / CR PPN Liability &euro;10m<br>
+      &bull; Update PPN Stability Check: &euro;20m &rarr; &euro;30m<br>
+      &bull; Flag changes to &ldquo;YES &mdash; CHANGED&rdquo; (expected &mdash; documented)<br><br>
+      <span class="party-badge maples">Maples</span> Fiduciary updates Register of Noteholders<br>
+      <em style="color:var(--muted);font-size:0.85rem">No TA involved. No units created. No capstock. The PPN face value IS the capital record.</em>
+    </div>
+
+    <div class="callout danger"><strong>There is no &ldquo;capstock&rdquo; in the traditional sense.</strong> The PPN is a debt instrument with a face value, not equity with units. When the AUT adds &euro;10m, the PPN face value increases by &euro;10m. That&rsquo;s it. No NAV-per-unit calculation, no units created, no TA processing.</div>
+  </div>
+</div>
+
+<!-- Phase 6: Cash drag -->
+<div class="phase">
+  <div class="phase-dot blue"></div>
+  <div class="phase-day">Days 45&ndash;55 &mdash; Cash Drag Period</div>
+  <div class="card blue-border">
+    <h3>&euro;10m Sits as Cash Until KKR Deploys</h3>
+    <p>The new &euro;10m is cash on the balance sheet. It earns no loan interest &mdash; just bank deposit rates. The portfolio yield drops because the NAV denominator increased but the income numerator hasn&rsquo;t yet.</p>
+
+    <div class="flow-arrow cash"><span class="arrow">&rarr;</span> Original &euro;20m portfolio continues generating ~&euro;33k/day interest</div>
+    <div class="flow-arrow cash"><span class="arrow">&rarr;</span> New &euro;10m cash earns ~&euro;0.3k/day at bank deposit rates</div>
+    <div class="flow-arrow cash"><span class="arrow">&rarr;</span> Blended yield temporarily drops from ~6.0% to ~4.0% annualised</div>
+
+    <div class="callout warn"><strong>Cash drag.</strong> KKR should deploy the &euro;10m into new loans quickly. Every day the cash sits undeployed, the AUT&rsquo;s return is diluted. Track deployment progress against KKR&rsquo;s timeline.</div>
+  </div>
+</div>
+
+<!-- Phase 7: KKR deploys -->
+<div class="phase">
+  <div class="phase-dot blue"></div>
+  <div class="phase-day">Days 55&ndash;65 &mdash; KKR Deploys Capital</div>
+  <div class="card blue-border">
+    <h3>KKR Purchases New Loans</h3>
+    <p>KKR deploys the &euro;10m into 15-20 new loan facilities. Each new loan needs a Markit LoanX ID, facility terms (spread, floor, day count, maturity), and must be set up in the accrual engine.</p>
+
+    <div style="margin-top:0.8rem">
+      <span class="party-badge kkr">KKR</span> provides trade instructions (T+0) + Markit IDs<br>
+      <span class="party-badge fa">FA Team</span> actions:<br>
+      &bull; Book each new loan position at trade price<br>
+      &bull; Set up accrual terms per credit agreement<br>
+      &bull; Track settlement (T+7 to T+20 for each loan)<br>
+      &bull; Accrue delayed compensation during settlement period<br>
+      &bull; Add new positions to compliance testing parameters<br>
+      &bull; Verify Markit coverage for each new position
+    </div>
+
+    <div class="callout info"><strong>Settlement lag:</strong> Loan trades don&rsquo;t settle T+2 like equities. Expect T+7 to T+20. During this period, track pending trades and accrue delayed compensation daily. Cash doesn&rsquo;t leave the bank account until settlement.</div>
+  </div>
+</div>
+
+<!-- Phase 8: Quarter-end -->
+<div class="phase">
+  <div class="phase-dot sage"></div>
+  <div class="phase-day">Day 90 &mdash; Quarter-End</div>
+  <div class="card sage-border">
+    <h3>Quarterly Distribution: Income Waterfall</h3>
+    <p>The quarterly interest waterfall runs as normal. Total interest for the quarter is approximately &euro;3m &mdash; accrued on the original &euro;20m portfolio for the full quarter plus the new loans for the period after deployment.</p>
+
+    <div class="numbers-grid">
+      <div class="num-box teal"><div class="value">~&euro;1.5m</div><div class="label">Interest Days 1&ndash;44</div></div>
+      <div class="num-box amber"><div class="value">~&euro;0.2m</div><div class="label">Interest Days 45&ndash;55 (cash drag)</div></div>
+      <div class="num-box sage"><div class="value">~&euro;1.3m</div><div class="label">Interest Days 55&ndash;90 (full portfolio)</div></div>
+      <div class="num-box blue"><div class="value">~&euro;3.0m</div><div class="label">Total Quarter Interest</div></div>
+    </div>
+
+    <div class="callout info"><strong>No equalisation needed.</strong> The AUT is the sole investor. They contributed the original &euro;20m and the additional &euro;10m. ALL the income belongs to them. There is no second investor to share with or to be unfair to.</div>
+
+    <table class="summary-table">
+      <tr><th>Interest Waterfall</th><th>Amount</th><th>Notes</th></tr>
+      <tr><td>Total Interest Inflows</td><td class="highlight">&euro;3.0m</td><td>Full quarter from original + partial from new loans</td></tr>
+      <tr><td>Less: Senior Expenses (I-1 to I-9)</td><td>(&euro;0.27m)</td><td>Per priority of payments, subject to caps</td></tr>
+      <tr><td><strong>PPN Income Coupon to AUT (I-10)</strong></td><td class="highlight">&euro;2.73m</td><td>Residual &mdash; this is the S110 tax deduction</td></tr>
+    </table>
+
+    <table class="summary-table" style="margin-top:1rem">
+      <tr><th>Principal Waterfall</th><th>Amount</th><th>Notes</th></tr>
+      <tr><td>Loan Repayments + Prepayments</td><td>&euro;0.15m</td><td>From original portfolio only (new loans too fresh)</td></tr>
+      <tr><td>Application</td><td class="highlight">Reinvest</td><td>KKR redeploys into new facilities per OM</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- Phase 9: Summary -->
+<div class="phase">
+  <div class="phase-dot sage"></div>
+  <div class="phase-day">End State &mdash; Quarter Summary</div>
+  <div class="card sage-border">
+    <h3>Before &amp; After: What Changed This Quarter</h3>
+
+    <table class="summary-table">
+      <tr><th>Metric</th><th>Start of Quarter</th><th>End of Quarter</th><th>Change</th></tr>
+      <tr><td>Portfolio Fair Value</td><td>&euro;20.0m</td><td>~&euro;30.2m</td><td class="changed">+&euro;10.2m</td></tr>
+      <tr><td>Cash at Bank</td><td>&euro;0</td><td>~&euro;0.5m</td><td class="changed">+&euro;0.5m (residual from deployment)</td></tr>
+      <tr><td>PPN Face Value</td><td>&euro;20.0m</td><td>&euro;30.0m</td><td class="changed">+&euro;10.0m (drawdown)</td></tr>
+      <tr><td>NAV (post-distribution)</td><td>&euro;20.0m</td><td>~&euro;30.5m</td><td class="changed">+&euro;10.5m</td></tr>
+      <tr><td>PPN Coupon Paid</td><td>&mdash;</td><td>&euro;2.73m</td><td>To AUT as interest income</td></tr>
+      <tr><td>Investors</td><td>1 (AUT)</td><td>1 (AUT)</td><td>No change</td></tr>
+      <tr><td>Units / Capstock Created</td><td>&mdash;</td><td>&mdash;</td><td><strong>None. PPN face value is the capital record.</strong></td></tr>
+    </table>
+
+    <div class="callout info"><strong>Key takeaway:</strong> The PPN face value tracks capital contributed (&euro;30m). The NAV tracks economic value (~&euro;30.5m including unrealised gains). The difference is the AUT&rsquo;s unrealised return. No units, no capstock, no TA. Just a debt instrument with a face value and a daily mark.</div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Footer -->
+
+  <div class="footer">
+    S110 DAC SPV &mdash; Mid-Quarter Drawdown Flow &middot; Single Investor Scenario &middot; Confidential Working Document
+  </div>
+
+</div>
+</body>
+</html>
