@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fa-system / flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a1a;
+    --bg-alt: #222;
+    --fg: #d4d4d4;
+    --fg-dim: #888;
+    --fg-bright: #fff;
+    --accent: #f0c674;
+    --green: #b5bd68;
+    --red: #cc6666;
+    --blue: #81a2be;
+    --purple: #b294bb;
+    --border: #333;
+    --mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+background: var(–bg);
+color: var(–fg);
+font-family: var(–mono);
+font-size: 14px;
+line-height: 1.6;
+min-height: 100vh;
+}
+
+body {
+padding: 40px 20px 80px;
+max-width: 1100px;
+margin: 0 auto;
+}
+
+.crt {
+background-image:
+linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.08) 50%);
+background-size: 100% 3px;
+pointer-events: none;
+position: fixed;
+inset: 0;
+z-index: 1000;
+}
+
+/* — header — */
+header {
+border-bottom: 1px solid var(–border);
+padding-bottom: 20px;
+margin-bottom: 40px;
+}
+
+.prompt {
+color: var(–green);
+margin-bottom: 8px;
+font-size: 13px;
+}
+.prompt .path { color: var(–blue); }
+.prompt .cmd { color: var(–fg); }
+
+h1 {
+font-size: 22px;
+font-weight: 700;
+color: var(–fg-bright);
+letter-spacing: -0.5px;
+margin-bottom: 6px;
+}
+
+.subtitle {
+color: var(–fg-dim);
+font-size: 13px;
+}
+
+.meta {
+display: flex;
+gap: 24px;
+margin-top: 16px;
+font-size: 12px;
+color: var(–fg-dim);
+flex-wrap: wrap;
+}
+.meta span strong { color: var(–accent); font-weight: 500; }
+
+/* — nav — */
+nav.slides {
+display: flex;
+gap: 4px;
+margin-bottom: 32px;
+flex-wrap: wrap;
+border: 1px solid var(–border);
+padding: 6px;
+background: var(–bg-alt);
+}
+nav.slides button {
+background: transparent;
+border: none;
+color: var(–fg-dim);
+font-family: var(–mono);
+font-size: 12px;
+padding: 8px 12px;
+cursor: pointer;
+transition: all 0.1s;
+}
+nav.slides button:hover {
+color: var(–fg-bright);
+background: #2a2a2a;
+}
+nav.slides button.active {
+color: var(–bg);
+background: var(–accent);
+}
+
+/* — slides — */
+.slide {
+display: none;
+animation: fadeIn 0.2s ease-out;
+}
+.slide.active { display: block; }
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(4px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.slide h2 {
+font-size: 16px;
+color: var(–fg-bright);
+font-weight: 600;
+margin-bottom: 6px;
+}
+.slide h2::before {
+content: ’# ’;
+color: var(–fg-dim);
+}
+
+.slide .step-meta {
+color: var(–fg-dim);
+font-size: 12px;
+margin-bottom: 24px;
+padding-bottom: 16px;
+border-bottom: 1px dashed var(–border);
+}
+
+/* — ascii boxes — */
+.ascii {
+white-space: pre;
+color: var(–fg-dim);
+font-size: 13px;
+line-height: 1.3;
+overflow-x: auto;
+padding: 16px;
+background: #151515;
+border: 1px solid var(–border);
+margin: 16px 0 24px;
+}
+.ascii .hi { color: var(–accent); }
+.ascii .ok { color: var(–green); }
+.ascii .bad { color: var(–red); }
+.ascii .io { color: var(–blue); }
+.ascii .glue { color: var(–purple); }
+
+/* — body text — */
+.slide p {
+margin-bottom: 14px;
+max-width: 72ch;
+}
+
+.slide .comment {
+color: var(–fg-dim);
+}
+.slide .comment::before { content: ’// ’; }
+
+.slide ul {
+list-style: none;
+margin-bottom: 18px;
+}
+.slide ul li {
+padding-left: 20px;
+position: relative;
+margin-bottom: 6px;
+max-width: 72ch;
+}
+.slide ul li::before {
+content: ‘-’;
+position: absolute;
+left: 0;
+color: var(–fg-dim);
+}
+.slide ul li strong {
+color: var(–accent);
+font-weight: 500;
+}
+
+/* — inline code — */
+code {
+color: var(–green);
+background: #151515;
+padding: 1px 6px;
+border: 1px solid var(–border);
+font-size: 13px;
+}
+
+/* — panels — */
+.panel {
+border: 1px solid var(–border);
+padding: 16px 20px;
+margin: 16px 0;
+background: #1e1e1e;
+}
+.panel.warn {
+border-left: 3px solid var(–red);
+}
+.panel.note {
+border-left: 3px solid var(–blue);
+}
+.panel.ok {
+border-left: 3px solid var(–green);
+}
+.panel .label {
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 1px;
+color: var(–fg-dim);
+margin-bottom: 8px;
+}
+.panel.warn .label { color: var(–red); }
+.panel.note .label { color: var(–blue); }
+.panel.ok .label { color: var(–green); }
+
+/* — footer controls — */
+.controls {
+position: fixed;
+bottom: 0;
+left: 0;
+right: 0;
+background: var(–bg-alt);
+border-top: 1px solid var(–border);
+padding: 10px 20px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+font-size: 12px;
+color: var(–fg-dim);
+z-index: 100;
+}
+.controls .keys kbd {
+background: #151515;
+border: 1px solid var(–border);
+padding: 2px 6px;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–fg);
+}
+.controls .progress {
+color: var(–accent);
+}
+.controls .nav-btns button {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–fg);
+padding: 4px 12px;
+font-family: var(–mono);
+font-size: 12px;
+cursor: pointer;
+margin-left: 6px;
+}
+.controls .nav-btns button:hover {
+border-color: var(–accent);
+color: var(–accent);
+}
+.controls .nav-btns button:disabled {
+opacity: 0.3;
+cursor: not-allowed;
+}
+
+/* — tables — */
+table {
+width: 100%;
+border-collapse: collapse;
+margin: 16px 0;
+font-size: 13px;
+}
+th, td {
+text-align: left;
+padding: 8px 12px;
+border-bottom: 1px solid var(–border);
+}
+th {
+color: var(–accent);
+font-weight: 500;
+border-bottom: 1px solid var(–accent);
+}
+td code { font-size: 12px; }
+
+/* — cursor — */
+.cursor::after {
+content: ‘_’;
+color: var(–accent);
+animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* — small screens — */
+@media (max-width: 720px) {
+body { padding: 20px 12px 80px; font-size: 13px; }
+.ascii { font-size: 11px; }
+.controls { font-size: 11px; padding: 8px 12px; }
+nav.slides button { font-size: 11px; padding: 6px 10px; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="crt"></div>
+
+<header>
+  <div class="prompt">
+    <span>user@fa-system</span>:<span class="path">~/docs</span>$ <span class="cmd">cat flow.md</span>
+  </div>
+  <h1>fa-system / end-to-end flow</h1>
+  <div class="subtitle">how a NAV gets from raw input to a signed-off number, without anyone pretending the AI is magic</div>
+  <div class="meta">
+    <span><strong>version</strong> 0.3</span>
+    <span><strong>license</strong> internal</span>
+    <span><strong>principle</strong> LLM writes code, code gets checked, human signs</span>
+  </div>
+</header>
+
+<nav class="slides" id="nav"></nav>
+
+<main id="deck">
+
+<!-- slide 1: overview -->
+
+<section class="slide active" data-title="00 overview">
+  <h2>the whole thing, on one screen</h2>
+  <div class="step-meta">there is no magic. read this and you understand the system.</div>
+
+  <div class="ascii">
+ ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+ │  <span class="io">/io</span>     │ -> │ <span class="glue">/glue</span>    │ -> │ <span class="hi">/checks</span>  │ -> │ <span class="io">/core</span>    │ -> │ <span class="ok">human</span>    │
+ │ reader   │    │ llm       │    │ verify    │    │ run       │    │ signs    │
+ └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+      │               │                │               │               │
+      ▼               ▼                ▼               ▼               ▼
+   parse          write sql       diff + tests    execute on      audit +
+   messy          to do the       + formal        real data       promote
+   input          calc            checks          (deterministic) to /library
+  </div>
+
+  <p><span class="comment">five things happen. in order. always.</span></p>
+  <ul>
+    <li><strong>/io</strong> reads whatever format turned up today.</li>
+    <li><strong>/glue</strong> is where the LLM writes calculation code — SQL, preferably.</li>
+    <li><strong>/checks</strong> verifies the code before it touches real data.</li>
+    <li><strong>/core</strong> runs the verified code deterministically.</li>
+    <li><strong>human</strong> signs. the human is the accountable party.</li>
+  </ul>
+
+  <div class="panel note">
+    <div class="label">note</div>
+    the LLM never computes the number. it writes code. code is checked. code runs. that's the rule.
+  </div>
+</section>
+
+<!-- slide 2: io -->
+
+<section class="slide" data-title="01 /io">
+  <h2>/io — read the input</h2>
+  <div class="step-meta">step 1. the custodian sent a file. we have to read it.</div>
+
+  <div class="ascii">
+ input: <span class="io">trustee_feed_20260421.csv</span>  (3.2 MB, 14,812 rows)
+        │
+        ▼
+ ┌────────────────────────────────────────────┐
+ │  is the format known?                      │
+ │    yes -> use existing parser              │
+ │    no  -> LLM writes new parser            │
+ │           -> goes through /checks first    │
+ │           -> never runs on live data       │
+ │              until review passes           │
+ └────────────────────────────────────────────┘
+        │
+        ▼
+ normalised rows (schema: positions_v3)
+  </div>
+
+  <p>most days, the format is one we've seen before. we have a parser. we use it. done in 40ms.</p>
+  <p>when the custodian changes their export format (they will, without telling us), the LLM writes a new parser. <em>that parser is code</em>. it goes through the same review gate as any calculation code.</p>
+
+  <div class="panel warn">
+    <div class="label">rule</div>
+    never trust upstream to be consistent. accept any format, any day. parsing failures surface early, not during NAV strike.
+  </div>
+</section>
+
+<!-- slide 3: glue -->
+
+<section class="slide" data-title="02 /glue">
+  <h2>/glue — llm writes the code</h2>
+  <div class="step-meta">step 2. we need a calculation. the library may or may not have it.</div>
+
+  <div class="ascii">
+ request: "compute MV for instrument type XYZ with haircut rule Z"
+        │
+        ▼
+ ┌────────────────────────────────────────────┐
+ │  is it in /library?                        │
+ │    yes -> call tool_v1.3.2. done.          │
+ │    no  -> LLM writes new tool (sql).       │
+ │           second LLM writes its version.   │
+ │           diff them.                       │
+ │           agreement required to proceed.   │
+ │           disagreement -> stop. human.     │
+ └────────────────────────────────────────────┘
+  </div>
+
+  <p>the library is the point. every passing tool gets stored, versioned, and reused. the LLM's job shrinks over time. this is a feature.</p>
+
+  <p>SQL is the preferred output because SQL is easier to verify than Pandas. you can reason about what a SELECT does. you cannot always reason about what a method chain does.</p>
+
+  <div class="panel note">
+    <div class="label">on llms</div>
+    they are autocorrect on steroids. useful for catching stupid bugs and writing boilerplate code. not useful as an oracle. treat accordingly.
+  </div>
+</section>
+
+<!-- slide 4: checks -->
+
+<section class="slide" data-title="03 /checks">
+  <h2>/checks — verify before you run</h2>
+  <div class="step-meta">step 3. the code is new. it could be wrong. find out before it touches real data.</div>
+
+  <div class="ascii">
+ candidate_tool.sql
+        │
+        ├─ <span class="ok">test 1:</span> run against golden test cases        [pass/fail]
+        ├─ <span class="ok">test 2:</span> diff against second-LLM version       [agree/disagree]
+        ├─ <span class="ok">test 3:</span> property tests (invariants hold?)     [pass/fail]
+        └─ <span class="ok">test 4:</span> formal verifier (if material)         [proven/unproven]
+        │
+        ▼
+ all pass ─── yes ──> proceed to /core
+          ─── no  ──> stop. surface to human. do not retry silently.
+  </div>
+
+  <p>this is just testing. the industry already knows how to test. the novelty is applying it to LLM output with the same discipline we'd apply to a human junior's first PR.</p>
+
+  <table>
+    <tr><th>check</th><th>catches</th><th>cost</th></tr>
+    <tr><td><code>golden tests</code></td><td>known calculation regressions</td><td>cheap</td></tr>
+    <tr><td><code>dual-LLM diff</code></td><td>silly mistakes, hallucinated columns</td><td>one extra call</td></tr>
+    <tr><td><code>property tests</code></td><td>edge cases humans forgot</td><td>moderate</td></tr>
+    <tr><td><code>z3</code></td><td>logic errors in critical paths</td><td>expensive, reserved</td></tr>
+  </table>
+
+  <div class="panel warn">
+    <div class="label">failure mode</div>
+    if a check fails, do not ask the LLM to "try again." stop. a human looks at it. retrying silently is how you get confident wrong answers.
+  </div>
+</section>
+
+<!-- slide 5: core -->
+
+<section class="slide" data-title="04 /core">
+  <h2>/core — run the verified code</h2>
+  <div class="step-meta">step 4. deterministic execution on real data.</div>
+
+  <div class="ascii">
+ verified_tool.sql + input_data
+        │
+        ▼
+ ┌────────────────────────────────────────────┐
+ │  execute                                   │
+ │  -> output rows                            │
+ │  -> diff vs yesterday                      │
+ │  -> flag statistical outliers              │
+ │     (ewma, changepoint, isolation forest)  │
+ └────────────────────────────────────────────┘
+        │
+        ▼
+ result + anomaly_report
+  </div>
+
+  <p>this is boring code. rust or c, probably. it just runs. no LLM involvement. deterministic, reproducible, fast.</p>
+
+  <p>the anomaly report is statistical process control — the kind of thing factories have been doing since the 1920s. call it what it is. don't call it an "anomaly agent" unless you're writing a brochure.</p>
+
+  <div class="panel ok">
+    <div class="label">reproducibility</div>
+    given the same input + tool version, /core produces the same output. forever. if it doesn't, the system is broken and we stop shipping until it's fixed.
+  </div>
+</section>
+
+<!-- slide 6: human -->
+
+<section class="slide" data-title="05 human">
+  <h2>human — signs and is accountable</h2>
+  <div class="step-meta">step 5. the part that is not automated, on purpose.</div>
+
+  <div class="ascii">
+ result + anomaly_report + tool_version + input_hash
+        │
+        ▼
+ ┌────────────────────────────────────────────┐
+ │  human reviewer                            │
+ │  - reads the anomaly report first          │
+ │  - looks at the code (it's readable)       │
+ │  - signs, or sends back                    │
+ └────────────────────────────────────────────┘
+        │
+        ├─ signed ───> output leaves the building
+        │              tool gets promoted to /library
+        │
+        └─ rejected -> back to /glue with notes
+  </div>
+
+  <p>the human is not a rubber stamp. the human is the reason the system is allowed to exist in a regulated environment. "the AI did it" is not a defence. "the human who signed it reviewed the code and the evidence" is.</p>
+
+  <div class="panel note">
+    <div class="label">staffing rule</div>
+    the humans reviewing LLM-written code must be people who could have written it themselves. you do not hire juniors to sign off on AI output. that's how you get a codebase nobody understands.
+  </div>
+</section>
+
+<!-- slide 7: library -->
+
+<section class="slide" data-title="06 /library">
+  <h2>/library — the thing that compounds</h2>
+  <div class="step-meta">the moat, if you want to call it that.</div>
+
+  <div class="ascii">
+ month 1:   [ 12 tools ]  <span class="comment">most calculations still generated fresh</span>
+ month 6:   [ 180 tools ]  <span class="comment">~60% of calculations served from library</span>
+ month 18:  [ 900 tools ]  <span class="comment">~90% served from library, generation is exception</span>
+
+each tool entry:
+tool_id:       nav_equity_eur_v2.4.1
+generated_by:  claude-sonnet-4.5 @ 2026-02-11
+verified_by:   golden_tests, z3_proof_attached
+signed_off:    p.byrne, 2026-02-11
+uses:          14,209 invocations since promotion
+regressions:   0
+
+  </div>
+
+  <p>every tool that passes checks and gets signed becomes a versioned, reusable asset. next time a similar calculation comes up, we call the tool. we don't regenerate.</p>
+
+  <p>this compounds. the LLM does less work over time, not more. costs drop. reliability climbs. the library is the durable advantage — not the model, not the prompt, not the "architecture." the pile of verified tools.</p>
+
+  <div class="panel ok">
+    <div class="label">the insight</div>
+    as LLM inference gets cheaper, the savings go into more checks, not fewer. you don't reduce fees. you increase trustworthiness. that is what clients are actually paying for.
+  </div>
+</section>
+
+<!-- slide 8: audit -->
+
+<section class="slide" data-title="07 /audit">
+  <h2>/audit — every run is reproducible</h2>
+  <div class="step-meta">the unglamorous part that makes the regulator go away.</div>
+
+  <div class="ascii">
+ run_2026-04-21T17:42:03Z.log
+ ─────────────────────────────────────────────────────────
+  input_file:       trustee_feed_20260421.csv
+  input_hash:       sha256:a3f1...e88c
+  parser:           positions_v3_parser@1.1.0
+  tools_used:
+    - nav_equity_eur@2.4.1   (library hit)
+    - fx_convert_gbp@1.0.3   (library hit)
+    - new_haircut_xyz@0.1.0  (fresh, verified this run)
+  checks_passed:    [golden, dual_llm, property]
+  anomalies:        2 (reviewed, both explained)
+  reviewed_by:      p.byrne
+  signed_at:        2026-04-21T18:19:44Z
+  output_hash:      sha256:7d12...44ab
+ ─────────────────────────────────────────────────────────
+  </div>
+
+  <p>six months from now, when a regulator asks why the NAV moved on a specific day, you answer with the log. exact tool versions, exact inputs, exact reviewer, exact timestamps. no archaeology.</p>
+
+  <div class="panel note">
+    <div class="label">format</div>
+    plain text. grep-able. versioned in git. readable at 3am. if you cannot debug this from a terminal, we built it wrong.
+  </div>
+</section>
+
+<!-- slide 9: what-we-dont -->
+
+<section class="slide" data-title="08 what we don't do">
+  <h2>what we explicitly don't do</h2>
+  <div class="step-meta">the boundaries matter as much as the capabilities.</div>
+
+  <ul>
+    <li><strong>no autonomous NAV.</strong> no human in the loop means no product. full stop.</li>
+    <li><strong>no LLM-in-the-calculation-path.</strong> the LLM writes code. code runs. the LLM never produces a number directly.</li>
+    <li><strong>no silent retries.</strong> if a check fails, a human sees it. no "let me try again" loops that erode the audit trail.</li>
+    <li><strong>no unexplained anomalies.</strong> every flag gets a reason written down by the reviewer. "looks fine" is not a reason.</li>
+    <li><strong>no juniors rubber-stamping LLM output.</strong> reviewers must be competent to write the code themselves.</li>
+    <li><strong>no marketing vocabulary in the repo.</strong> "neuro-symbolic" lives in the brochure. the code calls things what they are.</li>
+  </ul>
+
+  <div class="panel warn">
+    <div class="label">the failure mode we are preventing</div>
+    most of the industry is wrapping an LLM around a workflow and calling it done. it will produce confidently wrong NAVs. when it does, the liability is unclear and the audit trail is thin. we will not be in that category.
+  </div>
+</section>
+
+<!-- slide 10: bottom line -->
+
+<section class="slide" data-title="09 bottom line">
+  <h2>bottom line</h2>
+  <div class="step-meta">strip away the vocabulary. this is what's left.</div>
+
+  <p>a well-tested calculation engine. a disciplined way to generate and review new code. an immutable log. a human at the end who signs.</p>
+
+  <p>that is the whole system.</p>
+
+  <p>it is not revolutionary. it is built properly, which in fund administration is apparently rare enough to be a business.</p>
+
+  <div class="ascii">
+ <span class="hi">input</span> → <span class="io">read</span> → <span class="glue">generate</span> → <span class="hi">verify</span> → <span class="io">run</span> → <span class="ok">sign</span> → <span class="hi">log</span>
+         ↑________________reusable tools________________↓
+                        (the library compounds)
+  </div>
+
+  <div class="panel ok">
+    <div class="label">why this wins</div>
+    not because it's clever. because it's correct, reproducible, and accountable. in a regulated industry, those three things are the product. everything else is packaging.
+  </div>
+
+  <p class="cursor"><span class="comment">end of document.</span> </p>
+</section>
+
+</main>
+
+<div class="controls">
+  <div class="keys">
+    <kbd>←</kbd> <kbd>→</kbd> navigate  ·  <kbd>j</kbd> <kbd>k</kbd> also work
+  </div>
+  <div class="progress" id="progress">01 / 10</div>
+  <div class="nav-btns">
+    <button id="prev">prev</button>
+    <button id="next">next</button>
+  </div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const nav = document.getElementById('nav');
+  const progress = document.getElementById('progress');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  let current = 0;
+
+  // build nav
+  slides.forEach((slide, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = slide.dataset.title;
+    btn.addEventListener('click', () => go(i));
+    nav.appendChild(btn);
+  });
+
+  function go(i) {
+    if (i < 0 || i >= slides.length) return;
+    slides[current].classList.remove('active');
+    nav.children[current].classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    nav.children[current].classList.add('active');
+    progress.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === slides.length - 1;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  prevBtn.addEventListener('click', () => go(current - 1));
+  nextBtn.addEventListener('click', () => go(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'j') go(current + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'k') go(current - 1);
+  });
+
+  go(0);
+</script>
+
+</body>
+</html>
