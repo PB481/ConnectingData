@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic ERP — Data Architecture Mapping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0A0E;
+    --surface: #121218;
+    --surface-2: #1A1A22;
+    --surface-3: #22222C;
+    --border: #2A2A36;
+    --border-light: #3A3A48;
+    --text: #E8E6E3;
+    --text-secondary: #9A9AA8;
+    --text-muted: #6A6A78;
+
+    /* Medallion */
+    --bronze: #CD7F32;
+    --bronze-bg: rgba(205,127,50,0.08);
+    --bronze-border: rgba(205,127,50,0.28);
+    --silver: #B8B9BD;
+    --silver-bg: rgba(184,185,189,0.08);
+    --silver-border: rgba(184,185,189,0.28);
+    --gold: #D4AF37;
+    --gold-bg: rgba(212,175,55,0.08);
+    --gold-border: rgba(212,175,55,0.28);
+
+    /* Accents */
+    --accent: #4ECDC4;
+    --accent-bg: rgba(78,205,196,0.08);
+    --accent-border: rgba(78,205,196,0.28);
+    --red: #FF6B6B;
+    --red-bg: rgba(255,107,107,0.06);
+    --purple: #A78BFA;
+    --purple-bg: rgba(167,139,250,0.08);
+    --green: #6BCB77;
+    --green-bg: rgba(107,203,119,0.08);
+
+    /* Platform brands */
+    --snowflake: #29B5E8;
+    --snowflake-bg: rgba(41,181,232,0.08);
+    --snowflake-border: rgba(41,181,232,0.28);
+    --databricks: #FF3621;
+    --databricks-bg: rgba(255,54,33,0.08);
+    --databricks-border: rgba(255,54,33,0.28);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(78,205,196,0.05), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(167,139,250,0.04), transparent 60%);
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 64px 32px 120px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 56px;
+    margin-bottom: 72px;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+  }
+  .hero-meta .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .hero h1 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 200;
+    font-size: clamp(38px, 6vw, 68px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent);
+  }
+  .hero .lede {
+    font-size: 18px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    max-width: 780px;
+    font-weight: 300;
+  }
+  .hero .lede strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 72px 0;
+    border-bottom: 1px solid var(--border);
+    animation: fadeUp 0.8s ease-out forwards;
+    opacity: 0;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .section h2 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+  .section-desc {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 760px;
+    margin-bottom: 40px;
+    line-height: 1.65;
+  }
+
+  /* ── MEDALLION LAYERS ── */
+  .medallion-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .layer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid;
+    border-radius: 4px;
+    padding: 28px 32px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .layer:hover { transform: translateX(4px); }
+  .layer.bronze { border-left-color: var(--bronze); }
+  .layer.silver { border-left-color: var(--silver); }
+  .layer.gold { border-left-color: var(--gold); }
+  .layer-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .layer-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  .layer.bronze .layer-title { color: var(--bronze); }
+  .layer.silver .layer-title { color: var(--silver); }
+  .layer.gold .layer-title { color: var(--gold); }
+  .layer-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 4px 10px;
+    border-radius: 2px;
+    border: 1px solid;
+  }
+  .layer.bronze .layer-tag { color: var(--bronze); border-color: var(--bronze-border); background: var(--bronze-bg); }
+  .layer.silver .layer-tag { color: var(--silver); border-color: var(--silver-border); background: var(--silver-bg); }
+  .layer.gold .layer-tag { color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
+  .layer-desc {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: 15px;
+  }
+  .agents-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .agent {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-light);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .agent .marker {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .agent.llm .marker { background: var(--purple); }
+  .agent.det .marker { background: var(--accent); }
+  .agent.ml .marker { background: var(--gold); }
+  .agent.human .marker { background: var(--red); }
+  .agent .name { color: var(--text); font-weight: 500; }
+  .agent .type { color: var(--text-muted); }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-item .marker { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── DATA VAULT ── */
+  .vault-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+  }
+  .vault-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .vault-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .vault-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .vault-card h3 {
+    font-weight: 400;
+    font-size: 20px;
+    margin-bottom: 12px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .vault-card p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .vault-examples {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-top: 1px dashed var(--border);
+    padding-top: 14px;
+    line-height: 1.7;
+  }
+  .vault-examples strong { color: var(--text-secondary); font-weight: 500; }
+
+  /* ── DATA MESH ── */
+  .mesh-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .mesh-cell {
+    background: var(--surface);
+    padding: 28px;
+    transition: background 0.2s;
+  }
+  .mesh-cell:hover { background: var(--surface-2); }
+  .mesh-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.15em;
+  }
+  .mesh-cell h4 {
+    font-weight: 500;
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .mesh-cell p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* ── HOW IT WORKS (Q&A) ── */
+  .qa-list { display: flex; flex-direction: column; gap: 12px; }
+  .qa {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 24px 28px;
+  }
+  .qa-q {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+  }
+  .qa-a {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .qa-a strong { color: var(--text); font-weight: 500; }
+  .qa-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 2px;
+    color: var(--accent);
+  }
+
+  /* ── DEPLOYMENT VIEWS (NEW) ── */
+  .deploy-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding: 16px 20px;
+    border-radius: 4px;
+    background: var(--surface);
+    border: 1px solid;
+  }
+  .deploy-header.snowflake { border-color: var(--snowflake-border); }
+  .deploy-header.databricks { border-color: var(--databricks-border); }
+  .deploy-logo {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .deploy-header.snowflake .deploy-logo {
+    background: var(--snowflake-bg);
+    color: var(--snowflake);
+    border: 1px solid var(--snowflake-border);
+  }
+  .deploy-header.databricks .deploy-logo {
+    background: var(--databricks-bg);
+    color: var(--databricks);
+    border: 1px solid var(--databricks-border);
+  }
+  .deploy-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+  }
+  .deploy-header.snowflake .deploy-title { color: var(--snowflake); }
+  .deploy-header.databricks .deploy-title { color: var(--databricks); }
+  .deploy-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-top: 4px;
+  }
+
+  .deploy-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .deploy-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 20px;
+    align-items: start;
+  }
+  .deploy-row.snowflake { border-left: 3px solid var(--snowflake); }
+  .deploy-row.databricks { border-left: 3px solid var(--databricks); }
+  .deploy-cell-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+  .deploy-cell-component {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .deploy-cell-component span {
+    display: block;
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 4px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .deploy-row.snowflake .deploy-cell-component { color: var(--snowflake); }
+  .deploy-row.databricks .deploy-cell-component { color: var(--databricks); }
+  .deploy-cell-detail {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .deploy-callout {
+    margin-top: 20px;
+    padding: 18px 22px;
+    background: var(--surface);
+    border: 1px solid;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+  .deploy-callout.snowflake { border-color: var(--snowflake-border); }
+  .deploy-callout.databricks { border-color: var(--databricks-border); }
+  .deploy-callout strong { color: var(--text); font-weight: 500; }
+  .deploy-callout.snowflake strong { color: var(--snowflake); }
+  .deploy-callout.databricks strong { color: var(--databricks); }
+
+  /* ── DEFENCE LAYERS ── */
+  .defence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .defence-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--red);
+    border-radius: 4px;
+    padding: 24px;
+  }
+  .defence-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.15em;
+    margin-bottom: 10px;
+  }
+  .defence-card h4 {
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .defence-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── ROSETTA TABLE ── */
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .comp-table th,
+  .comp-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    font-weight: 500;
+    background: var(--surface-2);
+  }
+  .comp-table td {
+    color: var(--text-secondary);
+  }
+  .comp-table td:first-child {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .comp-table tr:hover { background: var(--surface-2); }
+  .moat-row td:nth-child(2),
+  .moat-row td:nth-child(3) {
+    color: var(--red);
+    font-style: italic;
+  }
+
+  .moat-callout {
+    margin-top: 28px;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--accent-border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .moat-callout strong { color: var(--accent); font-weight: 500; }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 80px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    line-height: 2;
+  }
+  .footer em { color: var(--accent); font-style: normal; }
+
+  @media (max-width: 768px) {
+    .container { padding: 40px 20px 80px; }
+    .deploy-row { grid-template-columns: 1fr; }
+    .deploy-cell-label { margin-bottom: -8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ═══ HERO ═══ -->
+  <header class="hero">
+    <div class="hero-meta">
+      <span class="dot"></span>
+      <span>Architecture Reference · v2</span>
+      <span>·</span>
+      <span>Snowflake & Databricks Deployment Views Added</span>
+    </div>
+    <h1>Agentic ERP — mapped to <em>Medallion</em>, <em>Data Vault</em>, and <em>Data Mesh</em>.</h1>
+    <p class="lede">
+      Same architecture, two vocabularies. This document re-expresses the agentic fund administration platform
+      in the language used by Snowflake and Databricks practitioners — and shows what the deployment topology
+      actually looks like on each platform. The goal is <strong>shared language for industry conversations</strong>
+      without diluting what makes the architecture distinctive: deterministic verification of probabilistic outputs.
+    </p>
+  </header>
+
+  <!-- ═══ SECTION 1: MEDALLION LAYER MAPPING ═══ -->
+  <section class="section" style="animation-delay: 0.1s;">
+    <div class="section-label">Section 01</div>
+    <h2>Medallion Layer Mapping</h2>
+    <p class="section-desc">
+      The nine agents in the platform map cleanly to Bronze / Silver / Gold. The interesting part is the
+      <strong style="color:var(--text)">mix of agent types within each layer</strong> — LLM, deterministic,
+      ML, and human-in-the-loop — which is what differentiates an agentic ERP from a standard pipeline.
+    </p>
+
+    <div class="medallion-grid">
+
+      <div class="layer bronze">
+        <div class="layer-header">
+          <div class="layer-title">Bronze · Raw Capture</div>
+          <span class="layer-tag">Land · Extract · Classify</span>
+        </div>
+        <p class="layer-desc">
+          Documents arrive in any format. The Bronze tier classifies and extracts — no business logic applied,
+          no calculations performed. Confidence scores flow downstream. This is where probabilistic AI is most
+          valuable and most contained.
+        </p>
+        <div class="agents-row">
+          <div class="agent llm"><span class="marker"></span><span class="name">A1 · Intake</span><span class="type">LLM (Haiku)</span></div>
+          <div class="agent llm"><span class="marker"></span><span class="name">A2 · Reader</span><span class="type">LLM (Sonnet/Haiku)</span></div>
+        </div>
+      </div>
+
+      <div class="layer silver">
+        <div class="layer-header">
+          <div class="layer-title">Silver · Verified Calculation</div>
+          <span class="layer-tag">Generate · Validate · Verify</span>
+        </div>
+        <p class="layer-desc">
+          The Silver tier is where the architecture's central insight lives: <strong style="color:var(--text)">LLMs
+          generate deterministic calculation code; the calculation itself is performed and verified by deterministic
+          and ML systems, not by LLMs</strong>. This is what makes the platform safe for regulated NAV production.
+        </p>
+        <div class="agents-row">
+          <div class="agent llm"><span class="marker"></span><span class="name">A3 · Builder Primary</span><span class="type">LLM (Sonnet/Opus)</span></div>
+          <div class="agent llm"><span class="marker"></span><span class="name">A3b · Builder Secondary</span><span class="type">LLM (different family)</span></div>
+          <div class="agent det"><span class="marker"></span><span class="name">A4 · Constitution</span><span class="type">Deterministic + Z3</span></div>
+          <div class="agent ml"><span class="marker"></span><span class="name">A5 · Anomaly</span><span class="type">Isolation Forest + EWMA</span></div>
+          <div class="agent llm"><span class="marker"></span><span class="name">A6 · Auditor</span><span class="type">LLM (Inverse)</span></div>
+        </div>
+      </div>
+
+      <div class="layer gold">
+        <div class="layer-header">
+          <div class="layer-title">Gold · Audited Posting</div>
+          <span class="layer-tag">Review · Approve · Post</span>
+        </div>
+        <p class="layer-desc">
+          The Gold tier is where humans and the production ledger live. Approved calculations enter the Tool Library
+          and become reusable assets at near-zero marginal cost. This is the layer where the flywheel compounds.
+        </p>
+        <div class="agents-row">
+          <div class="agent human"><span class="marker"></span><span class="name">A7 · Human Gate</span><span class="type">Reviewer</span></div>
+          <div class="agent det"><span class="marker"></span><span class="name">A8 · Posting</span><span class="type">Deterministic ledger write</span></div>
+          <div class="agent det"><span class="marker"></span><span class="name">A9 · Tool Library</span><span class="type">Precedent store</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="marker" style="background:var(--purple)"></span>LLM (probabilistic)</div>
+      <div class="legend-item"><span class="marker" style="background:var(--accent)"></span>Deterministic code</div>
+      <div class="legend-item"><span class="marker" style="background:var(--gold)"></span>Traditional ML</div>
+      <div class="legend-item"><span class="marker" style="background:var(--red)"></span>Human-in-the-loop</div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 2: DATA VAULT MODELLING ═══ -->
+  <section class="section" style="animation-delay: 0.15s;">
+    <div class="section-label">Section 02</div>
+    <h2>Data Vault Modelling</h2>
+    <p class="section-desc">
+      Data Vault provides the persistence pattern for the platform's entity model: stable Hubs for business keys,
+      Satellites for descriptive attributes that change over time, and Links for the relationships between them.
+      This maps directly onto the entity resolution pipeline already in production.
+    </p>
+
+    <div class="vault-grid">
+
+      <div class="vault-card">
+        <div class="vault-type">Hub · Stable Identity</div>
+        <h3>Business Keys</h3>
+        <p>Hubs are the entities that exist independently of any single transaction. In FA, these are the things every system needs to reference consistently.</p>
+        <div class="vault-examples">
+          <strong>Examples</strong><br>
+          HUB_FUND (ISIN / LEI / internal ID)<br>
+          HUB_INVESTOR (LEI / KYC ID)<br>
+          HUB_INSTRUMENT (ISIN / CUSIP)<br>
+          HUB_COUNTERPARTY (LEI)
+        </div>
+      </div>
+
+      <div class="vault-card">
+        <div class="vault-type">Satellite · Versioned Attributes</div>
+        <h3>Time-Varying Detail</h3>
+        <p>Satellites carry the descriptive data that changes — and they preserve history natively, which matters for regulatory restatements and audit trails.</p>
+        <div class="vault-examples">
+          <strong>Examples</strong><br>
+          SAT_FUND_NAV (per valuation point)<br>
+          SAT_FUND_DOMICILE (regulatory changes)<br>
+          SAT_INVESTOR_KYC (refresh cycles)<br>
+          SAT_INSTRUMENT_PRICING (per pricing source)
+        </div>
+      </div>
+
+      <div class="vault-card">
+        <div class="vault-type">Link · Relationships</div>
+        <h3>Entity Connections</h3>
+        <p>Links capture the relationships between Hubs without forcing a hierarchy. This is what makes the model resilient to organisational change without schema rework.</p>
+        <div class="vault-examples">
+          <strong>Examples</strong><br>
+          LNK_INVESTOR_FUND (subscription)<br>
+          LNK_FUND_INSTRUMENT (holdings)<br>
+          LNK_FUND_COUNTERPARTY (depositary, etc.)<br>
+          LNK_FUND_FAMILY (umbrella ↔ sub-fund)
+        </div>
+      </div>
+
+      <div class="vault-card">
+        <div class="vault-type">Where it shows up</div>
+        <h3>Entity Resolution Pipeline</h3>
+        <p>The existing entity resolution pipeline (Medallion / Data Vault architecture, three operating modes) is the production implementation of this pattern. It reconciles inconsistent identifiers across upstream systems before they reach the Builder.</p>
+        <div class="vault-examples">
+          <strong>Modes</strong><br>
+          Live (LLM-assisted resolution)<br>
+          Generate-Prompt (offline, manual)<br>
+          Offline (deterministic only)
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 3: DATA MESH ALIGNMENT ═══ -->
+  <section class="section" style="animation-delay: 0.2s;">
+    <div class="section-label">Section 03</div>
+    <h2>Data Mesh Alignment</h2>
+    <p class="section-desc">
+      Dehghani's four Data Mesh principles map onto the platform components without strain. The platform was not
+      built to be a Data Mesh — it converged on the same answers because the same underlying problems
+      (autonomy, governance, discoverability) apply.
+    </p>
+
+    <div class="mesh-grid">
+
+      <div class="mesh-cell">
+        <div class="mesh-num">PRINCIPLE 01</div>
+        <h4>Domain ownership</h4>
+        <p>The Fund Rules Ontology is owned by the regulatory and product teams, not data engineering. It is the legal source of truth for calculations, and it is versioned and tested like code.</p>
+      </div>
+
+      <div class="mesh-cell">
+        <div class="mesh-num">PRINCIPLE 02</div>
+        <h4>Data as a product</h4>
+        <p>The Tool Library is the canonical example. Every approved calculation is a discoverable, documented, versioned, reusable product with a clear owner — not just a script in a repo.</p>
+      </div>
+
+      <div class="mesh-cell">
+        <div class="mesh-num">PRINCIPLE 03</div>
+        <h4>Self-serve infrastructure</h4>
+        <p>The Builder generates calculation code on demand. The Constitution validates it. Domain experts compose new calculations without going through a central data team. The platform is the infrastructure.</p>
+      </div>
+
+      <div class="mesh-cell">
+        <div class="mesh-num">PRINCIPLE 04</div>
+        <h4>Federated governance</h4>
+        <p>The Constitution Agent enforces global invariants (double-entry, LPA limits, ACID, dimensional integrity) while domain teams own their specific rules. Central guardrails, federated content.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 4: HOW (Q&A) ═══ -->
+  <section class="section" style="animation-delay: 0.25s;">
+    <div class="section-label">Section 04</div>
+    <h2>The HOW</h2>
+    <p class="section-desc">
+      The technical questions that data engineers from a Snowflake or Databricks background ask first.
+      Direct answers, with the platform's actual implementations.
+    </p>
+
+    <div class="qa-list">
+
+      <div class="qa">
+        <div class="qa-q">Q · How do you handle conflicting business keys across upstream systems?</div>
+        <div class="qa-a">
+          The <strong>entity resolution pipeline</strong> runs before the Builder ever sees the data. It uses a Medallion-staged approach with deterministic matching first (LEI, ISIN), then a confidence-scored fuzzy stage, then optional LLM-assisted disambiguation in <code>live</code> mode. The output is a <strong>canonical Hub key</strong> — the rest of the platform never sees the raw inconsistency.
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="qa-q">Q · How is change history preserved? Can you restate a prior NAV?</div>
+        <div class="qa-a">
+          Satellites are append-only with a <code>load_dts</code> timestamp. The Posting Agent writes immutable entries. To restate, the Builder generates a new calculation script targeting the historical valuation point; the Constitution validates it; the Human Gate approves the restatement; the Posting Agent writes a <strong>new Satellite row</strong> with full provenance back to the original. Nothing is overwritten.
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="qa-q">Q · How do you guarantee transformation consistency across runs?</div>
+        <div class="qa-a">
+          This is what the <strong>Tool Library</strong> exists for. Once a calculation is approved, the script is content-hashed and stored. Future requests for the same calculation type retrieve the verified script — they do not regenerate it. Layer 2 of the defence stack runs <strong>regression tests</strong> against the precedent on every reuse. Drift is caught before it reaches the ledger.
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="qa-q">Q · How do you handle schema drift in upstream files?</div>
+        <div class="qa-a">
+          The Reader produces <strong>canonical JSON</strong> with confidence scores per field. Schema drift in source files manifests as low-confidence extractions, which the Anomaly Agent and Human Gate catch before they propagate. <strong>The platform never depends on upstream systems to change</strong> — that's a deliberate principle.
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="qa-q">Q · How do you do data quality?</div>
+        <div class="qa-a">
+          Three layers, in order of cost. <strong>Bronze</strong>: confidence scoring at extraction. <strong>Silver</strong>: Constitution validation (double-entry, LPA limits, ACID, dimensional integrity) plus the six defence layers. <strong>Gold</strong>: Anomaly Agent ML-based outlier detection plus mandatory Human Gate for novelty. Every layer is auditable.
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="qa-q">Q · How does this scale beyond fund administration?</div>
+        <div class="qa-a">
+          The Reader, Builder, Constitution, and Tool Library are <strong>domain-parameterised</strong> — they take the Fund Rules Ontology as input. Swap the ontology for transfer agency rules, depositary rules, or insurance accounting rules, and the same architecture applies. The defence layers and Human Gate are domain-agnostic.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 5: SNOWFLAKE DEPLOYMENT VIEW (NEW) ═══ -->
+  <section class="section" style="animation-delay: 0.3s;">
+    <div class="section-label">Section 05 · NEW</div>
+    <h2>Deployment View — Snowflake</h2>
+    <p class="section-desc">
+      What the Agentic ERP looks like running natively on Snowflake. Each platform component maps to a specific
+      Snowflake primitive — no third-party orchestration required. The <strong style="color:var(--text)">deterministic
+      defence layers run as Snowpark UDFs and external functions</strong>, keeping verification close to the data.
+    </p>
+
+    <div class="deploy-header snowflake">
+      <div class="deploy-logo">❄</div>
+      <div>
+        <div class="deploy-title">Snowflake-Native Topology</div>
+        <div class="deploy-sub">Cortex · Snowpark · Streams · Tasks · Container Services</div>
+      </div>
+    </div>
+
+    <div class="deploy-stack">
+
+      <div class="deploy-row snowflake">
+        <div>
+          <div class="deploy-cell-label">Bronze · Intake</div>
+        </div>
+        <div class="deploy-cell-component">
+          Stages + Snowpipe Streaming
+          <span>+ Cortex AI_CLASSIFY for routing</span>
+        </div>
+        <div class="deploy-cell-detail">
+          Documents land in external/internal Stages. Snowpipe Streaming auto-ingests. <strong>Cortex AI_CLASSIFY</strong> performs the A1 Intake routing without leaving Snowflake. Reader (A2) calls <strong>Cortex COMPLETE</strong> for extraction; large/complex documents route to Snowpark Container Services running self-hosted Sonnet/Haiku.
+        </div>
+      </div>
+
+      <div class="deploy-row snowflake">
+        <div>
+          <div class="deploy-cell-label">Silver · Build</div>
+        </div>
+        <div class="deploy-cell-component">
+          Snowpark Container Services
+          <span>+ Cortex Agents for orchestration</span>
+        </div>
+        <div class="deploy-cell-detail">
+          Builder Primary (A3) runs as a <strong>Snowpark Container Service</strong> calling Cortex COMPLETE or Bedrock. Builder Secondary (A3b) runs in a separate container with a different model family. <strong>Cortex Agents</strong> orchestrates the dual-builder flow. Generated Python is materialised as a <strong>Snowpark UDF</strong> for the Constitution to execute in the warehouse.
+        </div>
+      </div>
+
+      <div class="deploy-row snowflake">
+        <div>
+          <div class="deploy-cell-label">Silver · Verify</div>
+        </div>
+        <div class="deploy-cell-component">
+          Snowpark UDFs + Streams
+          <span>+ Z3 in Container Services</span>
+        </div>
+        <div class="deploy-cell-detail">
+          Constitution (A4) runs as deterministic Snowpark Python UDFs against a sandbox database clone. <strong>Z3 SMT solver</strong> runs in a Container Service called via External Function. Anomaly Agent (A5) uses <strong>Cortex ML functions</strong> (FORECAST, ANOMALY_DETECTION) plus a custom Isolation Forest UDF. <strong>Streams + Tasks</strong> orchestrate the pipeline.
+        </div>
+      </div>
+
+      <div class="deploy-row snowflake">
+        <div>
+          <div class="deploy-cell-label">Gold · Post</div>
+        </div>
+        <div class="deploy-cell-component">
+          Secure Views + Tasks
+          <span>+ Streamlit in Snowflake for HITL</span>
+        </div>
+        <div class="deploy-cell-detail">
+          Human Gate (A7) runs as a <strong>Streamlit in Snowflake</strong> app — no external hosting, native auth, native row-level security. Posting Agent (A8) writes via Tasks with serializable transactions. The production ledger lives in a governed schema with Secure Views for downstream consumers. Tool Library (A9) is a Snowflake table with a content-hash primary key.
+        </div>
+      </div>
+
+      <div class="deploy-row snowflake">
+        <div>
+          <div class="deploy-cell-label">Cross-cutting</div>
+        </div>
+        <div class="deploy-cell-component">
+          Horizon Catalog + Time Travel
+          <span>+ Cortex Search for Tool Library lookup</span>
+        </div>
+        <div class="deploy-cell-detail">
+          <strong>Horizon Catalog</strong> provides governance, lineage, and access policies across all layers. <strong>Time Travel</strong> gives 90-day default restate capability — the Satellite-pattern history comes for free. <strong>Cortex Search</strong> indexes the Tool Library for semantic precedent matching. Snowflake Notebooks for analyst-driven exploration of the entire flow.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="deploy-callout snowflake">
+      <strong>What Snowflake gives you for free:</strong> Time Travel handles Data Vault Satellite versioning natively.
+      Horizon Catalog handles federated governance. Cortex Search handles Tool Library lookup. Streamlit-in-Snowflake
+      handles the Human Gate UI. <strong>What you still have to build:</strong> Dual-Builder consensus logic, Z3 integration
+      via Container Services, the Tool Library flywheel itself, and the calculation-script-as-UDF materialisation pattern.
+      The defence layers remain the moat — Snowflake is the substrate, not the answer.
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 6: DATABRICKS DEPLOYMENT VIEW (NEW) ═══ -->
+  <section class="section" style="animation-delay: 0.35s;">
+    <div class="section-label">Section 06 · NEW</div>
+    <h2>Deployment View — Databricks</h2>
+    <p class="section-desc">
+      The same architecture on Databricks. The mapping is cleaner in some ways (Lakeflow Declarative Pipelines and
+      Mosaic AI map almost 1:1 onto Silver-tier needs) and rougher in others (Tool Library has no native equivalent
+      and must be built on Unity Catalog primitives).
+    </p>
+
+    <div class="deploy-header databricks">
+      <div class="deploy-logo">▲</div>
+      <div>
+        <div class="deploy-title">Databricks-Native Topology</div>
+        <div class="deploy-sub">Lakeflow · Mosaic AI · Unity Catalog · Genie · MLflow</div>
+      </div>
+    </div>
+
+    <div class="deploy-stack">
+
+      <div class="deploy-row databricks">
+        <div>
+          <div class="deploy-cell-label">Bronze · Intake</div>
+        </div>
+        <div class="deploy-cell-component">
+          Auto Loader + DLT Bronze
+          <span>+ Mosaic AI Model Serving for Reader</span>
+        </div>
+        <div class="deploy-cell-detail">
+          Auto Loader handles incremental file ingestion to Delta Bronze. Intake (A1) and Reader (A2) call <strong>Mosaic AI Model Serving</strong> endpoints for Sonnet/Haiku — either via Anthropic-on-Databricks or self-hosted. <strong>AI Functions</strong> (ai_classify, ai_extract) provide a SQL-native path for simpler routing decisions.
+        </div>
+      </div>
+
+      <div class="deploy-row databricks">
+        <div>
+          <div class="deploy-cell-label">Silver · Build</div>
+        </div>
+        <div class="deploy-cell-component">
+          Mosaic AI Agent Framework
+          <span>+ Workflows for orchestration</span>
+        </div>
+        <div class="deploy-cell-detail">
+          Builder Primary (A3) and Secondary (A3b) run as <strong>Mosaic AI Agents</strong> with different foundation models per agent. <strong>Agent Evaluation</strong> handles the consensus-comparison work. Generated Python is registered as a <strong>Unity Catalog Function</strong>. Workflows orchestrate the entire dual-builder fan-out and consensus check.
+        </div>
+      </div>
+
+      <div class="deploy-row databricks">
+        <div>
+          <div class="deploy-cell-label">Silver · Verify</div>
+        </div>
+        <div class="deploy-cell-component">
+          DLT Expectations + Z3 job task
+          <span>+ Lakehouse Monitoring for Anomaly</span>
+        </div>
+        <div class="deploy-cell-detail">
+          Constitution (A4) runs partly as <strong>DLT Expectations</strong> (declarative invariants like double-entry balance) and partly as a Workflows job task running Z3 SMT verification. Anomaly Agent (A5) uses <strong>Lakehouse Monitoring</strong> for drift detection plus a custom <strong>MLflow-registered Isolation Forest model</strong>. All output flows into Delta Silver tables with full lineage.
+        </div>
+      </div>
+
+      <div class="deploy-row databricks">
+        <div>
+          <div class="deploy-cell-label">Gold · Post</div>
+        </div>
+        <div class="deploy-cell-component">
+          Databricks Apps for HITL
+          <span>+ Delta Gold + Genie for queries</span>
+        </div>
+        <div class="deploy-cell-detail">
+          Human Gate (A7) runs as a <strong>Databricks App</strong> (or Lakehouse App) — native auth, integrated with Unity Catalog permissions. Posting Agent (A8) writes via Workflows with Delta ACID guarantees. <strong>Genie</strong> provides natural-language access to the production ledger for analyst self-service. Tool Library (A9) is a Delta table with a content-hash primary key, registered as a Unity Catalog asset.
+        </div>
+      </div>
+
+      <div class="deploy-row databricks">
+        <div>
+          <div class="deploy-cell-label">Cross-cutting</div>
+        </div>
+        <div class="deploy-cell-component">
+          Unity Catalog + MLflow
+          <span>+ Vector Search for Tool Library</span>
+        </div>
+        <div class="deploy-cell-detail">
+          <strong>Unity Catalog</strong> handles governance, lineage, attribute-based access, and cross-workspace federation. <strong>MLflow Model Registry</strong> manages the lifecycle of the Anomaly model and any custom Builder fine-tunes. <strong>Mosaic AI Vector Search</strong> indexes the Tool Library for semantic precedent matching. Time Travel on Delta gives Satellite-pattern history natively.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="deploy-callout databricks">
+      <strong>What Databricks gives you for free:</strong> DLT Expectations make declarative Constitution rules
+      first-class. Mosaic AI Agent Framework handles Builder orchestration with Agent Evaluation built in. Unity
+      Catalog Functions are a natural home for materialised calculation scripts. <strong>What you still have to build:</strong>
+      Z3 integration as a custom job task, the Tool Library precedent-matching logic on top of Vector Search, the
+      content-hash flywheel discipline, and the Human Gate review UX. The agent framework is closer to your needs
+      than Snowflake's offering, but it doesn't replace the verification architecture.
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 7: DEFENCE LAYERS ═══ -->
+  <section class="section" style="animation-delay: 0.4s;">
+    <div class="section-label">Section 07</div>
+    <h2>Defence Layers — Beyond Standard Quality Gates</h2>
+    <p class="section-desc">
+      Standard data platforms offer expectations, constraints, and quality rules. The Agentic ERP needs more,
+      because the cost of a wrong NAV is asymmetric — a quiet error compounds into a restatement, a regulatory
+      finding, and reputational damage. Six layers, executed in fail-fast order from cheapest to most expensive.
+    </p>
+
+    <div class="defence-grid">
+
+      <div class="defence-card">
+        <div class="defence-num">LAYER 01</div>
+        <h4>Dual-Builder Consensus</h4>
+        <p>Two independent LLMs from different model families generate the calculation. Both must produce identical output. N-version programming applied to AI generation.</p>
+      </div>
+
+      <div class="defence-card">
+        <div class="defence-num">LAYER 02</div>
+        <h4>Tool Library Regression</h4>
+        <p>Every new script is tested against the Tool Library of verified precedents. Known inputs must produce identical outputs. Drift is caught before execution.</p>
+      </div>
+
+      <div class="defence-card">
+        <div class="defence-num">LAYER 03</div>
+        <h4>Z3 Formal Verification</h4>
+        <p>Microsoft's Z3 SMT solver mathematically proves invariants of the generated code. Pre/post-conditions derived from the Fund Rules Ontology. If the proof fails, execution stops.</p>
+      </div>
+
+      <div class="defence-card">
+        <div class="defence-num">LAYER 04</div>
+        <h4>Inverse Verification</h4>
+        <p>An independent LLM (Auditor) reads the generated code and produces a plain-English explanation. The reviewer reads the explanation, not the code. Cross-referenced against the Ontology.</p>
+      </div>
+
+      <div class="defence-card">
+        <div class="defence-num">LAYER 05</div>
+        <h4>Property-Based Testing</h4>
+        <p>Hypothesis generates 1000+ randomised inputs. Mathematical invariants must hold across the whole input space: fees ≥ 0, fees ≤ LPA max, NAV components sum correctly, and so on.</p>
+      </div>
+
+      <div class="defence-card">
+        <div class="defence-num">LAYER 06</div>
+        <h4>Novelty Gate</h4>
+        <p>First-time calculation types always require human review, regardless of all automated verification. The Tool Library is only populated after explicit human validation. No silent firsts.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 8: ROSETTA STONE ═══ -->
+  <section class="section" style="animation-delay: 0.45s; border-bottom: none;">
+    <div class="section-label">Section 08</div>
+    <h2>Terminology Rosetta Stone</h2>
+    <p class="section-desc">
+      Side-by-side reference for conversations with Snowflake, Databricks, or general data engineering teams.
+      Updated to reflect platform features as of 2026 — including Cortex Agents, Mosaic AI Agent Framework,
+      Streamlit-in-Snowflake, and Databricks Apps. The <strong style="color:var(--red)">red rows</strong>
+      are the rows that matter most: where neither platform has a native answer.
+    </p>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Agentic ERP Concept</th>
+          <th>Snowflake</th>
+          <th>Databricks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Bronze Layer (Reader)</td>
+          <td>Stages + Snowpipe Streaming + Cortex AI_CLASSIFY</td>
+          <td>Auto Loader → Delta Bronze + AI Functions</td>
+        </tr>
+        <tr>
+          <td>Silver Layer (Build)</td>
+          <td>Snowpark Container Services + Cortex Agents</td>
+          <td>Mosaic AI Agent Framework + Workflows</td>
+        </tr>
+        <tr>
+          <td>Silver Layer (Verify)</td>
+          <td>Snowpark UDFs + Streams &amp; Tasks</td>
+          <td>DLT Expectations + Lakehouse Monitoring</td>
+        </tr>
+        <tr>
+          <td>Gold Layer (Post)</td>
+          <td>Secure Views + Tasks + Streamlit-in-Snowflake</td>
+          <td>Delta Gold + Databricks Apps + Genie</td>
+        </tr>
+        <tr>
+          <td>Fund Rules Ontology</td>
+          <td>Snowpark UDFs + Stored Procedures</td>
+          <td>Unity Catalog Functions + Feature Store</td>
+        </tr>
+        <tr>
+          <td>Anomaly Agent</td>
+          <td>Cortex ML (FORECAST, ANOMALY_DETECTION)</td>
+          <td>Lakehouse Monitoring + MLflow models</td>
+        </tr>
+        <tr>
+          <td>Entity Resolution</td>
+          <td>Snowpark ML + Cortex Search</td>
+          <td>Zingg / Splink on Spark + Vector Search</td>
+        </tr>
+        <tr>
+          <td>Satellite history (restate)</td>
+          <td>Time Travel (90-day default, extensible)</td>
+          <td>Delta Time Travel</td>
+        </tr>
+        <tr>
+          <td>Federated governance</td>
+          <td>Horizon Catalog</td>
+          <td>Unity Catalog</td>
+        </tr>
+        <tr class="moat-row">
+          <td>Tool Library Flywheel</td>
+          <td>Build on Cortex Search + content-hash table</td>
+          <td>Build on Vector Search + Unity Catalog asset</td>
+        </tr>
+        <tr class="moat-row">
+          <td>Dual-Builder Consensus</td>
+          <td>No native pattern</td>
+          <td>Agent Evaluation is the closest, but does not enforce</td>
+        </tr>
+        <tr class="moat-row">
+          <td>Z3 Formal Verification</td>
+          <td>Container Services external function</td>
+          <td>Workflows job task</td>
+        </tr>
+        <tr class="moat-row">
+          <td>Inverse Verification (Auditor)</td>
+          <td>No native pattern</td>
+          <td>No native pattern</td>
+        </tr>
+        <tr class="moat-row">
+          <td>Human Gate (regulated review)</td>
+          <td>Streamlit-in-Snowflake (UI only, logic bespoke)</td>
+          <td>Databricks Apps (UI only, logic bespoke)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="moat-callout">
+      <strong>Where the architecture goes beyond the platform:</strong> Cortex and Mosaic AI both shipped agent frameworks
+      since the original mapping was written. They cover orchestration well — but they do not provide Dual-Builder consensus,
+      they do not perform formal verification, and they do not enforce Tool Library flywheel discipline. These are the
+      domain-specific defence layers required by the asymmetric cost of NAV errors. <strong>The platform is the substrate;
+      the verification architecture is the moat.</strong>
+    </div>
+  </section>
+
+  <footer class="footer">
+    Agentic ERP — Architecture Reference Document · v2<br>
+    Snowflake & Databricks deployment views added · April 2026<br>
+    <em>Not every pretty diagram is architecture. Not every pipeline is verified.</em>
+  </footer>
+
+</div>
+</body>
+</html>
