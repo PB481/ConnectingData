@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vendor Review — Resolve / IntegraLynx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #0f1524;
+    --bg-elevated: #131b30;
+    --bg-card: #161f37;
+    --border-subtle: #1f2a47;
+    --border-strong: #2a3a60;
+    --text-primary: #e8edf7;
+    --text-secondary: #9aa5bf;
+    --text-muted: #5f6b85;
+    --accent-teal: #2dd4bf;
+    --accent-cyan: #22d3ee;
+    --accent-navy: #1e40af;
+    --accent-amber: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-green: #10b981;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'DM Sans', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(45, 212, 191, 0.04), transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(34, 211, 238, 0.03), transparent 50%);
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+
+  .classification {
+    color: var(--accent-amber);
+    border: 1px solid var(--accent-amber);
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  h1 {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  h1 .accent { color: var(--accent-teal); }
+
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 17px;
+    max-width: 780px;
+    margin-bottom: 24px;
+  }
+
+  .header-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .header-meta-item .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  .header-meta-item .value {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  /* ---------- Section ---------- */
+  section {
+    margin-bottom: 56px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-teal);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+  }
+
+  h2 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+
+  p { color: var(--text-secondary); margin-bottom: 14px; }
+  p strong { color: var(--text-primary); font-weight: 600; }
+
+  /* ---------- TLDR Card ---------- */
+  .tldr {
+    background: linear-gradient(135deg, var(--bg-elevated), var(--bg-card));
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--accent-teal);
+    border-radius: 6px;
+    padding: 28px 32px;
+    margin-bottom: 48px;
+  }
+
+  .tldr-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-teal);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 12px;
+  }
+
+  .tldr-headline {
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  .tldr-headline em { color: var(--accent-cyan); font-style: normal; font-weight: 600; }
+
+  /* ---------- Verdict Cards ---------- */
+  .verdict-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .verdict-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 20px 22px;
+    position: relative;
+  }
+
+  .verdict-card.no { border-left: 3px solid var(--accent-red); }
+  .verdict-card.maybe { border-left: 3px solid var(--accent-amber); }
+  .verdict-card.yes { border-left: 3px solid var(--accent-green); }
+
+  .verdict-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+  }
+
+  .verdict-card.no .verdict-tag { background: rgba(239, 68, 68, 0.12); color: var(--accent-red); }
+  .verdict-card.maybe .verdict-tag { background: rgba(245, 158, 11, 0.12); color: var(--accent-amber); }
+  .verdict-card.yes .verdict-tag { background: rgba(16, 185, 129, 0.12); color: var(--accent-green); }
+
+  .verdict-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .verdict-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  /* ---------- Comparison Table ---------- */
+  .comparison-wrapper {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+
+  table.comparison {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  table.comparison th {
+    background: var(--bg-elevated);
+    text-align: left;
+    padding: 14px 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-strong);
+  }
+
+  table.comparison th.col-resolve { color: var(--text-secondary); }
+  table.comparison th.col-erp { color: var(--accent-teal); }
+
+  table.comparison td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  table.comparison tr:last-child td { border-bottom: none; }
+
+  table.comparison td.dim {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  table.comparison td.erp { color: var(--text-primary); }
+
+  /* ---------- Bullet list (sparingly) ---------- */
+  ul.findings {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+  }
+
+  ul.findings li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  ul.findings li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent-teal);
+    font-family: var(--mono);
+  }
+
+  /* ---------- Risk callouts ---------- */
+  .risk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 20px;
+  }
+
+  .risk-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-left: 2px solid var(--accent-amber);
+    border-radius: 4px;
+    padding: 16px 18px;
+  }
+
+  .risk-card .risk-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent-amber);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .risk-card .risk-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .risk-card .risk-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ---------- Recommendations ---------- */
+  .rec-list {
+    counter-reset: rec;
+    list-style: none;
+    padding: 0;
+  }
+
+  .rec-list li {
+    counter-increment: rec;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 18px 22px 18px 60px;
+    margin-bottom: 12px;
+    position: relative;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  .rec-list li::before {
+    content: counter(rec, decimal-leading-zero);
+    position: absolute;
+    left: 18px;
+    top: 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-teal);
+  }
+
+  .rec-list li strong { color: var(--text-primary); }
+
+  /* ---------- Quote / Yellow flag block ---------- */
+  .flag-block {
+    background: rgba(245, 158, 11, 0.06);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin: 16px 0;
+  }
+
+  .flag-block .flag-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent-amber);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+  }
+
+  .flag-block .flag-body {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer a { color: var(--accent-cyan); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 720px) {
+    .container { padding: 28px 18px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 22px; }
+    .tldr { padding: 20px; }
+    table.comparison { font-size: 12px; }
+    table.comparison td, table.comparison th { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ============ HEADER ============ -->
+  <header>
+    <div class="meta-row">
+      <span>Vendor Assessment // Build-vs-Buy</span>
+      <span class="classification">Internal · Confidential</span>
+    </div>
+    <h1>Resolve <span class="accent">/</span> IntegraLynx</h1>
+    <p class="subtitle">
+      Vendor review of the Client Onboarding solution and assessment of fit as a partner
+      for building the Agentic ERP fund administration platform.
+    </p>
+    <div class="header-meta">
+      <div class="header-meta-item">
+        <div class="label">Subject</div>
+        <div class="value">resolvefinancialsoftware.com</div>
+      </div>
+      <div class="header-meta-item">
+        <div class="label">Solution Reviewed</div>
+        <div class="value">Client Onboarding</div>
+      </div>
+      <div class="header-meta-item">
+        <div class="label">Adjacent Solutions</div>
+        <div class="value">NAV Oversight, AI in AM</div>
+      </div>
+      <div class="header-meta-item">
+        <div class="label">Review Date</div>
+        <div class="value">2026-04-27</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ TLDR ============ -->
+  <div class="tldr">
+    <div class="tldr-label">Bottom Line</div>
+    <div class="tldr-headline">
+      Resolve is a <em>competent enterprise data-platform vendor</em> with strong actuarial DNA
+      that has wrapped LLM extraction around a configurable framework. They are
+      <em>not building what you are building</em>, and they are <em>not architecturally equipped to</em>.
+      IntegraLynx is a feeder and overlay system; the Agentic ERP is a core system. Treat them
+      as a benchmark, not a partner.
+    </div>
+  </div>
+
+  <!-- ============ WHAT THEY ARE ============ -->
+  <section>
+    <div class="section-label">Section 01</div>
+    <h2>What Resolve Actually Is</h2>
+    <p>
+      Resolve Financial Software is the vendor; <strong>IntegraLynx is the platform</strong>.
+      They position themselves as "unifying disparate data systems" for fund administrators,
+      custodians, depositaries, insurers, and banks. The team self-describes as actuaries paired
+      with developers — strong domain pedigree, particularly insurance-heavy. Logos shown include
+      Zurich, CNP, Prudential, Mercer, Bank of Ireland, Santander, and Utmost.
+    </p>
+    <p>
+      The Client Onboarding product is one of seven solutions in their Asset Management line.
+      Its sibling solutions sit directly adjacent to your ERP scope: NAV Oversight (shadow NAV with
+      150+ controls per fund), Fund Data Management, Annex IV / Form PF, Cost Disclosures, CCI,
+      and AI in Asset Management.
+    </p>
+  </section>
+
+  <!-- ============ WHAT IT DOES ============ -->
+  <section>
+    <div class="section-label">Section 02</div>
+    <h2>What the Client Onboarding Solution Does</h2>
+    <p>
+      Stripping the marketing copy, the substance is an LLM-driven document extraction and
+      orchestration layer for fund onboarding. It ingests IMAs, prospectuses, supplements, fee
+      letters, and side letters; extracts structured fields (parties, share classes, fee rules,
+      hurdles, dates, counterparties); routes low-confidence cases to human reviewers via a
+      stoplight workflow; then pushes validated data into downstream fund accounting, GL, client
+      master, sub-ledger, and reporting systems via APIs, flat files, or connectors.
+    </p>
+    <p>
+      A genuinely interesting adjunct: they pitch <strong>pre-engagement extraction</strong> —
+      running publicly available prospectuses through the engine before contracts are signed,
+      to produce a "data snapshot" that informs sales scoping and pricing. That overlaps
+      conceptually with your effort-based pricing engine, just from the document side rather
+      than the operational complexity side.
+    </p>
+    <p>
+      The headline claim — onboarding cycles compressed from 12–18 months to "weeks" — is the
+      standard fund-admin transition pain point, expressed in the standard way.
+    </p>
+  </section>
+
+  <!-- ============ HONEST READ ============ -->
+  <section>
+    <div class="section-label">Section 03</div>
+    <h2>Honest Read on the Marketing Claims</h2>
+    <p>
+      The page is carefully worded to imply more than it commits to. Phrases such as
+      "designed to comply with GDPR," "built with the expectation of SOC-type compliance
+      (you can layer your own controls)," and "reference knowledge models evolve from usage"
+      are aspirational framings rather than concrete claims.
+    </p>
+
+    <div class="flag-block">
+      <div class="flag-label">⚠ Yellow Flag</div>
+      <div class="flag-body">
+        The single client testimonial on the Client Onboarding page
+        ("Head of Technology, Dublin-based life assurance client") appears reused on the
+        NAV Oversight page with slightly different attribution
+        ("Head of Technology, Global Financial Services Client"). Same quote, different page.
+        This raises a question about the maturity of the asset management book of business
+        versus the insurance book.
+      </div>
+    </div>
+
+    <p>
+      There is no architecture detail, no model evaluation methodology, no description of
+      extraction confidence calibration, no mention of formal verification or deterministic
+      validation of extracted data. The "LLM Engine" sits in their platform diagram as one
+      block alongside "Calculations" and "Rules" — i.e. it is framed as one capability among
+      many, not as the architectural centre of gravity.
+    </p>
+  </section>
+
+  <!-- ============ COMPARISON TABLE ============ -->
+  <section>
+    <div class="section-label">Section 04</div>
+    <h2>Side-by-Side: IntegraLynx vs the Agentic ERP</h2>
+    <p>
+      The crucial asymmetry: <strong>IntegraLynx is a feeder and overlay system.
+      The Agentic ERP is a core system.</strong> Resolve sits beside Multifonds, FundSuite,
+      Geneva, Investran. Your ERP is designed to <em>replace</em> them.
+    </p>
+
+    <div class="comparison-wrapper">
+      <table class="comparison">
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th class="col-resolve">IntegraLynx (Client Onboarding)</th>
+            <th class="col-erp">Agentic ERP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="dim">Core architectural insight</td>
+            <td>LLM extracts fields; humans review exceptions; data flows to existing systems</td>
+            <td class="erp">LLMs generate verified calculation code; maths proves it correct</td>
+          </tr>
+          <tr>
+            <td class="dim">Verification model</td>
+            <td>Confidence thresholds + four-eyes human review</td>
+            <td class="erp">Six defence layers: Dual-Builder consensus, Z3 formal verification, Inverse Verification, property-based testing, Tool Library regression, Novelty check</td>
+          </tr>
+          <tr>
+            <td class="dim">Source of truth</td>
+            <td>Extracted structured data fed downstream</td>
+            <td class="erp">Fund Rules Ontology as legal source of truth</td>
+          </tr>
+          <tr>
+            <td class="dim">Strategic moat</td>
+            <td>Domain expertise + extraction tuning</td>
+            <td class="erp">Tool Library Flywheel — compounding precedent asset</td>
+          </tr>
+          <tr>
+            <td class="dim">Stance toward existing systems</td>
+            <td>Integration layer feeding fund accounting / GL / sub-ledger</td>
+            <td class="erp">Replacement of the fund accounting engine itself</td>
+          </tr>
+          <tr>
+            <td class="dim">Determinism</td>
+            <td>Not addressed</td>
+            <td class="erp">Central thesis — probabilistic AI generating deterministic code</td>
+          </tr>
+          <tr>
+            <td class="dim">Deployment model</td>
+            <td>SaaS, with on-prem / hybrid / cloud options</td>
+            <td class="erp">AWS-native: Bedrock, ECS Fargate, Aurora Serverless, SageMaker</td>
+          </tr>
+          <tr>
+            <td class="dim">Workforce framing</td>
+            <td>Exception triage to reviewers</td>
+            <td class="erp">Role elevation via HITL skills framework + Human Gate</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ CAN THEY HELP? ============ -->
+  <section>
+    <div class="section-label">Section 05</div>
+    <h2>Can They Help Build the ERP?</h2>
+    <p>Three honest answers depending on what is meant by "help."</p>
+
+    <div class="verdict-grid">
+
+      <div class="verdict-card no">
+        <div class="verdict-tag">No</div>
+        <div class="verdict-title">As a vendor whose platform you'd build on top of</div>
+        <div class="verdict-body">
+          IntegraLynx is positioned as the unification fabric for <em>existing</em> back-office
+          systems. Building an agentic ERP on top of someone else's platform inverts your
+          architectural thesis — you become the application, they become the data layer, and
+          your differentiator is subordinated to their orchestration model. The moat is lost.
+        </div>
+      </div>
+
+      <div class="verdict-card no">
+        <div class="verdict-tag">Probably Not</div>
+        <div class="verdict-title">As a build / co-development partner</div>
+        <div class="verdict-body">
+          Their pitch is "actuaries + developers configuring our framework." That is a
+          configuration-and-implementation engagement model, not a co-development model for
+          novel architecture. Your build needs people who can reason about Z3 SMT proofs,
+          design neuro-symbolic calculation pipelines, and build property-based test harnesses
+          for accounting code generation. Their public materials don't show that capability.
+        </div>
+      </div>
+
+      <div class="verdict-card maybe">
+        <div class="verdict-tag">Maybe</div>
+        <div class="verdict-title">As a tactical partner for one specific module</div>
+        <div class="verdict-body">
+          The onboarding document-to-structured-data extraction problem is real and
+          well-defined. <em>Licensing</em> their extraction as an upstream feeder to the
+          Reader stage could be a build-vs-buy conversation worth having — provided contracts
+          leave you free to swap them out, since extraction schemas would shape your downstream
+          pipeline. Their pre-engagement extraction overlaps interestingly with the pricing engine.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ RISKS ============ -->
+  <section>
+    <div class="section-label">Section 06</div>
+    <h2>Strategic Risks if You Engage Them</h2>
+
+    <div class="risk-grid">
+
+      <div class="risk-card">
+        <div class="risk-label">Risk 01</div>
+        <div class="risk-title">Disclosure asymmetry</div>
+        <div class="risk-body">
+          Discovery conversations require you to describe your architecture; they describe
+          their roadmap in marketing terms. Their AI in Asset Management page tells you what
+          they are <em>planning</em> to build that overlaps with what you are <em>already</em> building.
+        </div>
+      </div>
+
+      <div class="risk-card">
+        <div class="risk-label">Risk 02</div>
+        <div class="risk-title">Positioning leak</div>
+        <div class="risk-body">
+          If they are moving toward agentic territory (their AI in Asset Management solution suggests
+          they are), giving them visibility into your dual-builder, Z3, and Tool Library architecture
+          hands them a roadmap.
+        </div>
+      </div>
+
+      <div class="risk-card">
+        <div class="risk-label">Risk 03</div>
+        <div class="risk-title">"Partner" capture</div>
+        <div class="risk-body">
+          Implementation partners often try to convert pilots into framework lock-in. IntegraLynx
+          becomes the integration hub; your ERP becomes one module inside their platform diagram.
+        </div>
+      </div>
+
+      <div class="risk-card">
+        <div class="risk-label">Risk 04</div>
+        <div class="risk-title">Verification philosophy mismatch</div>
+        <div class="risk-body">
+          Their model is human-in-the-loop on exceptions; yours is mathematical proof on every
+          calculation. These are different epistemic stances. Bolting your verification onto
+          their orchestration creates a fragile boundary.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ RECOMMENDATIONS ============ -->
+  <section>
+    <div class="section-label">Section 07</div>
+    <h2>Recommended Posture</h2>
+
+    <ol class="rec-list">
+      <li>
+        <strong>Treat them as a benchmark, not a partner.</strong> Use their public materials
+        to calibrate your positioning. What they don't claim — formal verification, deterministic
+        guarantees, code generation rather than data extraction — is the gap your messaging
+        should occupy. Their "Trust is key" testimonial is essentially the same value proposition
+        you make, just without the architectural backing. Your story is <em>why</em> the trust is justified.
+      </li>
+      <li>
+        <strong>Take a short discovery call only with a specific, narrow question</strong> — for
+        example, "what is your extraction accuracy on Irish ICAV prospectuses across share class
+        fee structures?" Go in with a non-disclosure stance about your own architecture.
+      </li>
+      <li>
+        <strong>Watch their AI in Asset Management page.</strong> That is where their roadmap will
+        leak. If they begin claiming code generation, deterministic verification, or formal methods,
+        the competitive picture changes and warrants a fresh review.
+      </li>
+      <li>
+        <strong>Reuse the pre-engagement extraction idea, on your own terms.</strong> Their concept of
+        running public fund documents through extraction before contracts are signed is genuinely
+        useful. It is also straightforward to build inside the Reader stage of your pipeline and
+        feeds directly into the effort-based pricing engine. Build, do not buy.
+      </li>
+    </ol>
+  </section>
+
+  <!-- ============ CLOSING ============ -->
+  <section>
+    <div class="section-label">Closing</div>
+    <h2>Summary</h2>
+    <p>
+      IntegraLynx Client Onboarding occupies a real and valuable slot in the workflow — the
+      unstructured-document-to-structured-data conversion at fund take-on — that your platform also
+      has to solve. Their NAV Oversight product is the closer competitor philosophically (shadow
+      calcs, break detection, audit trail), but it remains an <em>oversight</em> layer rather than
+      the calculation engine itself.
+    </p>
+    <p>
+      They are competent at what they do. They are not the right partner for what you are doing.
+    </p>
+  </section>
+
+  <footer>
+    <span>Vendor Review · Resolve / IntegraLynx · 2026-04-27</span>
+    <span>Source: <a href="https://resolvefinancialsoftware.com/solution/client-onboarding/" target="_blank" rel="noopener">resolvefinancialsoftware.com</a></span>
+  </footer>
+
+</div>
+
+</body>
+</html>
