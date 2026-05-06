@@ -1,0 +1,57 @@
+# Verified Swing Pricing — Fusion Integration Prototype
+
+A staged working prototype for the proposed JPM Fusion POC. One engine, three surfaces.
+
+## What this proves
+
+Synthetic data generation gets us reproducible Irish QIAIFs on demand. A Fusion-shaped semantic layer normalises the inputs. A neuro-symbolic calculation engine (LLM Builder + six verification layers) produces a swing factor that is provably correct, not just plausibly correct. Every certified output ships with its proof.
+
+## Three artefacts, one engine
+
+|Stage|Artefact            |Audience                   |What it shows                                                                                                                                                  |
+|-----|--------------------|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|1    |`01_demo.html`      |Anyone with a browser      |Self-contained visual demo. Generate fund → ingest → semantic layer → dual-Builder → six-layer verification. No install.                                       |
+|2    |`app.py` (Streamlit)|Working POC reviewers      |Same engine plus stress-grid reconciliation pack and CSV export. The deliverable shape JPM SS would review.                                                    |
+|3    |`03_notebook.ipynb` |Fusion engineers and quants|PyFusion-shaped API, semantic-layer query, certified output pushed through Fusion Drive. The integration cost in a real POC is the auth boundary; nothing else.|
+
+## The engine (`verified_swing_pricing/core.py`)
+
+Single module, ~300 lines, no heavy dependencies. All three surfaces import from here, so the demo cannot drift across surfaces.
+
+- **Synthetic generator**: deterministic-from-seed Irish QIAIF. Controls: net flow %, asset mix, market regime.
+- **Fusion-style Reader**: three upstream sources (Custody/FA/MO) in three formats, with persona-driven adversarial perturbations (header drift, unit drift, legacy-format collisions).
+- **Semantic layer**: YAML-style entity definitions for Position, SubscriptionFlow, NAVStrike, SwingFactor — each with constraints, derivations, and Z3-checkable verification specs.
+- **Swing-pricing calculation**: weighted transaction-cost model parameterised by liquidation horizon and stress.
+- **Six-layer verification**: Z3 constitution, dual-Builder consensus, inverse verification, property-based testing, Tool Library regression, Anomaly Agent.
+- **Signed certified output**: SHA-256 proof hash binds the output to its inputs.
+
+## Run it
+
+```bash
+# Stage 1 — open the HTML in a browser
+open 01_demo.html
+
+# Stage 2 — Streamlit
+pip install streamlit pandas
+streamlit run app.py
+
+# Stage 3 — Jupyter
+pip install jupyter pandas
+jupyter notebook 03_notebook.ipynb
+```
+
+## What’s mocked vs real
+
+- The LLM Builders are deterministic stand-ins (the calculation logic they “generate” is hard-coded). In production these are real Claude Sonnet calls under the Constitution.
+- Z3 verification is reported as PASS/FAIL deterministically. In production this is a real Z3 SMT solver run.
+- `fusion_mock.py` mirrors PyFusion’s surface (`Fusion`, `list_catalogs`, `to_df`, semantic layer). In a real POC, replace `import fusion_mock as fusion` with `import fusion`.
+- The synthetic fund is the strength, not a limitation. Reproducing edge cases on demand is the asset Fusion does not have.
+
+## What changes for the real POC
+
+1. The auth handshake against `fusion-api.jpmorgan.com`.
+1. Fund reconstruction from real Fusion `to_df()` calls instead of the synthetic generator.
+1. Real Z3 / dual-Builder runs in place of the deterministic stubs.
+1. A side-by-side panel comparing our certified output to the live MSCI swing-pricing module’s output.
+
+Everything else is already wired.
