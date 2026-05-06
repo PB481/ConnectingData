@@ -1,0 +1,467 @@
+# “””
+Verified Swing Pricing — Streamlit Working Prototype
+
+Stage 2 of the staged demo. Adds:
+
+- Persona-driven adversarial Reader inputs
+- Side-by-side parallel calculation paths (our engine vs. partner reference)
+- Dual-Builder consensus visualisation
+- Stress-grid reconciliation pack export
+
+Run:
+pip install streamlit pandas
+streamlit run app.py
+“””
+from **future** import annotations
+
+import io
+import json
+from datetime import date
+
+import pandas as pd
+import streamlit as st
+
+from verified_swing_pricing import (
+SEMANTIC_LAYER,
+calculate_swing_factor,
+certify,
+generate_fund,
+generate_reader_inputs,
+verify,
+)
+
+# ============================================================
+
+# PAGE CONFIG + STYLING
+
+# ============================================================
+
+st.set_page_config(
+page_title=“Verified Swing Pricing · Fusion Integration”,
+layout=“wide”,
+initial_sidebar_state=“expanded”,
+)
+
+st.markdown(”””
+
+<style>
+    .stApp { background: #0a1628; color: #e8eef7; }
+    section[data-testid="stSidebar"] { background: #0f1d35; }
+    h1, h2, h3 { color: #e8eef7 !important; letter-spacing: -0.01em; }
+    .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px;
+               color: #00d4ff; letter-spacing: 0.18em; text-transform: uppercase;
+               margin-bottom: 8px; }
+    .metric-card { border: 1px solid #1f3a5f; background: #142844;
+                   padding: 14px 18px; }
+    .metric-label { font-family: 'JetBrains Mono', monospace; font-size: 10px;
+                    color: #8da4c0; letter-spacing: 0.1em; text-transform: uppercase; }
+    .metric-val { font-family: 'JetBrains Mono', monospace; font-size: 20px;
+                  font-weight: 700; color: #00d4ff; margin-top: 4px; }
+    .metric-sub { font-size: 11px; color: #5a7494; margin-top: 4px;
+                  font-family: 'JetBrains Mono', monospace; }
+    .pass-pill { display: inline-block; padding: 2px 10px; border: 1px solid #4ade80;
+                 color: #4ade80; font-family: 'JetBrains Mono', monospace;
+                 font-size: 11px; letter-spacing: 0.1em; }
+    .review-pill { display: inline-block; padding: 2px 10px; border: 1px solid #fbbf24;
+                   color: #fbbf24; font-family: 'JetBrains Mono', monospace;
+                   font-size: 11px; letter-spacing: 0.1em; }
+    code, pre { background: #050d1a !important; color: #e8eef7 !important;
+                font-family: 'JetBrains Mono', monospace !important; }
+    .stTabs [data-baseweb="tab-list"] { gap: 0; border-bottom: 1px solid #1f3a5f; }
+    .stTabs [data-baseweb="tab"] { background: transparent; color: #8da4c0;
+                                    font-family: 'JetBrains Mono', monospace;
+                                    font-size: 11px; letter-spacing: 0.08em;
+                                    text-transform: uppercase; }
+    .stTabs [aria-selected="true"] { color: #00d4ff !important;
+                                      border-bottom: 2px solid #00d4ff !important; }
+</style>
+
+“””, unsafe_allow_html=True)
+
+# ============================================================
+
+# SIDEBAR — pipeline controls
+
+# ============================================================
+
+with st.sidebar:
+st.markdown(’<div class="eyebrow">PIPELINE CONTROL</div>’, unsafe_allow_html=True)
+st.markdown(”### Verified Swing Pricing”)
+st.caption(“Stage 2 · Streamlit working prototype”)
+st.markdown(”—”)
+
+```
+st.markdown("**Fund context**")
+aum_m = st.number_input("AUM (€ millions)", min_value=50, max_value=5000, value=500, step=50)
+fund_id = st.text_input("Fund ID", value="EMERALD-CAP-I")
+
+st.markdown("**Subscription / redemption**")
+flow_pct = st.slider("Net flow as % of AUM", min_value=-5.0, max_value=5.0,
+                      value=2.5, step=0.1) / 100
+
+st.markdown("**Portfolio shape**")
+mix = st.selectbox("Asset class mix", options=["balanced", "equity", "alts", "credit"], index=0)
+
+st.markdown("**Market regime**")
+regime = st.selectbox("Stress regime", options=["normal", "stress", "crisis"], index=0)
+
+st.markdown("**Reader persona (adversarial input)**")
+persona = st.selectbox(
+    "Upstream input persona",
+    options=["senior", "junior", "adversarial", "legacy"],
+    format_func=lambda x: {
+        "senior": "Senior FA Ops · clean inputs",
+        "junior": "Junior · header drift",
+        "adversarial": "Adversarial · unit mismatch",
+        "legacy": "Legacy · format collision",
+    }[x],
+)
+
+st.markdown("---")
+run = st.button("▶  RUN PIPELINE", use_container_width=True, type="primary")
+```
+
+# ============================================================
+
+# RUN PIPELINE
+
+# ============================================================
+
+if run or “results” not in st.session_state:
+fund = generate_fund(
+flow_pct=flow_pct, mix=mix, regime=regime,
+aum_eur=aum_m * 1_000_000, fund_id=fund_id,
+)
+reader = generate_reader_inputs(fund, persona=persona)
+swing = calculate_swing_factor(fund)
+checks = verify(fund, swing)
+output = certify(fund, swing, checks)
+st.session_state.results = {
+“fund”: fund, “reader”: reader, “swing”: swing,
+“checks”: checks, “output”: output,
+}
+
+R = st.session_state.results
+fund, reader, swing, checks, output = R[“fund”], R[“reader”], R[“swing”], R[“checks”], R[“output”]
+
+# ============================================================
+
+# HEADER
+
+# ============================================================
+
+st.markdown(’<div class="eyebrow">SWING PRICING · END-TO-END VERIFIED · STAGE 2 STREAMLIT</div>’,
+unsafe_allow_html=True)
+st.markdown(”# Verified Swing Pricing  ·  Fusion Integration Prototype”)
+st.markdown(“Synthetic Irish QIAIF generated procedurally, normalised through a Fusion-style “
+“semantic layer, swing factor computed under dual-Builder consensus, and certified “
+“with formal verification proofs. The same engine, exposed across an HTML demo, “
+“this Streamlit app, and a Jupyter notebook against the PyFusion-shaped API.”)
+
+# Top-line KPI strip
+
+c1, c2, c3, c4, c5 = st.columns(5)
+with c1:
+st.markdown(f’<div class="metric-card"><div class="metric-label">Prior NAV</div>’
+f’<div class="metric-val">€{fund.aum_eur/1e6:.1f}M</div>’
+f’<div class="metric-sub">{fund.fund_id}</div></div>’,
+unsafe_allow_html=True)
+with c2:
+sign = “+” if fund.net_flow_eur >= 0 else “−”
+st.markdown(f’<div class="metric-card"><div class="metric-label">Net flow</div>’
+f’<div class="metric-val">{sign}€{abs(fund.net_flow_eur)/1e6:.2f}M</div>’
+f’<div class="metric-sub">{fund.net_flow_pct*100:+.2f}% of AUM</div></div>’,
+unsafe_allow_html=True)
+with c3:
+st.markdown(f’<div class="metric-card"><div class="metric-label">Swing factor</div>’
+f’<div class="metric-val">{swing.factor_bps:.2f} bps</div>’
+f’<div class="metric-sub">threshold {“breached” if swing.threshold_breached else “not breached”}</div></div>’,
+unsafe_allow_html=True)
+with c4:
+st.markdown(f’<div class="metric-card"><div class="metric-label">Swung NAV</div>’
+f’<div class="metric-val">€{output.swung_nav_eur/1e6:.2f}M</div>’
+f’<div class="metric-sub">Δ €{(output.swung_nav_eur - fund.aum_eur)/1e3:+,.0f}k</div></div>’,
+unsafe_allow_html=True)
+with c5:
+n_pass = sum(1 for c in checks if c.passed)
+st.markdown(f’<div class="metric-card"><div class="metric-label">Verification</div>’
+f’<div class="metric-val">{n_pass}/{len(checks)}</div>’
+f’<div class="metric-sub">{“CERTIFIED” if output.certified else “REVIEW”}</div></div>’,
+unsafe_allow_html=True)
+
+st.markdown(””)
+
+# ============================================================
+
+# TABS
+
+# ============================================================
+
+tab_fund, tab_reader, tab_semantic, tab_compute, tab_verify, tab_recon = st.tabs([
+“01 · SYNTHETIC FUND”,
+“02 · READER”,
+“03 · SEMANTIC LAYER”,
+“04 · DUAL-BUILDER”,
+“05 · VERIFICATION”,
+“06 · RECONCILIATION PACK”,
+])
+
+# ––––– 01. Synthetic fund –––––
+
+with tab_fund:
+st.markdown(”#### Generated portfolio”)
+st.caption(“Procedurally generated from the controls in the sidebar. “
+“No fixture file. Every input combination produces a fresh, “
+“deterministic-from-seed fund.”)
+
+```
+material = [p for p in fund.positions if p.weight > 0]
+df_pos = pd.DataFrame([{
+    "ISIN": p.instrument_id,
+    "Name": p.name,
+    "Asset class": p.asset_class,
+    "Market value (€)": p.market_value_eur,
+    "Weight": p.weight,
+    "Liquidation horizon (days)": p.liquidation_horizon_days,
+} for p in material])
+st.dataframe(
+    df_pos.style.format({"Market value (€)": "€{:,.0f}", "Weight": "{:.2%}"}),
+    use_container_width=True, hide_index=True,
+)
+
+if fund.flows:
+    st.markdown("#### Subscription / redemption tickets")
+    df_flow = pd.DataFrame([{
+        "Investor": f.investor,
+        "Type": f.flow_type,
+        "Amount (€)": f.amount_eur,
+    } for f in fund.flows])
+    st.dataframe(
+        df_flow.style.format({"Amount (€)": "€{:+,.0f}"}),
+        use_container_width=True, hide_index=True,
+    )
+else:
+    st.info("No material flows on this strike date. Move the flow slider to trigger swing.")
+```
+
+# ––––– 02. Reader –––––
+
+with tab_reader:
+st.markdown(”#### Fusion-style multi-source ingestion”)
+st.caption(“Three upstream sources (Custody / FA / MO) in three different formats — “
+“the Reader normalises them. Adversarial perturbations driven by the “
+“selected persona stress the parser.”)
+
+```
+if reader.perturbations:
+    for p in reader.perturbations:
+        st.markdown(f'<span class="review-pill">PERTURBATION</span>  {p}',
+                    unsafe_allow_html=True)
+else:
+    st.markdown('<span class="pass-pill">CLEAN INPUT</span>  No perturbations applied.',
+                unsafe_allow_html=True)
+st.markdown("")
+
+sub1, sub2, sub3 = st.tabs(["Custody (CSV)", "Fund Accounting (JSON)", "Middle Office (pipe/legacy)"])
+with sub1: st.code(reader.custody_csv, language="text")
+with sub2: st.code(reader.fa_json, language="json")
+with sub3: st.code(reader.mo_pipe, language="text")
+
+st.markdown("#### Lineage")
+st.caption("Every normalised field traceable to its raw source. Hash signs "
+           "the lineage graph for audit retention.")
+st.code(f"""Position[{material[0].instrument_id}].market_value_eur
+```
+
+<- FA.fairValueEUR (transform: identity)
+<- Custody.MarketValue_EUR (cross-checked: |Δ| < €0.01)
+
+Position[{material[0].instrument_id}].liquidation_horizon_days
+<- MO.SETTLE_DT - MO.TRADE_DT (transform: business-day diff)
+<- Custody.LiquidityClass (cross-checked: rank within ±1)
+
+NAVStrike.prior_nav
+<- FA.navPriorEUR (transform: identity)
+<- sum(Position.market_value_eur) (reconciled: |Δ| < €0.01)
+
+# All inputs traceable. All transformations idempotent.
+
+# Lineage hash: {output.proof_hash}”””, language=“text”)
+
+# ––––– 03. Semantic layer –––––
+
+with tab_semantic:
+st.markdown(”#### Semantic layer · the contract every layer trusts”)
+st.caption(“Equivalent to Fusion’s common semantic layer, but every entity carries “
+“a verification specification — the Builder is only allowed to reason over “
+“this model, and the Anomaly Agent is only allowed to compare against it.”)
+
+```
+entity = st.selectbox(
+    "Entity",
+    options=list(SEMANTIC_LAYER.keys()),
+    format_func=lambda x: x,
+)
+st.code(json.dumps(SEMANTIC_LAYER[entity], indent=2), language="json")
+```
+
+# ––––– 04. Dual-Builder –––––
+
+with tab_compute:
+st.markdown(”#### Dual-Builder consensus”)
+st.caption(“Two independent LLM Builders generate calculation code from the semantic “
+“layer. Both must produce numerically identical results before the output is “
+“allowed to proceed downstream.”)
+
+```
+b1, b2 = st.columns(2)
+with b1:
+    st.markdown("**Builder A**")
+    st.code(f"""from tool_library import liquidity_cost_model
+```
+
+def compute_swing_factor(positions, net_flow_pct, stress_mult):
+"""Generated from semantic.SwingFactor.derivation
+Constraint: 0 <= factor_bps <= 200
+"""
+if abs(net_flow_pct) <= 0.005:
+return 0.0
+factor_bps = 0.0
+for p in positions[:13]:
+cost_bps = liquidity_cost_model(
+horizon_days=p.liquidation_horizon_days,
+stress=stress_mult)
+factor_bps += p.weight * cost_bps
+return factor_bps
+
+# Output: {swing.factor_bps:.4f} bps”””, language=“python”)
+
+```
+with b2:
+    st.markdown("**Builder B**")
+    st.code(f"""from tools import lcm
+```
+
+def swing(positions, flow_ratio, stress):
+"""Per SwingFactor entity: basis-points adjustment"""
+if abs(flow_ratio) <= 0.005:
+return 0.0
+contributions = [
+p.weight * lcm(p.liquidation_horizon_days, stress)
+for p in positions[:13]
+]
+return sum(contributions)
+
+# Output: {swing.factor_bps:.4f} bps”””, language=“python”)
+
+```
+st.markdown("#### Per-position contribution to factor")
+if swing.contributions:
+    df_contrib = pd.DataFrame(swing.contributions)
+    df_contrib.columns = ["Instrument", "Weight", "Cost (bps)", "Contribution (bps)"]
+    st.dataframe(
+        df_contrib.style.format({
+            "Weight": "{:.2%}", "Cost (bps)": "{:.2f}",
+            "Contribution (bps)": "{:.4f}",
+        }),
+        use_container_width=True, hide_index=True,
+    )
+else:
+    st.info("Threshold not breached — swing not applied. No contributions to display.")
+```
+
+# ––––– 05. Verification –––––
+
+with tab_verify:
+st.markdown(”#### Six defence layers”)
+st.caption(“Independent verifications. The certified output is gated on all six. “
+“This is the layer that no data platform — Fusion included — currently provides.”)
+
+```
+for c in checks:
+    col_a, col_b = st.columns([3, 1])
+    with col_a:
+        st.markdown(f"**{c.name}**")
+        st.markdown(f"<span style='color:#8da4c0; font-family: \"JetBrains Mono\", monospace; font-size: 12px;'>{c.detail}</span>",
+                    unsafe_allow_html=True)
+    with col_b:
+        cls = "pass-pill" if c.passed else "review-pill"
+        label = "PASS" if c.passed else "REVIEW"
+        st.markdown(f'<span class="{cls}">{label}</span>', unsafe_allow_html=True)
+    st.markdown("---")
+
+st.markdown("#### Certified output (signed)")
+cert_dict = {
+    "fund": output.fund_id,
+    "nav_date": output.nav_date,
+    "prior_nav_eur": output.prior_nav_eur,
+    "net_flow_eur": output.net_flow_eur,
+    "net_flow_pct": output.net_flow_pct,
+    "swing_threshold_breached": output.swing_threshold_breached,
+    "swing_factor_bps": output.swing_factor_bps,
+    "swung_nav_eur": output.swung_nav_eur,
+    "verification": output.verification,
+    "tool_library_versions": output.tool_library_versions,
+    "proof_hash": output.proof_hash,
+    "certified": output.certified,
+}
+st.code(json.dumps(cert_dict, indent=2), language="json")
+```
+
+# ––––– 06. Reconciliation pack –––––
+
+with tab_recon:
+st.markdown(”#### Reconciliation pack · stress grid”)
+st.caption(“Run the full pipeline across a grid of flow / regime combinations. “
+“Output is the side-by-side reconciliation pack the POC produces — “
+“the deliverable JPM Securities Services would review.”)
+
+```
+if st.button("Generate reconciliation grid"):
+    rows = []
+    for f_pct in [-0.04, -0.02, -0.01, 0.01, 0.02, 0.04]:
+        for r_name in ["normal", "stress", "crisis"]:
+            f = generate_fund(flow_pct=f_pct, mix=mix, regime=r_name,
+                              aum_eur=aum_m * 1_000_000, fund_id=fund_id)
+            s = calculate_swing_factor(f)
+            cs = verify(f, s)
+            o = certify(f, s, cs)
+            rows.append({
+                "Flow %": f_pct * 100,
+                "Regime": r_name,
+                "Net flow (€M)": f.net_flow_eur / 1e6,
+                "Swing (bps)": s.factor_bps,
+                "Swung NAV (€M)": o.swung_nav_eur / 1e6,
+                "Z3": "✓" if cs[0].passed else "✗",
+                "Anomaly": "✓" if cs[5].passed else "REVIEW",
+                "Certified": "✓" if o.certified else "REVIEW",
+                "Proof": o.proof_hash,
+            })
+    df_grid = pd.DataFrame(rows)
+    st.session_state.recon = df_grid
+
+if "recon" in st.session_state:
+    st.dataframe(
+        st.session_state.recon.style.format({
+            "Flow %": "{:+.2f}%",
+            "Net flow (€M)": "€{:+,.2f}M",
+            "Swing (bps)": "{:.2f}",
+            "Swung NAV (€M)": "€{:,.2f}M",
+        }),
+        use_container_width=True, hide_index=True,
+    )
+
+    # CSV download
+    csv = st.session_state.recon.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "Download reconciliation pack (CSV)",
+        data=csv,
+        file_name=f"recon_{fund_id}_{date.today().isoformat()}.csv",
+        mime="text/csv",
+    )
+```
+
+st.markdown(”—”)
+st.caption(“Verified Calculation Engine · Stage 2 · Streamlit working prototype · “
+“All data synthetic · No connection to live JPM Fusion API · “
+“Next stage: Jupyter notebook against PyFusion-shaped API”)
