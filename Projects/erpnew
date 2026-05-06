@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic ERP — Client Change Request Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --bg-panel: #ffffff;
+    --bg-sunken: #f1ede5;
+    --ink: #1a1714;
+    --ink-soft: #4a443c;
+    --ink-mute: #8a8378;
+    --line: #d8d2c4;
+    --line-soft: #e8e3d6;
+    --accent: #7a2418;
+    --accent-soft: #c0644f;
+    --teal: #1f5d5e;
+    --gold: #b08831;
+    --green: #4a6b3a;
+    --warn: #a85a1f;
+    --shadow-1: 0 1px 2px rgba(26,23,20,0.04), 0 1px 1px rgba(26,23,20,0.02);
+    --shadow-2: 0 4px 12px rgba(26,23,20,0.06), 0 2px 4px rgba(26,23,20,0.03);
+    --shadow-3: 0 12px 32px rgba(26,23,20,0.08), 0 4px 8px rgba(26,23,20,0.04);
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+background: var(–bg);
+color: var(–ink);
+font-family: var(–sans);
+font-size: 14px;
+line-height: 1.5;
+-webkit-font-smoothing: antialiased;
+overflow-x: hidden;
+}
+
+/* Decorative grid overlay */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(var(–line-soft) 1px, transparent 1px),
+linear-gradient(90deg, var(–line-soft) 1px, transparent 1px);
+background-size: 64px 64px;
+opacity: 0.35;
+pointer-events: none;
+z-index: 0;
+}
+
+.container {
+position: relative;
+z-index: 1;
+max-width: 1440px;
+margin: 0 auto;
+padding: 32px 40px 80px;
+}
+
+/* ===== HEADER ===== */
+header {
+display: flex;
+justify-content: space-between;
+align-items: flex-end;
+border-bottom: 1px solid var(–ink);
+padding-bottom: 24px;
+margin-bottom: 32px;
+}
+
+.brand {
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.brand-eyebrow {
+font-family: var(–mono);
+font-size: 10px;
+letter-spacing: 0.18em;
+text-transform: uppercase;
+color: var(–ink-mute);
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.brand-eyebrow::before {
+content: ‘’;
+width: 6px;
+height: 6px;
+border-radius: 50%;
+background: var(–accent);
+display: inline-block;
+}
+
+.brand-title {
+font-family: var(–serif);
+font-size: 38px;
+font-weight: 400;
+letter-spacing: -0.02em;
+line-height: 1;
+}
+
+.brand-title em {
+font-style: italic;
+color: var(–accent);
+font-weight: 300;
+}
+
+.brand-sub {
+font-family: var(–serif);
+font-style: italic;
+font-size: 15px;
+color: var(–ink-soft);
+margin-top: 6px;
+}
+
+.header-meta {
+display: flex;
+gap: 24px;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–ink-mute);
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+
+.header-meta div span {
+display: block;
+color: var(–ink);
+font-size: 14px;
+text-transform: none;
+letter-spacing: 0;
+margin-top: 2px;
+}
+
+/* ===== INTRO ===== */
+.intro {
+display: grid;
+grid-template-columns: 1.4fr 1fr;
+gap: 48px;
+margin-bottom: 40px;
+padding-bottom: 32px;
+border-bottom: 1px solid var(–line);
+}
+
+.intro-lead {
+font-family: var(–serif);
+font-size: 22px;
+line-height: 1.4;
+font-weight: 300;
+color: var(–ink);
+}
+
+.intro-lead em {
+font-style: italic;
+color: var(–accent);
+}
+
+.intro-instructions {
+font-size: 13px;
+color: var(–ink-soft);
+}
+
+.intro-instructions h4 {
+font-family: var(–mono);
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.15em;
+color: var(–ink-mute);
+margin-bottom: 8px;
+font-weight: 500;
+}
+
+.intro-instructions ol {
+list-style: none;
+counter-reset: step;
+padding: 0;
+}
+
+.intro-instructions li {
+counter-increment: step;
+padding-left: 28px;
+position: relative;
+margin-bottom: 6px;
+}
+
+.intro-instructions li::before {
+content: counter(step);
+position: absolute;
+left: 0;
+top: 0;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–accent);
+font-weight: 600;
+}
+
+/* ===== CASE SELECTOR ===== */
+.section-head {
+display: flex;
+justify-content: space-between;
+align-items: baseline;
+margin-bottom: 16px;
+}
+
+.section-title {
+font-family: var(–serif);
+font-size: 18px;
+font-weight: 600;
+letter-spacing: -0.01em;
+}
+
+.section-title-num {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–ink-mute);
+margin-right: 12px;
+}
+
+.section-aside {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–ink-mute);
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+
+.case-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 12px;
+margin-bottom: 12px;
+}
+
+.case-grid.anti {
+grid-template-columns: repeat(3, 1fr);
+margin-bottom: 32px;
+}
+
+.case-card {
+background: var(–bg-panel);
+border: 1px solid var(–line);
+padding: 14px 14px 12px;
+cursor: pointer;
+transition: all 0.2s ease;
+position: relative;
+overflow: hidden;
+}
+
+.case-card:hover {
+border-color: var(–ink);
+transform: translateY(-1px);
+box-shadow: var(–shadow-2);
+}
+
+.case-card.active {
+background: var(–ink);
+color: var(–bg);
+border-color: var(–ink);
+}
+
+.case-card.active .case-num,
+.case-card.active .case-tag { color: var(–bg); opacity: 0.7; }
+
+.case-card.anti {
+background: var(–bg-sunken);
+border-style: dashed;
+border-color: var(–line);
+}
+
+.case-card.anti.active {
+background: var(–accent);
+color: var(–bg);
+border-style: solid;
+border-color: var(–accent);
+}
+
+.case-card.anti.active .case-num,
+.case-card.anti.active .case-tag { color: var(–bg); }
+
+.case-num {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–ink-mute);
+letter-spacing: 0.1em;
+margin-bottom: 4px;
+}
+
+.case-title {
+font-family: var(–serif);
+font-size: 14px;
+font-weight: 600;
+line-height: 1.25;
+margin-bottom: 6px;
+}
+
+.case-tag {
+font-family: var(–mono);
+font-size: 9px;
+color: var(–ink-mute);
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+
+/* ===== STAGE PANEL ===== */
+.controls {
+display: flex;
+align-items: center;
+gap: 16px;
+margin-bottom: 20px;
+padding: 14px 18px;
+background: var(–ink);
+color: var(–bg);
+}
+
+.btn-play {
+background: var(–bg);
+color: var(–ink);
+border: none;
+padding: 8px 18px;
+font-family: var(–mono);
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.12em;
+cursor: pointer;
+font-weight: 600;
+transition: all 0.2s;
+}
+
+.btn-play:hover { background: var(–accent-soft); }
+.btn-play:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-reset {
+background: transparent;
+color: var(–bg);
+border: 1px solid rgba(250,247,242,0.3);
+padding: 8px 14px;
+font-family: var(–mono);
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.12em;
+cursor: pointer;
+}
+
+.controls-status {
+flex: 1;
+font-family: var(–mono);
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+opacity: 0.7;
+}
+
+.speed-select {
+background: transparent;
+border: 1px solid rgba(250,247,242,0.3);
+color: var(–bg);
+font-family: var(–mono);
+font-size: 11px;
+padding: 6px 8px;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+}
+
+/* ===== FLOW CANVAS ===== */
+.flow-wrap {
+display: grid;
+grid-template-columns: 1fr 320px;
+gap: 24px;
+margin-bottom: 32px;
+}
+
+.flow-canvas {
+background: var(–bg-panel);
+border: 1px solid var(–line);
+padding: 32px 28px 28px;
+position: relative;
+min-height: 540px;
+}
+
+.flow-canvas-header {
+display: flex;
+justify-content: space-between;
+align-items: baseline;
+margin-bottom: 20px;
+padding-bottom: 12px;
+border-bottom: 1px solid var(–line-soft);
+}
+
+.flow-canvas-title {
+font-family: var(–serif);
+font-size: 16px;
+font-weight: 600;
+}
+
+.flow-canvas-meta {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–ink-mute);
+letter-spacing: 0.1em;
+text-transform: uppercase;
+}
+
+/* Stage row: 11 stages laid out as a horizontal flow */
+.stages-svg-wrap { width: 100%; position: relative; }
+.stages-svg { width: 100%; height: auto; display: block; }
+
+/* Side panel narrative */
+.narrative-panel {
+background: var(–bg-panel);
+border: 1px solid var(–line);
+padding: 24px;
+display: flex;
+flex-direction: column;
+min-height: 540px;
+}
+
+.narr-stage-num {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–accent);
+letter-spacing: 0.18em;
+text-transform: uppercase;
+margin-bottom: 6px;
+font-weight: 600;
+}
+
+.narr-stage-title {
+font-family: var(–serif);
+font-size: 22px;
+font-weight: 600;
+letter-spacing: -0.015em;
+margin-bottom: 14px;
+line-height: 1.15;
+}
+
+.narr-stage-arch {
+font-size: 12px;
+color: var(–ink-mute);
+font-style: italic;
+margin-bottom: 16px;
+padding-bottom: 12px;
+border-bottom: 1px dotted var(–line);
+line-height: 1.4;
+}
+
+.narr-stage-body {
+font-size: 13px;
+color: var(–ink-soft);
+line-height: 1.55;
+flex: 1;
+}
+
+.narr-stage-body strong { color: var(–ink); font-weight: 600; }
+
+.narr-tools {
+margin-top: 16px;
+padding-top: 14px;
+border-top: 1px solid var(–line-soft);
+}
+
+.narr-tools-label {
+font-family: var(–mono);
+font-size: 9px;
+text-transform: uppercase;
+letter-spacing: 0.15em;
+color: var(–ink-mute);
+margin-bottom: 8px;
+}
+
+.narr-tool {
+display: inline-block;
+font-family: var(–mono);
+font-size: 10px;
+padding: 3px 8px;
+border: 1px solid var(–line);
+margin: 0 4px 4px 0;
+color: var(–ink-soft);
+background: var(–bg-sunken);
+}
+
+.narr-tool.active {
+background: var(–teal);
+color: var(–bg);
+border-color: var(–teal);
+}
+
+/* Empty narrative state */
+.narr-empty {
+height: 100%;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+color: var(–ink-mute);
+text-align: center;
+}
+
+.narr-empty-icon {
+font-family: var(–serif);
+font-style: italic;
+font-size: 48px;
+color: var(–line);
+margin-bottom: 12px;
+}
+
+.narr-empty-text {
+font-family: var(–serif);
+font-style: italic;
+font-size: 15px;
+max-width: 220px;
+line-height: 1.4;
+}
+
+/* ===== STATS ROW ===== */
+.stats {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 16px;
+margin-bottom: 32px;
+}
+
+.stat {
+background: var(–bg-panel);
+border: 1px solid var(–line);
+padding: 18px 20px;
+position: relative;
+overflow: hidden;
+}
+
+.stat::before {
+content: ‘’;
+position: absolute;
+left: 0;
+top: 0;
+width: 3px;
+height: 100%;
+background: var(–ink);
+}
+
+.stat.accent::before { background: var(–accent); }
+.stat.teal::before { background: var(–teal); }
+.stat.gold::before { background: var(–gold); }
+
+.stat-label {
+font-family: var(–mono);
+font-size: 9px;
+text-transform: uppercase;
+letter-spacing: 0.15em;
+color: var(–ink-mute);
+margin-bottom: 8px;
+}
+
+.stat-value {
+font-family: var(–serif);
+font-size: 32px;
+font-weight: 400;
+line-height: 1;
+letter-spacing: -0.02em;
+}
+
+.stat-value .unit {
+font-size: 14px;
+color: var(–ink-mute);
+margin-left: 4px;
+font-style: italic;
+}
+
+.stat-detail {
+font-size: 11px;
+color: var(–ink-mute);
+margin-top: 6px;
+font-family: var(–mono);
+}
+
+/* ===== MODAL ===== */
+.modal-overlay {
+position: fixed;
+inset: 0;
+background: rgba(26,23,20,0.5);
+display: none;
+z-index: 100;
+align-items: center;
+justify-content: center;
+padding: 40px;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+background: var(–bg);
+max-width: 640px;
+width: 100%;
+padding: 40px;
+border: 1px solid var(–ink);
+box-shadow: var(–shadow-3);
+max-height: 80vh;
+overflow-y: auto;
+position: relative;
+}
+
+.modal-eyebrow {
+font-family: var(–mono);
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.18em;
+color: var(–accent);
+margin-bottom: 8px;
+}
+
+.modal-title {
+font-family: var(–serif);
+font-size: 28px;
+font-weight: 600;
+letter-spacing: -0.02em;
+margin-bottom: 20px;
+line-height: 1.1;
+}
+
+.modal-close {
+position: absolute;
+top: 24px;
+right: 24px;
+background: transparent;
+border: 1px solid var(–line);
+width: 32px;
+height: 32px;
+cursor: pointer;
+font-family: var(–mono);
+font-size: 14px;
+color: var(–ink-soft);
+}
+
+.modal-section {
+margin-bottom: 18px;
+}
+
+.modal-section h4 {
+font-family: var(–mono);
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.15em;
+color: var(–ink-mute);
+margin-bottom: 8px;
+font-weight: 500;
+}
+
+.modal-section p {
+font-size: 14px;
+color: var(–ink-soft);
+line-height: 1.55;
+}
+
+.modal-section p strong { color: var(–ink); }
+
+/* ===== FOOTER ===== */
+footer {
+margin-top: 80px;
+padding-top: 24px;
+border-top: 1px solid var(–line);
+display: flex;
+justify-content: space-between;
+align-items: center;
+font-family: var(–mono);
+font-size: 10px;
+color: var(–ink-mute);
+text-transform: uppercase;
+letter-spacing: 0.12em;
+}
+
+/* ===== ANIMATION CLASSES ===== */
+@keyframes pulse-stage {
+0%, 100% { transform: scale(1); }
+50% { transform: scale(1.06); }
+}
+
+@keyframes orbit-glow {
+0%, 100% { opacity: 0.4; }
+50% { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+.flow-wrap { grid-template-columns: 1fr; }
+.case-grid { grid-template-columns: repeat(2, 1fr); }
+.case-grid.anti { grid-template-columns: repeat(2, 1fr); }
+.stats { grid-template-columns: repeat(2, 1fr); }
+.intro { grid-template-columns: 1fr; gap: 24px; }
+}
+</style>
+
+</head>
+<body>
+<div class="container">
+
+  <!-- ===== HEADER ===== -->
+
+  <header>
+    <div class="brand">
+      <div class="brand-eyebrow">Internal · Strategic Architecture</div>
+      <h1 class="brand-title">Agentic ERP <em>— Client Change Request Flow</em></h1>
+      <div class="brand-sub">A workflow visualisation. Pick a case. Watch the architecture do its job.</div>
+    </div>
+    <div class="header-meta">
+      <div>Document<span>v0.3 — reshaped</span></div>
+      <div>Audience<span>JPM Fund Services</span></div>
+      <div>Domain<span>Irish UCITS / AIF / QIAIF / ICAV</span></div>
+    </div>
+  </header>
+
+  <!-- ===== INTRO ===== -->
+
+  <section class="intro">
+    <div class="intro-lead">
+      The architecture is not a NAV engine. It is a <em>client change request platform</em> with a case-library moat. Every fulfilled request becomes a verified precedent that lowers the cost of the next one. Verification tools are applied where they earn their keep — not as universal pipeline gates.
+    </div>
+    <div class="intro-instructions">
+      <h4>How to use this</h4>
+      <ol>
+        <li>Pick a case from the eleven below</li>
+        <li>Hit play — watch the request move through the eleven-stage flow</li>
+        <li>Read the side panel for the stage-specific commentary</li>
+        <li>Click any stage's <span style="font-family:var(--mono);">?</span> for the architectural drill-down</li>
+        <li>Try an anti-case to see scope discipline in action</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===== CASE SELECTOR ===== -->
+
+  <div class="section-head">
+    <div class="section-title"><span class="section-title-num">01</span>Load-bearing cases</div>
+    <div class="section-aside">eight cases — chosen to span breadth, not just depth</div>
+  </div>
+  <div class="case-grid" id="caseGrid"></div>
+
+  <div class="section-head" style="margin-top:8px;">
+    <div class="section-title"><span class="section-title-num">02</span>Anti-cases — what the architecture is <em style="font-style:italic;color:var(--accent);">not</em> for</div>
+    <div class="section-aside">scope boundary — three illustrative refusals from the fifty-case list</div>
+  </div>
+  <div class="case-grid anti" id="antiCaseGrid"></div>
+
+  <!-- ===== CONTROLS ===== -->
+
+  <div class="controls">
+    <button class="btn-play" id="btnPlay" disabled>▶ Run flow</button>
+    <button class="btn-reset" id="btnReset">↺ Reset</button>
+    <div class="controls-status" id="controlStatus">Select a case to begin</div>
+    <select class="speed-select" id="speedSelect">
+      <option value="2200">Normal speed</option>
+      <option value="1400">Fast</option>
+      <option value="3200">Slow — for explaining</option>
+    </select>
+  </div>
+
+  <!-- ===== FLOW + NARRATIVE ===== -->
+
+  <div class="flow-wrap">
+    <div class="flow-canvas">
+      <div class="flow-canvas-header">
+        <div class="flow-canvas-title" id="flowTitle">The eleven-stage flow</div>
+        <div class="flow-canvas-meta" id="flowMeta">awaiting case selection</div>
+      </div>
+      <div class="stages-svg-wrap">
+        <svg class="stages-svg" id="stageSvg" viewBox="0 0 900 460" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+    </div>
+
+```
+<aside class="narrative-panel" id="narrativePanel">
+  <div class="narr-empty">
+    <div class="narr-empty-icon">¶</div>
+    <div class="narr-empty-text">The case-by-stage commentary will appear here as the flow runs.</div>
+  </div>
+</aside>
+```
+
+  </div>
+
+  <!-- ===== STATS ===== -->
+
+  <div class="section-head">
+    <div class="section-title"><span class="section-title-num">03</span>Live metrics</div>
+    <div class="section-aside">case library, token meter, verification activity</div>
+  </div>
+  <div class="stats">
+    <div class="stat accent">
+      <div class="stat-label">Case library</div>
+      <div class="stat-value" id="statLibrary">0<span class="unit">precedents</span></div>
+      <div class="stat-detail">grows with every fulfilled request</div>
+    </div>
+    <div class="stat teal">
+      <div class="stat-label">Tokens consumed — current case</div>
+      <div class="stat-value" id="statTokens">0<span class="unit">k</span></div>
+      <div class="stat-detail" id="statTokensDetail">— bills at completion</div>
+    </div>
+    <div class="stat gold">
+      <div class="stat-label">Reuse from library</div>
+      <div class="stat-value" id="statReuse">0<span class="unit">%</span></div>
+      <div class="stat-detail" id="statReuseDetail">precedent match strength</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Cumulative billings</div>
+      <div class="stat-value" id="statBillings">€0<span class="unit">k</span></div>
+      <div class="stat-detail">across this session</div>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+
+  <footer>
+    <div>Agentic ERP · v0.3 · Internal Working Document</div>
+    <div>One file · No external deps · Behind any firewall</div>
+  </footer>
+</div>
+
+<!-- ===== STAGE INFO MODAL ===== -->
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">×</button>
+    <div class="modal-eyebrow" id="modalEyebrow">Stage 01</div>
+    <div class="modal-title" id="modalTitle">Stage title</div>
+    <div class="modal-section">
+      <h4>What this stage does</h4>
+      <p id="modalWhat"></p>
+    </div>
+    <div class="modal-section">
+      <h4>Why it exists</h4>
+      <p id="modalWhy"></p>
+    </div>
+    <div class="modal-section">
+      <h4>What's new vs the original architecture</h4>
+      <p id="modalDelta"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================================================
+   DATA — eleven stages, eight cases, three anti-cases
+   =========================================================== */
+
+const STAGES = [
+  { id:'intake', num:'01', label:'Intake', short:'Intake',
+    what:'Receive the change request. Parse it from email / portal / call into a structured representation: which fund, which share class, which jurisdiction, which regulations apply, what the deadline is, what the commercial sensitivity is.',
+    why:'Real client requests come in as messy informal artefacts. Without a serious intake stage, the platform is a back-end with no front door.',
+    delta:'New stage. The original architecture had no intake — it assumed structured input arrived from somewhere. Real fund admin doesn\'t work that way.'
+  },
+  { id:'scope', num:'02', label:'Scope & precedent', short:'Scope',
+    what:'Search the case library for similar prior work. If a strong precedent exists, the bulk of the work becomes reuse plus delta. If not, this is a new case that will eventually become a precedent itself.',
+    why:'This is where the case library compounds. Every fulfilled request reduces the cost of every similar future request. This is the actual moat — the verification stack is just the quality control around it.',
+    delta:'Reframed. The original "novelty check" pointed at this but framed it backwards (flag the unprecedented). The right framing is precedent-first: search and reuse, novelty is implicit.'
+  },
+  { id:'draft', num:'03', label:'Draft', short:'Draft',
+    what:'Generate the artefacts the change requires. Often multiple — calculation code, regulatory mapping, configuration, prospectus disclosure language, board memo, investor statement template. LLM does the heavy lifting here.',
+    why:'Most change requests produce multiple artefacts, not just one calculation. The original architecture\'s "Builder" stage assumed code-only output.',
+    delta:'Renamed and broadened. "Builder" was too software-engineering. "Draft" is what you actually do.'
+  },
+  { id:'cross', num:'04', label:'Two-impl. cross-check', short:'Cross-check',
+    what:'Where the artefact is calculation code, generate it twice independently and compare outputs across many synthetic scenarios. Where it\'s a mapping, cross-check the mappings. Where it\'s documentation, this stage is skipped.',
+    why:'Cheap, model-agnostic, gives reviewers a clear binary signal: the two implementations agree, or they don\'t. Catches LLM drift very effectively.',
+    delta:'Kept. This is one of the verification stages that genuinely earns its keep on calculation work.'
+  },
+  { id:'rules', num:'05', label:'Rules check', short:'Rules check',
+    what:'Apply the relevant rules from the Fund Rules Ontology. UCITS 5/10/40, SFDR Article 8/9, AIFMD leverage limits, prospectus constraints, ESMA guidelines. Most checks are rule lookups, range checks, schema validations — not Z3.',
+    why:'The Fund Rules Ontology is what the rules check checks against. Without an ontology covering Irish UCITS / AIF / QIAIF / ICAV, this stage has nothing to do.',
+    delta:'Renamed from "Constitution" — a name that sounded grand and meant nothing. This is a rules check. Mathematical proof tools are reserved for the small set of cases where invariants genuinely matter.'
+  },
+  { id:'verify', num:'06', label:'Invariant + reverse checks', short:'Verify',
+    what:'For calculation-heavy artefacts: run invariant tests across many synthetic inputs, do reverse checks (back-calculate from outputs to inputs). For non-calculation artefacts: skip. This is a tool used when appropriate, not a universal stage.',
+    why:'Where invariants genuinely matter — performance fee equalisation, share class hedging consistency, waterfall calculations — formal proof tools are the right answer. For most NAV calculations, invariant testing in Hypothesis-style is sufficient.',
+    delta:'Demoted from "always-on pipeline gate" to "tool used as appropriate". The original aluminium frame was over-engineered. This is the carbon fibre version.'
+  },
+  { id:'outlier', num:'07', label:'Outlier detection', short:'Outlier',
+    what:'Compare outputs to historical patterns from the case library. Is this NAV in line with prior NAVs? Is this fee accrual reasonable? Is the report sized similarly to comparable reports? Statistical, not LLM-driven.',
+    why:'Catches errors that pass rule checks but are still wrong — for example, a calculation that is internally consistent but applied to the wrong data set.',
+    delta:'Kept. The original "Anomaly Agent" — renamed for clarity.'
+  },
+  { id:'review', num:'08', label:'Reviewer signoff', short:'Signoff',
+    what:'The fund accountant, controller, or relevant reviewer makes the call. The platform presents a complete audit pack: precedents used, verifications run, outliers flagged, residual judgement calls.',
+    why:'This is where role elevation happens. The reviewer\'s job is judgement, not manual calculation. The platform makes them more productive, not redundant — a hard requirement for adoption.',
+    delta:'Renamed from "Human Gate" to use the role name people actually have. Same function, less robotic framing.'
+  },
+  { id:'deploy', num:'09', label:'Deployment', short:'Deploy',
+    what:'Push the change to relevant production systems — TA platform, accounting engine, NAV calc, regulatory feeds, client portal, board pack generator. Multi-system. Rollback must be possible.',
+    why:'A change request isn\'t done at signoff. It\'s done when production reflects the change.',
+    delta:'New stage. The original architecture stopped at the Human Gate, which is wrong — that\'s where the work *actually* gets dangerous (deploying to live systems).'
+  },
+  { id:'docs', num:'10', label:'Audit pack', short:'Audit pack',
+    what:'Generate the documentation artefacts: change record, regulatory filing if required, auditor pack, SOC1 control evidence, client communication. Most are LLM tasks with rule-based templates.',
+    why:'Auditor and regulator transparency is a USP, not a side effect. The audit pack generates from the same artefacts the change was built from — not reconstructed afterwards.',
+    delta:'Promoted from implicit side effect to first-class stage. This is the transparency moat made operational.'
+  },
+  { id:'library', num:'11', label:'Case library + bill', short:'Library + bill',
+    what:'Record the fulfilled change as a precedent in the case library with full provenance. Calculate the token bill — compute, verification time, reviewer time, deployment touches. Issue the invoice.',
+    why:'Without this, the case library doesn\'t compound and token pricing has nothing to bill from. The flywheel needs a spindle.',
+    delta:'New stage. The original architecture treated this as housekeeping — but this is where the moat actually accretes and where the commercial USP lands.'
+  }
+];
+
+const TOOLS = [
+  { id:'rag', label:'Library RAG' },
+  { id:'llm', label:'LLM draft' },
+  { id:'dual', label:'Dual builder' },
+  { id:'ontology', label:'Rules ontology' },
+  { id:'proof', label:'Maths proof' },
+  { id:'invariant', label:'Invariant tests' },
+  { id:'reverse', label:'Reverse check' },
+  { id:'stats', label:'Outlier stats' },
+  { id:'audit', label:'Audit-pack gen' },
+  { id:'meter', label:'Token meter' }
+];
+
+/* Per-stage / per-case narrative.
+   Each case provides: title, ref, summary, tag, tokenProfile, libraryReuse, billing,
+   and stages: { stageId: { body, tools[], skip? } } */
+
+const CASES = [
+  {
+    id:'launch', ref:'Case 1', tag:'Lifecycle',
+    title:'New umbrella + Article 8 UCITS sub-funds',
+    summary:'ICAV umbrella set up; suite of Article 8 UCITS sub-funds onboarded.',
+    tokenProfile:[3,4,18,12,16,14,8,4,12,15,4],
+    reuse:62, bill:'€48k',
+    stages: {
+      intake:{ body:'Client sends prospectus drafts, target launch date, ManCo, depositary, auditor, distribution markets. Platform parses into structured request: ICAV name, sub-fund names, share classes, base currencies, dealing cycle, hedge policy, fee structure, SFDR classification, target launch date.', tools:['rag','meter'] },
+      scope:{ body:'Search case library for similar Article 8 UCITS launches on this ManCo. Three close precedents found. Current launch is ~62% delta from a known template — meaningful saving over a from-scratch build.', tools:['rag'] },
+      draft:{ body:'Generate prospectus rule extraction (machine-readable), TA configuration, accounting configuration, CBI authorisation pack, board approval document, internal launch project plan. Multi-artefact output.', tools:['llm','ontology'] },
+      cross:{ body:'Generate the prospectus rule extraction twice independently. Two minor discrepancies on share class hedge accounting treatment flagged for review. The single highest-leverage check in this case — prospectus interpretation errors are an outsized source of downstream NAV errors.', tools:['dual'] },
+      rules:{ body:'Apply UCITS eligibility rules, 5/10/40 concentration constraints, SFDR Article 8 disclosure requirements, CBI ICAV rules, ManCo passporting. Mostly rule lookups against the Fund Rules Ontology — no Z3 needed.', tools:['ontology'] },
+      verify:{ body:'Test prospectus rules against synthetic portfolios. Reverse-test TA configuration against sample subscriptions and redemptions. Mathematical proof check applied to share class hedge accounting consistency only — that one invariant earns its keep.', tools:['invariant','reverse','proof'] },
+      outlier:{ body:'Compare configuration to similar sub-funds. One unusually long dealing cycle (T+5) flagged — confirmed intentional by ManCo, recorded with rationale.', tools:['stats'] },
+      review:{ body:'Fund accountant + Head of Fund Launch + ManCo signoff. Audit pack presents: precedents used, verifications run, two prospectus discrepancies resolved, the dealing-cycle rationale.', tools:[] },
+      deploy:{ body:'Push to TA system, accounting system, NAV calc engine, regulatory reporting feeds, board reporting templates. Phased rollout with parallel running for two NAV cycles before formal cut-over.', tools:[] },
+      docs:{ body:'Launch dossier, auditor reliance letter, SOC1 control evidence, CBI submission pack — all generated from the same source artefacts. Transparency by construction.', tools:['audit'] },
+      library:{ body:'Case recorded as precedent. Token bill computed across all stages. Strongest case-library compounding in the set — the next similar launch on this ManCo will run at ~30% of this cost.', tools:['meter'] }
+    }
+  },
+  {
+    id:'perfee', ref:'Case 2', tag:'Calculation',
+    title:'Performance fee — HWM, dynamic hurdle, crystallisation',
+    summary:'Complex performance fee mechanism with high water mark, dynamic hurdle rate, crystallisation periods.',
+    tokenProfile:[2,3,16,22,12,28,10,5,8,10,3],
+    reuse:48, bill:'€34k',
+    stages: {
+      intake:{ body:'Asset manager sends performance fee specification: HWM methodology, hurdle definition (tied to a benchmark index), crystallisation frequency, equalisation methodology (series accounting vs equalisation share method), share class scope, effective date.', tools:['rag','meter'] },
+      scope:{ body:'HWM-with-hurdle is well-precedented. The dynamic hurdle and crystallisation-period interaction is where novelty sits. ~48% reuse — calculation primitives lift cleanly from prior cases, hurdle and crystallisation logic needs fresh build.', tools:['rag'] },
+      draft:{ body:'Generate calculation code: daily HWM tracking per share class, hurdle rate accrual, performance fee accrual, crystallisation event handling, fee impact on NAV. Plus disclosure language, board reporting template, investor statement template.', tools:['llm','ontology'] },
+      cross:{ body:'Generate the performance fee calculation twice independently. Compare across rising NAV, falling NAV, NAV crossing HWM, NAV crossing hurdle, redemption mid-crystallisation. Performance fee bugs are extremely expensive — this is exactly where dual-builder earns its keep.', tools:['dual'] },
+      rules:{ body:'Apply prospectus rules (legal source of truth for performance fee). Check ESMA performance fee guidelines compliance. Verify crystallisation aligns with the dealing cycle.', tools:['ontology'] },
+      verify:{ body:'Mathematical proof tool applied to the equalisation invariant — no investor should pay more performance fee than their share of the high-water-mark gain. Hard to test exhaustively, easy to express formally. Property-based testing across synthetic NAV paths complements the proof.', tools:['proof','invariant','reverse'] },
+      outlier:{ body:'Compare fee accrual to historical patterns. No outliers; the fee profile is consistent with the prospectus.', tools:['stats'] },
+      review:{ body:'Senior fund accountant + product controller. Audit pack includes the equalisation invariant proof — a strong artefact for the auditor relationship.', tools:[] },
+      deploy:{ body:'Push to NAV engine, fee accrual scheduler, crystallisation event handler, investor statement generator. Effective date set; pre-go-live test cycle scheduled.', tools:[] },
+      docs:{ body:'Methodology document, auditor pack including equalisation proof, prospectus disclosure language. The proof is a marketable transparency artefact.', tools:['audit'] },
+      library:{ body:'Recorded as a precedent. High-skill, high-margin work currently priced opaquely industry-wide. Token-based pricing makes the value visible.', tools:['meter'] }
+    }
+  },
+  {
+    id:'naverror', ref:'Case 3', tag:'Workflow',
+    title:'NAV error remediation',
+    summary:'Historical NAV correction — recalculation, TA reprocessing, investor compensation.',
+    tokenProfile:[5,8,22,18,14,20,12,10,16,22,5],
+    reuse:55, bill:'€72k',
+    stages: {
+      intake:{ body:'Error identified: NAV three weeks ago wrong by N basis points. Root cause being investigated. Need to remediate end-to-end: corrected NAVs, TA reprocessing, investor compensation, regulator notification, board notification, client communication.', tools:['rag','meter'] },
+      scope:{ body:'Search case library for similar remediations. Prior NAV error precedents are extraordinarily valuable — type, size, period, remediation approach, regulator interaction, cost. ~55% reuse from the closest match.', tools:['rag'] },
+      draft:{ body:'Generate corrected NAVs per affected day, TA transaction reprocessing instructions, investor compensation per affected investor, regulator notification draft, board notification, client communication, auditor reliance update, SOC1 control breakdown.', tools:['llm','ontology'] },
+      cross:{ body:'Generate the corrected NAVs twice independently. A botched remediation is far worse than the original error — this is the highest-stakes dual-builder application in the set.', tools:['dual'] },
+      rules:{ body:'Apply CBI NAV error materiality thresholds, ESMA correction guidelines, prospectus rules on investor compensation.', tools:['ontology'] },
+      verify:{ body:'Reverse check is essential: given the compensation amounts, can we reproduce the affected NAV trajectories? Mathematical proof on the compensation invariant — no affected investor should be undercompensated, and the compensation should sum correctly across all investors.', tools:['proof','invariant','reverse'] },
+      outlier:{ body:'Flag investors whose compensation is unusual relative to the pattern. Two investors who subscribed and redeemed within the affected period flagged for additional review.', tools:['stats'] },
+      review:{ body:'Fund accountant + senior controller + Head of Fund Services + Risk + Compliance + ManCo + asset manager + auditor. The platform\'s job is to make this committee tractable — the audit pack is the meeting agenda.', tools:[] },
+      deploy:{ body:'Multi-system deployment with rollback: TA reprocessing, NAV restatement, regulator filing, investor communications, board pack regeneration, accounting restatement.', tools:[] },
+      docs:{ body:'The entire remediation dossier generated automatically from the artefacts — auditor pack, regulator filing, board pack, investor communications, all from the same record. This is the transparency USP made real.', tools:['audit'] },
+      library:{ body:'Recorded as a precedent. NAV remediations are heterogeneous and currently priced badly — usually time-and-materials with significant write-off risk. Token-based pricing transforms this commercially.', tools:['meter'] }
+    }
+  },
+  {
+    id:'tplus1', ref:'Case 4', tag:'Workflow',
+    title:'T+1 settlement transition',
+    summary:'US T+1 — trade processing, cash forecasting, reconciliation, custody messaging.',
+    tokenProfile:[3,4,12,4,8,2,6,4,10,8,3],
+    reuse:71, bill:'€18k',
+    stages: {
+      intake:{ body:'US market shifts to T+1. All US-trading sub-funds need: trade processing windows compressed, cash forecasting accelerated, reconciliation windows shortened, custody messaging adjusted, FX timing reviewed, securities lending recall windows reviewed.', tools:['rag','meter'] },
+      scope:{ body:'2024 US T+1 migration is the close precedent. ~71% reuse — the playbook lifts cleanly across funds with minor delta per fund.', tools:['rag'] },
+      draft:{ body:'Generate per affected fund: revised trade processing schedule, cash forecasting model, reconciliation windows, FX execution windows, custody messaging configuration, securities lending recall procedures, fail-rate monitoring thresholds, SLA amendments.', tools:['llm'] },
+      cross:{ body:'Most artefacts here are configuration and documentation rather than calculation. Cross-check is mostly schema validation and consistency checking, not independent code generation.', tools:[] },
+      rules:{ body:'Apply CSDR penalty regime, applicable T+1 regulatory guidance, prospectus settlement language, SLA constraints.', tools:['ontology'] },
+      verify:{ body:'Skipped. There is no calculation invariant to verify here. This is the architecture being honest about where the verification stack adds value — sometimes it doesn\'t, and that\'s fine.', tools:[], skip:true },
+      outlier:{ body:'Compare proposed configuration to peer funds. No outliers.', tools:['stats'] },
+      review:{ body:'Operations + Fund Services + asset manager + custodian.', tools:[] },
+      deploy:{ body:'Multi-system configuration push.', tools:[] },
+      docs:{ body:'SLA amendments, operations runbook updates, asset manager communication. Templated.', tools:['audit'] },
+      library:{ body:'Recorded. Next settlement-cycle transition (UK T+1, 2027) reuses this case directly.', tools:['meter'] }
+    }
+  },
+  {
+    id:'sfdr', ref:'Case 5', tag:'Regulatory',
+    title:'SFDR Level 2 / PAI integration',
+    summary:'Principal Adverse Impact data feeds, Annex IV-style reporting for Article 8/9 funds.',
+    tokenProfile:[3,5,16,10,12,8,6,4,10,12,4],
+    reuse:78, bill:'€22k',
+    stages: {
+      intake:{ body:'ManCo confirms Article 8 / Article 9 fund classification. Need PAI data feed for the 14 mandatory indicators, periodic reporting, entity-level + product-level disclosure alignment.', tools:['rag','meter'] },
+      scope:{ body:'High-precedent territory — SFDR PAI integrations have been done many times. ~78% reuse. The case library compounds aggressively here; this is the kind of regulatory work that should become near-zero-marginal-cost over time.', tools:['rag'] },
+      draft:{ body:'Generate PAI data feed specification, mapping table from vendor PAI feed to fund holdings, calculation code for the 14 indicators, Annex IV-style report template, entity-level disclosure update, prospectus disclosure update, website disclosure update.', tools:['llm','ontology'] },
+      cross:{ body:'Generate the PAI calculation code twice. Mappings are where errors happen — cross-check the mapping logic.', tools:['dual'] },
+      rules:{ body:'Apply SFDR Level 2 RTS rules — the 14 mandatory indicators, the calculation methodologies, the disclosure requirements. Pure rule lookup against the Fund Rules Ontology, no Z3 needed.', tools:['ontology'] },
+      verify:{ body:'Test that PAI calculations sum correctly across the portfolio. Reverse-test: given a PAI indicator value, identify the contributing securities.', tools:['invariant','reverse'] },
+      outlier:{ body:'Flag PAI values that are unusual relative to peer funds. One indicator (energy consumption intensity) flagged as significantly higher than peers — confirmed by sector exposure, recorded with rationale.', tools:['stats'] },
+      review:{ body:'ESG specialist + fund accountant + ManCo.', tools:[] },
+      deploy:{ body:'Push to data ingest, calculation engine, regulatory reporting feed, prospectus disclosure update.', tools:[] },
+      docs:{ body:'SFDR disclosure dossier, auditor pack, methodology document. Templated against prior precedents.', tools:['audit'] },
+      library:{ body:'Recorded. SFDR integrations are highly repeatable across funds — the library compounds aggressively. This is the regulatory thesis at its strongest.', tools:['meter'] }
+    }
+  },
+  {
+    id:'aladdin', ref:'Case 6', tag:'Integration',
+    title:'OMS onboarding — Aladdin / Charles River',
+    summary:'Bidirectional EOD holdings, cash, trade, corporate action feeds with reconciliation.',
+    tokenProfile:[2,4,14,6,8,2,5,4,12,8,3],
+    reuse:65, bill:'€26k',
+    stages: {
+      intake:{ body:'Asset manager has selected Aladdin (or Charles River). Set up bidirectional EOD holdings feed, cash feed, trade feed, corporate action feed, with reconciliation.', tools:['rag','meter'] },
+      scope:{ body:'Aladdin and Charles River are common — many precedents in the case library. ~65% reuse.', tools:['rag'] },
+      draft:{ body:'Generate feed specifications, mapping tables (asset identifiers, account identifiers, custodian codes), reconciliation rules, exception handling workflow, SLA documentation.', tools:['llm'] },
+      cross:{ body:'Cross-check the mapping logic, not independent code generation. Mapping errors are the dominant failure mode in OMS integration.', tools:['dual'] },
+      rules:{ body:'Apply data quality rules, identifier standards (ISIN, CUSIP, SEDOL, LEI), regulatory data requirements.', tools:['ontology'] },
+      verify:{ body:'Replace calculation invariant tests with feed reconciliation tests across multiple sample days.', tools:['invariant'] },
+      outlier:{ body:'Flag mappings that look unusual relative to other Aladdin integrations.', tools:['stats'] },
+      review:{ body:'Operations + middle-office + asset manager\'s middle-office.', tools:[] },
+      deploy:{ body:'Multi-system configuration. Phased rollout with parallel running before cut-over. Architectural note: the platform delegates the underlying integration work to specialised middleware tools — it orchestrates rather than replaces them.', tools:[] },
+      docs:{ body:'Integration dossier, SLA, runbook.', tools:['audit'] },
+      library:{ body:'Recorded. Each subsequent Aladdin integration on this admin is dramatically cheaper.', tools:['meter'] }
+    }
+  },
+  {
+    id:'liquidity', ref:'Case 7', tag:'Analytics',
+    title:'Liquidity risk dashboard',
+    summary:'Daily interactive dashboard mapping portfolio against ESMA liquidity buckets.',
+    tokenProfile:[3,4,12,5,10,5,5,3,8,8,3],
+    reuse:58, bill:'€19k',
+    stages: {
+      intake:{ body:'Client wants a customised daily interactive liquidity risk dashboard mapping portfolio assets against ESMA liquidity buckets. Specific bucket definitions, specific stress test integration.', tools:['rag','meter'] },
+      scope:{ body:'Bucket definitions and stress test integration vary; dashboard structure is largely repeatable. ~58% reuse.', tools:['rag'] },
+      draft:{ body:'Generate bucket classification logic, stress test integration, dashboard configuration (handed off to a BI tool — not built natively), data refresh schedule, SLA for delivery.', tools:['llm','ontology'] },
+      cross:{ body:'Generate bucket classification logic twice. Dashboard layout and refresh logic are configuration — no code cross-check needed.', tools:['dual'] },
+      rules:{ body:'Apply ESMA liquidity bucket definitions, prospectus liquidity language, AIFMD/UCITS liquidity stress testing requirements.', tools:['ontology'] },
+      verify:{ body:'Test bucket classification across portfolio compositions. Reverse-test that bucket aggregations sum to total portfolio.', tools:['invariant','reverse'] },
+      outlier:{ body:'Flag bucket classifications that look unusual relative to peer funds.', tools:['stats'] },
+      review:{ body:'Risk + Fund Services + asset manager.', tools:[] },
+      deploy:{ body:'Push the dashboard to the client portal, set up daily data refresh, set up SLA monitoring. Architectural note: the platform owns the logic and the data; the dashboard layer is delegated to a BI tool (Tableau / Power BI / Looker).', tools:[] },
+      docs:{ body:'Methodology document, dashboard documentation, SLA.', tools:['audit'] },
+      library:{ body:'Recorded.', tools:['meter'] }
+    }
+  },
+  {
+    id:'clo', ref:'Case 8', tag:'New asset class',
+    title:'CLO equity tranche onboarding',
+    summary:'Cash flow projection, valuation methodology, reconciliation, regulatory classification.',
+    tokenProfile:[3,5,18,16,12,24,9,5,10,12,4],
+    reuse:42, bill:'€38k',
+    stages: {
+      intake:{ body:'Fund adding CLO equity tranche exposure. Onboard the asset class: cash flow projection model, valuation methodology, reconciliation, regulatory classification, accounting treatment, risk reporting integration.', tools:['rag','meter'] },
+      scope:{ body:'CLO debt tranches are well-precedented; CLO equity is less so. ~42% reuse — equity-specific complexity needs fresh build.', tools:['rag'] },
+      draft:{ body:'Generate cash flow projection model (waterfall, OC tests, IC tests, equity distributions), valuation methodology, reconciliation rules against trustee reports, regulatory classification (Level 3), accounting treatment, risk reporting integration.', tools:['llm','ontology'] },
+      cross:{ body:'Cash flow projection and valuation model are both calculation-heavy. Independent dual generation is genuinely valuable here — these models have many edge cases.', tools:['dual'] },
+      rules:{ body:'Apply Level 3 fair value rules, applicable accounting standards, prospectus eligibility for the asset class.', tools:['ontology'] },
+      verify:{ body:'Mathematical proof tool applied to the waterfall calculation invariants — equity distributions should equal residual cash flow after debt tranche payments. Test the waterfall across many synthetic scenarios. Reverse-test the equity distribution.', tools:['proof','invariant','reverse'] },
+      outlier:{ body:'Flag valuations that are unusual relative to peer CLO equity tranches.', tools:['stats'] },
+      review:{ body:'Senior fund accountant + product controller + valuation specialist + auditor.', tools:[] },
+      deploy:{ body:'Push to accounting engine, NAV calc, risk reporting, regulatory reporting.', tools:[] },
+      docs:{ body:'Methodology document, Level 3 valuation memo, auditor pack.', tools:['audit'] },
+      library:{ body:'Recorded. CLO equity is high-skill, high-margin, currently priced badly. The case library extends to a new asset class — meaningful expansion of the moat.', tools:['meter'] }
+    }
+  }
+];
+
+const ANTI_CASES = [
+  {
+    id:'stale', ref:'Anti-case A', tag:'Real-time judgement',
+    title:'Stale pricing override during market suspension',
+    summary:'Asset manager invokes a stale-price override during a market halt.',
+    rejectReason:'This is a real-time judgement workflow with an audit trail, not a calculation problem. The override is by definition an exception to the calculation — there is no calculation correctness to verify. The verification stack adds little.',
+    routeTo:'Workflow tool with an audit trail. The platform records the override and applies a rules check, but the substantive work is human judgement and operational coordination.',
+    bill:'€0 — orchestrated, not fulfilled by the platform'
+  },
+  {
+    id:'sanctions', ref:'Anti-case B', tag:'Specialised tool exists',
+    title:'Sanctions screening automation (real-time OFAC / EU API)',
+    summary:'Upgrade AML/KYC screening to incorporate real-time sanctions list checks.',
+    rejectReason:'Mature dedicated platforms exist (ComplyAdvantage, Refinitiv WorldCheck, Dow Jones Risk & Compliance). Building this inside the platform replicates a commodity capability and dilutes focus.',
+    routeTo:'Best-of-breed sanctions screening provider. The platform integrates and orchestrates — it does not replace specialised compliance tooling.',
+    bill:'€0 — partner integration, not in scope'
+  },
+  {
+    id:'portal', ref:'Anti-case C', tag:'UI / UX out of scope',
+    title:'Interactive investor portal customisation',
+    summary:'Customise the LP portal for institutional clients to query historical capital account statements.',
+    rejectReason:'This is UI/UX work. The platform produces verified data and audit packs; it does not own the presentation layer. Building bespoke client portals is a different business with different economics.',
+    routeTo:'Client portal product team or external front-end vendor. The platform exposes APIs the portal consumes.',
+    bill:'€0 — UI work, out of architectural scope'
+  }
+];
+
+/* ===========================================================
+   RENDER STATE
+   =========================================================== */
+
+let activeCase = null;
+let isPlaying = false;
+let currentStageIdx = -1;
+let animTimer = null;
+let libraryCount = 0;
+let cumulativeBill = 0;
+
+/* ===========================================================
+   BUILD CASE CARDS
+   =========================================================== */
+
+function buildCaseCards() {
+  const grid = document.getElementById('caseGrid');
+  CASES.forEach((c, idx) => {
+    const card = document.createElement('button');
+    card.className = 'case-card';
+    card.dataset.caseId = c.id;
+    card.innerHTML = `
+      <div class="case-num">${c.ref} · ${idx+1} of 8</div>
+      <div class="case-title">${c.title}</div>
+      <div class="case-tag">${c.tag}</div>
+    `;
+    card.addEventListener('click', () => selectCase(c));
+    grid.appendChild(card);
+  });
+
+  const antiGrid = document.getElementById('antiCaseGrid');
+  ANTI_CASES.forEach((c) => {
+    const card = document.createElement('button');
+    card.className = 'case-card anti';
+    card.dataset.caseId = c.id;
+    card.innerHTML = `
+      <div class="case-num">${c.ref}</div>
+      <div class="case-title">${c.title}</div>
+      <div class="case-tag">↗ ${c.tag}</div>
+    `;
+    card.addEventListener('click', () => selectAntiCase(c));
+    antiGrid.appendChild(card);
+  });
+}
+
+/* ===========================================================
+   FLOW SVG
+   =========================================================== */
+
+const SVG_W = 900, SVG_H = 460;
+// 11 stages laid in two rows of horizontal flow with verification orbital
+// Top row: stages 1-6 (intake -> verify)
+// Bottom row: stages 7-11 (outlier -> library)
+const STAGE_POSITIONS = [
+  { x: 60,  y: 90  }, // intake
+  { x: 195, y: 90  }, // scope
+  { x: 330, y: 90  }, // draft
+  { x: 465, y: 90  }, // cross
+  { x: 600, y: 90  }, // rules
+  { x: 740, y: 90  }, // verify
+  { x: 740, y: 320 }, // outlier
+  { x: 600, y: 320 }, // review
+  { x: 465, y: 320 }, // deploy
+  { x: 330, y: 320 }, // docs
+  { x: 195, y: 320 }  // library
+];
+
+const TOOL_POSITIONS = [
+  { x: 90,  y: 220, id:'rag' },
+  { x: 200, y: 200, id:'llm' },
+  { x: 320, y: 220, id:'dual' },
+  { x: 440, y: 200, id:'ontology' },
+  { x: 560, y: 220, id:'proof' },
+  { x: 680, y: 200, id:'invariant' },
+  { x: 800, y: 220, id:'reverse' },
+  { x: 800, y: 250, id:'stats' },
+  { x: 560, y: 250, id:'audit' },
+  { x: 200, y: 250, id:'meter' }
+];
+
+function buildFlowSvg() {
+  const svg = document.getElementById('stageSvg');
+  // Wipe
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // Defs
+  const defs = svgEl('defs');
+  // Arrowhead
+  const marker = svgEl('marker', { id:'arrow', viewBox:'0 0 10 10', refX:'8', refY:'5',
+    markerWidth:'6', markerHeight:'6', orient:'auto-start-reverse' });
+  const arrowPath = svgEl('path', { d:'M0,0 L10,5 L0,10 Z', fill:'#8a8378' });
+  marker.appendChild(arrowPath);
+  defs.appendChild(marker);
+
+  const markerActive = svgEl('marker', { id:'arrow-active', viewBox:'0 0 10 10', refX:'8', refY:'5',
+    markerWidth:'6', markerHeight:'6', orient:'auto-start-reverse' });
+  const arrowPathA = svgEl('path', { d:'M0,0 L10,5 L0,10 Z', fill:'#7a2418' });
+  markerActive.appendChild(arrowPathA);
+  defs.appendChild(markerActive);
+
+  svg.appendChild(defs);
+
+  // Background "central column" label for the orbital tools
+  const orbitalLabel = svgEl('text', {
+    x: SVG_W/2, y: 240, 'text-anchor':'middle',
+    'font-family':"'JetBrains Mono', monospace",
+    'font-size':'9', 'letter-spacing':'2', fill:'#8a8378',
+    'font-weight':'500'
+  });
+  orbitalLabel.textContent = 'VERIFICATION TOOLS — ORBITAL';
+  svg.appendChild(orbitalLabel);
+
+  // Pipeline path — connecting lines
+  const pathD = buildPipelinePath();
+  const pipePath = svgEl('path', {
+    id:'pipePath', d: pathD,
+    fill:'none', stroke:'#d8d2c4', 'stroke-width':'1.5',
+    'stroke-dasharray':'3,3'
+  });
+  svg.appendChild(pipePath);
+
+  // Stages
+  STAGES.forEach((stage, i) => {
+    const pos = STAGE_POSITIONS[i];
+    const g = svgEl('g', { class:'stage-node', 'data-stage-id': stage.id, transform:`translate(${pos.x},${pos.y})` });
+    g.style.cursor = 'pointer';
+
+    // Background pill
+    const rect = svgEl('rect', {
+      x: -55, y: -28, width: 110, height: 56, rx: 6, ry: 6,
+      fill: '#ffffff', stroke:'#d8d2c4', 'stroke-width':'1',
+      class:'stage-rect'
+    });
+    g.appendChild(rect);
+
+    // Stage number
+    const num = svgEl('text', {
+      x: -47, y: -12,
+      'font-family':"'JetBrains Mono', monospace",
+      'font-size':'9', fill:'#8a8378', 'letter-spacing':'1'
+    });
+    num.textContent = stage.num;
+    g.appendChild(num);
+
+    // Info icon
+    const info = svgEl('text', {
+      x: 47, y: -12, 'text-anchor':'end',
+      'font-family':"'JetBrains Mono', monospace",
+      'font-size':'11', fill:'#8a8378',
+      class:'stage-info', cursor:'pointer'
+    });
+    info.textContent = '?';
+    info.addEventListener('click', (e) => { e.stopPropagation(); openStageModal(stage); });
+    g.appendChild(info);
+
+    // Stage label
+    const label = svgEl('text', {
+      x: 0, y: 6, 'text-anchor':'middle',
+      'font-family':"'Fraunces', serif",
+      'font-size':'13', fill:'#1a1714', 'font-weight':'600'
+    });
+    label.textContent = stage.short;
+    g.appendChild(label);
+
+    // Hover open modal
+    g.addEventListener('click', () => openStageModal(stage));
+
+    svg.appendChild(g);
+  });
+
+  // Token glyph (initially hidden)
+  const token = svgEl('g', { id:'token', opacity: 0 });
+  const tokenCircle = svgEl('circle', {
+    cx: 0, cy: 0, r: 14, fill:'#7a2418', stroke:'#faf7f2', 'stroke-width':'3'
+  });
+  const tokenText = svgEl('text', {
+    x: 0, y: 4, 'text-anchor':'middle',
+    'font-family':"'JetBrains Mono', monospace",
+    'font-size':'10', fill:'#faf7f2', 'font-weight':'600'
+  });
+  tokenText.textContent = '◆';
+  token.appendChild(tokenCircle);
+  token.appendChild(tokenText);
+  svg.appendChild(token);
+
+  // Verification tools — orbital cluster
+  TOOL_POSITIONS.forEach(t => {
+    const tool = TOOLS.find(tl => tl.id === t.id);
+    const g = svgEl('g', { class:'tool-node', 'data-tool-id': t.id, transform:`translate(${t.x},${t.y})` });
+
+    const rect = svgEl('rect', {
+      x: -38, y: -9, width: 76, height: 18, rx: 9, ry: 9,
+      fill: '#f1ede5', stroke:'#d8d2c4', 'stroke-width':'1',
+      class:'tool-rect'
+    });
+    g.appendChild(rect);
+
+    const label = svgEl('text', {
+      x: 0, y: 3, 'text-anchor':'middle',
+      'font-family':"'JetBrains Mono', monospace",
+      'font-size':'9', fill:'#4a443c', 'letter-spacing':'0.5',
+      class:'tool-label'
+    });
+    label.textContent = tool.label.toUpperCase();
+    g.appendChild(label);
+
+    svg.appendChild(g);
+  });
+}
+
+function buildPipelinePath() {
+  let d = `M ${STAGE_POSITIONS[0].x} ${STAGE_POSITIONS[0].y}`;
+  // Stages 1-6 horizontal
+  for (let i = 1; i < 6; i++) {
+    d += ` L ${STAGE_POSITIONS[i].x} ${STAGE_POSITIONS[i].y}`;
+  }
+  // Curve down to row 2
+  d += ` L ${STAGE_POSITIONS[6].x} ${STAGE_POSITIONS[6].y}`;
+  // Stages 7-11 horizontal (right to left)
+  for (let i = 7; i < 11; i++) {
+    d += ` L ${STAGE_POSITIONS[i].x} ${STAGE_POSITIONS[i].y}`;
+  }
+  return d;
+}
+
+function svgEl(name, attrs = {}) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', name);
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'class') el.setAttribute('class', v);
+    else el.setAttribute(k, v);
+  });
+  return el;
+}
+
+/* ===========================================================
+   CASE SELECTION
+   =========================================================== */
+
+function selectCase(c) {
+  resetAnimation();
+  activeCase = c;
+
+  // Card highlights
+  document.querySelectorAll('.case-card').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-case-id="${c.id}"]`).classList.add('active');
+
+  // Title + meta
+  document.getElementById('flowTitle').textContent = c.title;
+  document.getElementById('flowMeta').textContent = `${c.ref} · ${c.tag} · ready to run`;
+  document.getElementById('controlStatus').textContent = `Loaded: ${c.title}`;
+  document.getElementById('btnPlay').disabled = false;
+
+  // Reset stage visuals to default
+  resetStageVisuals();
+
+  // Reset stats
+  document.getElementById('statTokens').innerHTML = `0<span class="unit">k</span>`;
+  document.getElementById('statTokensDetail').textContent = `bill estimate: ${c.bill}`;
+  document.getElementById('statReuse').innerHTML = `${c.reuse}<span class="unit">%</span>`;
+  document.getElementById('statReuseDetail').textContent = 'precedent match strength';
+
+  // Narrative panel — reset to "ready" state
+  const panel = document.getElementById('narrativePanel');
+  panel.innerHTML = `
+    <div class="narr-stage-num">${c.ref} · ${c.tag}</div>
+    <div class="narr-stage-title">${c.title}</div>
+    <div class="narr-stage-arch">${c.summary}</div>
+    <div class="narr-stage-body">
+      Press <strong>▶ Run flow</strong> to watch the change request move through the eleven stages.
+      Side commentary will update at each stage. Verification tools light up only when actually used —
+      proving the architecture's "tools as needed, not pipeline gates" principle.
+    </div>
+    <div class="narr-tools">
+      <div class="narr-tools-label">Token bill at completion</div>
+      <div class="narr-tool" style="font-size:13px; padding:6px 12px;">${c.bill}</div>
+    </div>
+  `;
+}
+
+function selectAntiCase(c) {
+  resetAnimation();
+  activeCase = null;
+
+  document.querySelectorAll('.case-card').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-case-id="${c.id}"]`).classList.add('active');
+
+  document.getElementById('flowTitle').textContent = `${c.title} — refused at intake`;
+  document.getElementById('flowMeta').textContent = `${c.ref} · scope discipline in action`;
+  document.getElementById('controlStatus').textContent = `Anti-case loaded — flow does not run`;
+  document.getElementById('btnPlay').disabled = true;
+
+  // Reset stage visuals; mark intake as "rejected"
+  resetStageVisuals();
+  const intakeNode = document.querySelector('[data-stage-id="intake"] .stage-rect');
+  if (intakeNode) {
+    intakeNode.setAttribute('fill', '#fdf3ec');
+    intakeNode.setAttribute('stroke', '#a85a1f');
+    intakeNode.setAttribute('stroke-width', '2');
+  }
+
+  // Stats
+  document.getElementById('statTokens').innerHTML = `—`;
+  document.getElementById('statTokensDetail').textContent = c.bill;
+  document.getElementById('statReuse').innerHTML = `—`;
+  document.getElementById('statReuseDetail').textContent = 'not in scope';
+
+  // Narrative panel
+  const panel = document.getElementById('narrativePanel');
+  panel.innerHTML = `
+    <div class="narr-stage-num" style="color:#a85a1f;">${c.ref} · ${c.tag}</div>
+    <div class="narr-stage-title">${c.title}</div>
+    <div class="narr-stage-arch">${c.summary}</div>
+    <div class="narr-stage-body">
+      <p style="margin-bottom:12px;"><strong>Why this is refused:</strong> ${c.rejectReason}</p>
+      <p style="margin-bottom:12px;"><strong>What happens instead:</strong> ${c.routeTo}</p>
+      <p style="font-style:italic; color:var(--ink-mute);">Saying "no" to the wrong work is how the architecture stays defensible. Sprawl is the failure mode.</p>
+    </div>
+    <div class="narr-tools">
+      <div class="narr-tools-label">Outcome</div>
+      <div class="narr-tool" style="font-size:11px;">${c.bill}</div>
+    </div>
+  `;
+}
+
+/* ===========================================================
+   ANIMATION
+   =========================================================== */
+
+function play() {
+  if (!activeCase || isPlaying) return;
+  isPlaying = true;
+  currentStageIdx = -1;
+  document.getElementById('btnPlay').disabled = true;
+  document.getElementById('controlStatus').textContent = 'Running flow…';
+
+  resetStageVisuals();
+  document.getElementById('statTokens').innerHTML = `0<span class="unit">k</span>`;
+
+  const speed = parseInt(document.getElementById('speedSelect').value);
+  advance(speed);
+}
+
+function advance(speed) {
+  currentStageIdx++;
+  if (currentStageIdx >= STAGES.length) {
+    finish();
+    return;
+  }
+
+  const stage = STAGES[currentStageIdx];
+  const stageData = activeCase.stages[stage.id];
+
+  // Move token to stage position
+  moveTokenTo(STAGE_POSITIONS[currentStageIdx], speed * 0.4);
+
+  // Highlight stage
+  highlightStage(stage.id, stageData.skip);
+
+  // Activate tools for this stage
+  setTimeout(() => activateTools(stageData.tools || []), speed * 0.4);
+
+  // Update narrative
+  setTimeout(() => updateNarrative(stage, stageData), speed * 0.5);
+
+  // Update token meter
+  setTimeout(() => addTokens(activeCase.tokenProfile[currentStageIdx]), speed * 0.5);
+
+  // Schedule next
+  animTimer = setTimeout(() => advance(speed), speed);
+}
+
+function moveTokenTo(pos, dur) {
+  const token = document.getElementById('token');
+  token.setAttribute('opacity', '1');
+  // Get current position
+  const transform = token.getAttribute('transform') || 'translate(60,90)';
+  const match = transform.match(/translate\(([\d.-]+),([\d.-]+)\)/);
+  const fromX = match ? parseFloat(match[1]) : 60;
+  const fromY = match ? parseFloat(match[2]) : 90;
+
+  const start = performance.now();
+  const animate = (t) => {
+    const elapsed = t - start;
+    const p = Math.min(elapsed / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const x = fromX + (pos.x - fromX) * eased;
+    const y = fromY + (pos.y - fromY) * eased;
+    token.setAttribute('transform', `translate(${x},${y})`);
+    if (p < 1) requestAnimationFrame(animate);
+  };
+  requestAnimationFrame(animate);
+}
+
+function highlightStage(stageId, isSkip) {
+  document.querySelectorAll('.stage-node').forEach(g => {
+    const rect = g.querySelector('.stage-rect');
+    if (g.dataset.stageId === stageId) {
+      if (isSkip) {
+        rect.setAttribute('fill', '#f1ede5');
+        rect.setAttribute('stroke', '#8a8378');
+        rect.setAttribute('stroke-width', '1');
+        rect.setAttribute('stroke-dasharray', '4,2');
+      } else {
+        rect.setAttribute('fill', '#1a1714');
+        rect.setAttribute('stroke', '#1a1714');
+        rect.setAttribute('stroke-width', '2');
+        // text white
+        g.querySelectorAll('text').forEach(t => {
+          if (!t.classList.contains('stage-info')) t.setAttribute('fill', '#faf7f2');
+        });
+      }
+      // Add a pulse animation
+      g.style.animation = 'pulse-stage 0.6s ease-in-out';
+      setTimeout(() => { g.style.animation = ''; }, 600);
+    }
+  });
+}
+
+function activateTools(toolIds) {
+  document.querySelectorAll('.tool-node').forEach(g => {
+    const rect = g.querySelector('.tool-rect');
+    const label = g.querySelector('.tool-label');
+    if (toolIds.includes(g.dataset.toolId)) {
+      rect.setAttribute('fill', '#1f5d5e');
+      rect.setAttribute('stroke', '#1f5d5e');
+      label.setAttribute('fill', '#faf7f2');
+      g.style.animation = 'orbit-glow 1.2s ease-in-out';
+    } else {
+      rect.setAttribute('fill', '#f1ede5');
+      rect.setAttribute('stroke', '#d8d2c4');
+      label.setAttribute('fill', '#4a443c');
+      g.style.animation = '';
+    }
+  });
+}
+
+function updateNarrative(stage, stageData) {
+  const panel = document.getElementById('narrativePanel');
+  const toolNames = (stageData.tools || []).map(tid => TOOLS.find(t => t.id === tid)?.label || tid);
+  const allTools = TOOLS.map(t => {
+    const isActive = (stageData.tools || []).includes(t.id);
+    return `<span class="narr-tool${isActive ? ' active' : ''}">${t.label}</span>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="narr-stage-num">Stage ${stage.num} · ${activeCase.ref}</div>
+    <div class="narr-stage-title">${stage.label}</div>
+    <div class="narr-stage-arch">${stage.what}</div>
+    <div class="narr-stage-body">${stageData.body}${stageData.skip ? '<p style="margin-top:10px; font-style:italic; color:var(--warn);"><strong>Stage skipped for this case.</strong> The architecture being honest about where verification doesn\'t apply is a feature, not a gap.</p>' : ''}</div>
+    <div class="narr-tools">
+      <div class="narr-tools-label">${toolNames.length ? 'Tools used at this stage' : 'No tools active at this stage'}</div>
+      ${allTools}
+    </div>
+  `;
+}
+
+function addTokens(amount) {
+  const el = document.getElementById('statTokens');
+  const current = parseInt(el.dataset.value || '0');
+  const next = current + amount;
+  el.dataset.value = next;
+  el.innerHTML = `${next}<span class="unit">k</span>`;
+}
+
+function finish() {
+  isPlaying = false;
+  document.getElementById('btnPlay').disabled = false;
+  document.getElementById('controlStatus').textContent = `Complete — case added to library`;
+
+  // Increment library
+  libraryCount++;
+  document.getElementById('statLibrary').innerHTML = `${libraryCount}<span class="unit">precedents</span>`;
+
+  // Add to cumulative bill
+  const billNum = parseInt(activeCase.bill.replace(/[€k]/g, ''));
+  cumulativeBill += billNum;
+  document.getElementById('statBillings').innerHTML = `€${cumulativeBill}<span class="unit">k</span>`;
+
+  // Final narrative override — show summary
+  setTimeout(() => {
+    const panel = document.getElementById('narrativePanel');
+    panel.innerHTML = `
+      <div class="narr-stage-num" style="color:var(--green);">✓ Complete · ${activeCase.ref}</div>
+      <div class="narr-stage-title">Case fulfilled</div>
+      <div class="narr-stage-arch">${activeCase.title}</div>
+      <div class="narr-stage-body">
+        <p><strong>Eleven stages run.</strong> Verification tools applied where they earned their keep — not as universal gates.</p>
+        <p style="margin-top:10px;"><strong>Reuse from library:</strong> ${activeCase.reuse}% — the precedent match meaningfully reduced cost.</p>
+        <p style="margin-top:10px;"><strong>Token bill:</strong> ${activeCase.bill} — itemised by stage and tool. Visible to the client. Defensible to the auditor.</p>
+        <p style="margin-top:10px;"><strong>Library entry:</strong> recorded as a new precedent. The next similar request will reuse from this case.</p>
+        <p style="margin-top:14px; font-style:italic; color:var(--ink-mute);">Pick another case to see the architecture handle a different work type. Try an anti-case to see what the platform deliberately refuses.</p>
+      </div>
+    `;
+  }, 500);
+}
+
+function resetAnimation() {
+  if (animTimer) clearTimeout(animTimer);
+  isPlaying = false;
+  currentStageIdx = -1;
+  document.getElementById('statTokens').dataset.value = '0';
+  document.getElementById('token').setAttribute('opacity', '0');
+  resetStageVisuals();
+}
+
+function resetStageVisuals() {
+  document.querySelectorAll('.stage-node').forEach(g => {
+    const rect = g.querySelector('.stage-rect');
+    rect.setAttribute('fill', '#ffffff');
+    rect.setAttribute('stroke', '#d8d2c4');
+    rect.setAttribute('stroke-width', '1');
+    rect.removeAttribute('stroke-dasharray');
+    g.querySelectorAll('text').forEach(t => {
+      if (t.classList.contains('stage-info')) t.setAttribute('fill', '#8a8378');
+      else if (t.tagName === 'text' && t.getAttribute('font-size') === '9') t.setAttribute('fill', '#8a8378');
+      else t.setAttribute('fill', '#1a1714');
+    });
+  });
+  document.querySelectorAll('.tool-node').forEach(g => {
+    const rect = g.querySelector('.tool-rect');
+    const label = g.querySelector('.tool-label');
+    rect.setAttribute('fill', '#f1ede5');
+    rect.setAttribute('stroke', '#d8d2c4');
+    label.setAttribute('fill', '#4a443c');
+  });
+}
+
+/* ===========================================================
+   STAGE MODAL
+   =========================================================== */
+
+function openStageModal(stage) {
+  document.getElementById('modalEyebrow').textContent = `Stage ${stage.num}`;
+  document.getElementById('modalTitle').textContent = stage.label;
+  document.getElementById('modalWhat').innerHTML = stage.what;
+  document.getElementById('modalWhy').innerHTML = stage.why;
+  document.getElementById('modalDelta').innerHTML = stage.delta;
+  document.getElementById('modal').classList.add('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('modal').classList.remove('open');
+});
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
+});
+
+/* ===========================================================
+   INIT
+   =========================================================== */
+
+document.getElementById('btnPlay').addEventListener('click', play);
+document.getElementById('btnReset').addEventListener('click', () => {
+  resetAnimation();
+  document.querySelectorAll('.case-card').forEach(el => el.classList.remove('active'));
+  activeCase = null;
+  document.getElementById('btnPlay').disabled = true;
+  document.getElementById('controlStatus').textContent = 'Select a case to begin';
+  document.getElementById('flowTitle').textContent = 'The eleven-stage flow';
+  document.getElementById('flowMeta').textContent = 'awaiting case selection';
+  document.getElementById('statTokens').innerHTML = `0<span class="unit">k</span>`;
+  document.getElementById('statTokensDetail').textContent = '— bills at completion';
+  document.getElementById('statReuse').innerHTML = `0<span class="unit">%</span>`;
+  document.getElementById('statReuseDetail').textContent = 'precedent match strength';
+
+  const panel = document.getElementById('narrativePanel');
+  panel.innerHTML = `
+    <div class="narr-empty">
+      <div class="narr-empty-icon">¶</div>
+      <div class="narr-empty-text">The case-by-stage commentary will appear here as the flow runs.</div>
+    </div>
+  `;
+});
+
+buildCaseCards();
+buildFlowSvg();
+
+</script>
+
+</body>
+</html>
