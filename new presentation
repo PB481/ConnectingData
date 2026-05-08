@@ -685,10 +685,9 @@ html, body { background: var(--bg); }
 
         <div class="gantt-header">
           <div>
-            <h1>The 24-hour cycle.</h1>
+            <h1>The T+1 NAV cycle.</h1>
             <p style="color:var(--ink-muted); margin-top:14px; max-width:680px;">
-              A single struck NAV is the result of a globally choreographed sequence —
-              custody close, pricing, reconciliation, accruals, valuation, sign-off.
+              Seventeen hours from the 16:00 cut-off on Trade Date to fund delivery at 09:00 the next morning. Each lane runs against a hard deadline; the critical path has no slack.
             </p>
           </div>
           <div style="display:flex; flex-direction:column; gap:16px; align-items:flex-end;">
@@ -697,12 +696,12 @@ html, body { background: var(--bg); }
               <span><span class="swatch" style="background:var(--teal)"></span>Parallel</span>
               <span><span class="swatch" style="background:var(--ink-dim)"></span>Buffer</span>
             </div>
-            <button class="gantt-toggle" id="gantt-now-toggle">Show "now" indicator</button>
+            <button class="gantt-toggle" id="gantt-now-toggle">Show delivery cutoff</button>
           </div>
         </div>
 
         <div class="gantt-wrap">
-          <svg class="gantt-svg" id="gantt-svg" role="img" aria-label="Gantt chart of the 24-hour NAV lifecycle across global hubs"></svg>
+          <svg class="gantt-svg" id="gantt-svg" role="img" aria-label="Gantt chart of the T+1 NAV lifecycle from 16:00 trade-date cutoff to 09:00 fund delivery"></svg>
         </div>
 
         <div class="footer-meta">
@@ -1010,37 +1009,55 @@ const PILLARS = [
 ];
 
 // SLIDE 4: NAV lifecycle Gantt
-//   Hours 0–24, in local timezone of operating hub, over a single NAV cycle.
-//   `start` and `end` are hours (decimal). Critical path = type 'critical'.
+//   Wall clock starts at 16:00 T-Day, ends 09:00 T+1 (17 hours total).
+//   Values in `start` and `end` are ELAPSED hours from the cycle start.
+//   Reference: 16:00 T = 0  |  18:00 T = 2  |  21:00 T = 5
+//              00:00 T+1 = 8 | 06:00 T+1 = 14 | 09:00 T+1 = 17
+//   Types: 'critical' = brown (must-not-slip path), 'parallel' = teal,
+//          'buffer' = warm grey (slack/contingency).
+//   One task per row to keep labels readable.
 const GANTT_ROWS = [
-  { hub: 'Custody close',         tz: 'GLOBAL',     tasks: [
-    { name: 'Asia Pac close',          start: 0,    end: 2.5,  type: 'parallel' },
-    { name: 'EMEA close',              start: 7,    end: 9,    type: 'parallel' },
-    { name: 'US close',                start: 13,   end: 15,   type: 'parallel' }
+  // ── T-DAY 18:00 cutoff group ─────────────────────────────────────────────
+  { hub: 'TA cashflow',           tz: '18:00 T',            tasks: [
+    { name: 'TA cashflow',             start: 0,    end: 2,    type: 'critical' }
   ]},
-  { hub: 'Pricing & valuation',   tz: 'DUBLIN',     tasks: [
-    { name: 'Vendor price ingest',     start: 15,   end: 16.5, type: 'critical' },
-    { name: 'Stale/exception review',  start: 16.5, end: 18,   type: 'critical' },
-    { name: 'Price sign-off',          start: 18,   end: 18.5, type: 'critical' }
+  { hub: 'Income processed',      tz: '18:00 T',            tasks: [
+    { name: 'Income processed',        start: 0.5,  end: 2,    type: 'critical' }
   ]},
-  { hub: 'Reconciliation',        tz: 'DUBLIN',     tasks: [
-    { name: 'Cash recon',              start: 15.5, end: 17,   type: 'critical' },
-    { name: 'Position recon',          start: 16,   end: 17.5, type: 'critical' },
-    { name: 'Break investigation',     start: 17,   end: 19,   type: 'parallel' }
+  { hub: 'Corporate actions',     tz: '18:00 T',            tasks: [
+    { name: 'Corporate actions',       start: 0,    end: 2,    type: 'parallel' }
   ]},
-  { hub: 'Corporate actions',     tz: 'LUXEMBOURG', tasks: [
-    { name: 'Event apply',             start: 14,   end: 16,   type: 'parallel' },
-    { name: 'Income & accrual',        start: 16,   end: 18,   type: 'parallel' }
+  { hub: 'Expense processing',    tz: '18:00 T',            tasks: [
+    { name: 'Expense processing',      start: 0.5,  end: 2,    type: 'parallel' }
   ]},
-  { hub: 'NAV strike',            tz: 'DUBLIN',     tasks: [
-    { name: 'Pre-NAV checks',          start: 18.5, end: 19.5, type: 'critical' },
-    { name: 'NAV calculation',         start: 19.5, end: 20.5, type: 'critical' },
-    { name: 'Buffer / variance review',start: 20.5, end: 21,   type: 'buffer' },
-    { name: 'NAV publish',             start: 21,   end: 21.5, type: 'critical' }
+  // ── T-DAY 21:00 cutoff group ─────────────────────────────────────────────
+  { hub: 'Manager trades',        tz: '21:00 T',            tasks: [
+    { name: 'Manager trades',          start: 2,    end: 5,    type: 'critical' }
   ]},
-  { hub: 'Reporting & TA',        tz: 'US EAST',    tasks: [
-    { name: 'TA file generation',      start: 21.5, end: 22.5, type: 'parallel' },
-    { name: 'Investor reports',        start: 22,   end: 23.5, type: 'parallel' }
+  { hub: 'Derivative trades',     tz: '21:00 T',            tasks: [
+    { name: 'Derivative trades',       start: 2.5,  end: 5,    type: 'critical' }
+  ]},
+  { hub: 'Pricing',               tz: 'T-Day → 06:00 T+1',  tasks: [
+    { name: 'T-Day pricing',           start: 3,    end: 5,    type: 'critical' },
+    { name: 'Overnight repricing',     start: 8,    end: 14,   type: 'critical' }
+  ]},
+  { hub: 'Distribution calcs',    tz: '21:00 T',            tasks: [
+    { name: 'Distribution calculations', start: 3,  end: 5,    type: 'parallel' }
+  ]},
+  // ── T+1 09:00 delivery group ─────────────────────────────────────────────
+  { hub: 'NAV validation',        tz: '08:00 T+1',          tasks: [
+    { name: 'NAV validation',          start: 14,   end: 15.5, type: 'critical' }
+  ]},
+  { hub: 'Tax & pricing review',  tz: '08:30 T+1',          tasks: [
+    { name: 'Tax & pricing review',    start: 14.5, end: 16,   type: 'critical' }
+  ]},
+  { hub: 'Fund review',           tz: '08:30 T+1',          tasks: [
+    { name: 'Fund review',             start: 15.5, end: 16.5, type: 'critical' },
+    { name: 'Buffer',                  start: 16.5, end: 16.75,type: 'buffer'   }
+  ]},
+  { hub: 'Publish & report',      tz: '09:00 T+1',          tasks: [
+    { name: 'Publish NAV',             start: 16.5, end: 17,   type: 'critical' },
+    { name: 'Investor reports',        start: 16.75,end: 17,   type: 'parallel' }
   ]}
 ];
 
@@ -1303,33 +1320,48 @@ function drawGantt() {
   if (!width || !height) return;
   svg.selectAll('*').remove();
   svg.attr('viewBox', `0 0 ${width} ${height}`);
-  svg.append('title').text('Gantt chart of the 24-hour NAV lifecycle across global operating hubs.');
+  svg.append('title').text('Gantt chart of the T+1 NAV lifecycle from 16:00 trade-date cutoff to 09:00 fund delivery.');
 
-  const margin = { top: 20, right: 40, bottom: 28, left: 220 };
+  const margin = { top: 20, right: 40, bottom: 40, left: 220 };
   const innerW = width - margin.left - margin.right;
   const innerH = height - margin.top - margin.bottom;
 
-  const x = d3.scaleLinear().domain([0, 24]).range([0, innerW]);
+  const x = d3.scaleLinear().domain([0, 17]).range([0, innerW]);
   const rowH = innerH / GANTT_ROWS.length;
 
   const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-  // grid lines
+  // grid lines — every hour of the elapsed cycle
   const gridG = g.append('g').attr('class', 'grid');
-  d3.range(0, 25, 2).forEach(h => {
+  d3.range(0, 18, 1).forEach(h => {
     gridG.append('line')
       .attr('x1', x(h)).attr('x2', x(h))
       .attr('y1', 0).attr('y2', innerH);
   });
 
-  // x-axis labels
+  // x-axis labels — wall-clock GMT. Cycle starts 16:00 T-Day, ends 09:00 T+1.
+  // Elapsed hour 0 = 16:00 T, hour 8 = 00:00 T+1, hour 17 = 09:00 T+1.
+  // Labels every 3 elapsed hours so the axis isn't crowded.
   const axisG = g.append('g').attr('transform', `translate(0,${innerH + 4})`);
-  d3.range(0, 25, 2).forEach(h => {
+  const tickHours = [0, 2, 5, 8, 11, 14, 17]; // elapsed: 16:00, 18:00, 21:00, 00:00, 03:00, 06:00, 09:00
+  tickHours.forEach(h => {
+    const wallHour = (16 + h) % 24;
+    const onTPlus1 = (16 + h) >= 24;
+    const label = `${String(wallHour).padStart(2, '0')}:00`;
+    const dayTag = onTPlus1 ? 'T+1' : 'T';
     axisG.append('text')
       .attr('class', 'axis-label')
       .attr('x', x(h)).attr('y', 12)
       .attr('text-anchor', 'middle')
-      .text(`${String(h).padStart(2, '0')}:00`);
+      .text(label);
+    axisG.append('text')
+      .attr('class', 'axis-label')
+      .attr('x', x(h)).attr('y', 26)
+      .attr('text-anchor', 'middle')
+      .style('fill', 'var(--gold)')
+      .style('font-size', '9px')
+      .style('letter-spacing', '0.15em')
+      .text(dayTag);
   });
 
   // rows
@@ -1389,24 +1421,25 @@ function drawGantt() {
     });
   });
 
-  // "now" indicator group (toggleable)
+  // "now" indicator group (toggleable) — placed at fund delivery time, 09:00 T+1
   const nowG = g.append('g').attr('class', 'now-group').style('opacity', 0);
-  const nowX = x(17.5); // illustrative current time
+  const nowX = x(17); // 09:00 T+1 — fund delivery cutoff
   nowG.append('line')
     .attr('class', 'now-line')
     .attr('x1', nowX).attr('x2', nowX)
     .attr('y1', -8).attr('y2', innerH + 8);
   nowG.append('text')
     .attr('class', 'now-label')
-    .attr('x', nowX + 6).attr('y', -2)
-    .text('NOW · 17:30');
+    .attr('x', nowX - 6).attr('y', -2)
+    .attr('text-anchor', 'end')
+    .text('DELIVERY · 09:00 T+1');
 }
 function toggleGanttNow() {
   const btn = document.getElementById('gantt-now-toggle');
   const grp = d3.select('#gantt-svg .now-group');
   if (!grp.node()) return;
   const active = btn.classList.toggle('active');
-  btn.textContent = active ? 'Hide "now" indicator' : 'Show "now" indicator';
+  btn.textContent = active ? 'Hide delivery cutoff' : 'Show delivery cutoff';
   grp.transition().duration(400).style('opacity', active ? 1 : 0);
 }
 
