@@ -4,8 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The PPN-as-Share-Class Analogy</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>S110 DAC in Invest One — Fund of One Walkthrough</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --cream: #FDFAF5;
@@ -24,410 +24,470 @@
   --coral-light: #FDE8E5;
   --sage: #5B8A72;
   --sage-light: #E8F2EC;
-  --green-bg: #E8F5E9;
-  --green-dark: #2E7D32;
-  --red-bg: #FCE8E6;
-  --red-dark: #B71C1C;
+  --blue: #3668A7;
+  --blue-light: #E8EFF8;
 }
 
 - { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: ‘Source Sans 3’, sans-serif; background: var(–cream); color: var(–ink); line-height: 1.6; }
+  .container { max-width: 1140px; margin: 0 auto; padding: 2.5rem 2rem; }
 
-@page { size: A4; margin: 12mm; }
+.header { margin-bottom: 2.5rem; text-align: center; }
+.header h1 { font-family: ‘Playfair Display’, serif; font-size: 2.3rem; font-weight: 700; margin-bottom: 0.4rem; }
+.header .sub { font-size: 1.05rem; color: var(–muted); max-width: 720px; margin: 0 auto; }
+.header .tag { display: inline-block; margin-top: 0.8rem; padding: 0.3rem 1rem; background: var(–teal-light); color: var(–teal-dark); border-radius: 100px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 
-body {
-font-family: ‘Source Sans 3’, sans-serif;
-background: var(–cream);
-color: var(–ink);
-line-height: 1.55;
--webkit-font-smoothing: antialiased;
-}
+h2 { font-family: ‘Playfair Display’, serif; font-size: 1.5rem; font-weight: 700; color: var(–ink); margin: 2rem 0 0.8rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(–stone); }
+h3 { font-family: ‘Playfair Display’, serif; font-size: 1.15rem; font-weight: 700; color: var(–teal-dark); margin: 1.5rem 0 0.5rem; }
 
-.page {
-max-width: 980px;
-margin: 0 auto;
-padding: 2rem 1.5rem;
+.intro {
+background: var(–amber-light); border-left: 4px solid var(–amber); border-radius: 8px;
+padding: 1.2rem 1.4rem; margin-bottom: 1.5rem;
 }
+.intro strong { font-weight: 700; }
 
-/* Print-friendly */
-@media print {
-body { background: white; }
-.page { padding: 0; max-width: 100%; }
-.no-print { display: none; }
+/* Setup card */
+.setup-card {
+background: var(–white); border-radius: 10px; padding: 1.3rem 1.6rem;
+box-shadow: 0 1px 3px rgba(44,40,37,0.06); margin-bottom: 1.5rem;
 }
+.setup-grid {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+gap: 0.8rem; margin-top: 0.8rem;
+}
+.setup-item {
+background: var(–sand); padding: 0.7rem 1rem; border-radius: 6px;
+}
+.setup-item .lbl { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(–muted); }
+.setup-item .val { font-family: ‘JetBrains Mono’, monospace; font-size: 0.95rem; font-weight: 600; color: var(–ink); margin-top: 0.2rem; }
 
-/* Header */
-.header {
-border-bottom: 3px solid var(–teal);
-padding-bottom: 1rem;
-margin-bottom: 1.5rem;
+/* Scenario card */
+.scenario {
+background: var(–white); border-radius: 10px; padding: 1.4rem 1.6rem;
+box-shadow: 0 1px 3px rgba(44,40,37,0.06); margin-bottom: 1.5rem;
+border-left: 4px solid var(–teal);
 }
-.header h1 {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.9rem;
-font-weight: 700;
-color: var(–ink);
-letter-spacing: -0.01em;
-margin-bottom: 0.25rem;
+.scenario.sub { border-left-color: var(–sage); }
+.scenario.red { border-left-color: var(–amber); }
+.scenario.dist { border-left-color: var(–blue); }
+.scenario .meta {
+display: flex; gap: 1.5rem; font-size: 0.85rem; color: var(–muted);
+margin: 0.4rem 0 1rem;
 }
-.header .sub {
-font-size: 0.95rem;
-color: var(–muted);
-font-weight: 400;
-}
-.header .badge {
-display: inline-block;
-padding: 0.2rem 0.7rem;
-background: var(–teal-light);
-color: var(–teal-dark);
-font-size: 0.7rem;
-font-weight: 700;
-letter-spacing: 0.06em;
-text-transform: uppercase;
-border-radius: 100px;
-margin-top: 0.5rem;
-}
+.scenario .meta span strong { color: var(–ink); }
 
-/* The Analogy summary */
-.analogy {
-background: var(–white);
-border-radius: 8px;
-padding: 1rem 1.25rem;
-margin-bottom: 1.5rem;
-box-shadow: 0 1px 3px rgba(44,40,37,0.06);
-border-left: 3px solid var(–teal);
+/* Transaction instruction */
+.instruction {
+background: var(–blue-light); border-radius: 8px; padding: 0.9rem 1.2rem;
+margin: 0.8rem 0; font-family: ‘JetBrains Mono’, monospace; font-size: 0.82rem;
+border-left: 3px solid var(–blue);
 }
-.analogy h2 {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.05rem;
-font-weight: 700;
-color: var(–teal-dark);
-margin-bottom: 0.4rem;
+.instruction .row {
+display: grid; grid-template-columns: 180px 1fr; gap: 0.5rem; padding: 0.2rem 0;
 }
-.analogy p {
-font-size: 0.92rem;
-color: var(–charcoal);
+.instruction .row .field { color: var(–muted); font-size: 0.78rem; }
+.instruction .row .val { color: var(–ink); font-weight: 600; }
+.instruction-title {
+font-family: ‘Source Sans 3’, sans-serif; font-weight: 700; font-size: 0.85rem;
+color: var(–blue); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;
 }
 
-/* Two columns */
-.columns {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 1.25rem;
-margin-bottom: 1.5rem;
+/* Journal entries table */
+.je {
+border-collapse: collapse; width: 100%; margin: 0.8rem 0;
+font-family: ‘JetBrains Mono’, monospace; font-size: 0.83rem;
+border: 1px solid var(–stone); border-radius: 6px; overflow: hidden;
 }
+.je th {
+background: var(–ink); color: var(–white); padding: 0.55rem 0.8rem;
+text-align: left; font-weight: 600; font-size: 0.72rem; text-transform: uppercase;
+letter-spacing: 0.04em;
+}
+.je td { padding: 0.5rem 0.8rem; border-bottom: 1px solid var(–stone); vertical-align: top; }
+.je tr:nth-child(even) td { background: var(–sand); }
+.je .dr-col { color: var(–sage); font-weight: 600; }
+.je .cr-col { color: var(–coral); font-weight: 600; }
+.je .total-row td { background: var(–teal-light); font-weight: 700; color: var(–ink); }
+.je .narr { font-family: ‘Source Sans 3’, sans-serif; font-style: italic; color: var(–muted); font-size: 0.78rem; }
 
-.col {
-border-radius: 8px;
-padding: 1.1rem;
-box-shadow: 0 1px 3px rgba(44,40,37,0.06);
+/* Before/after */
+.ba-grid {
+display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0.8rem 0;
 }
+.ba-box {
+background: var(–sand); border-radius: 6px; padding: 0.8rem 1rem;
+font-family: ‘JetBrains Mono’, monospace; font-size: 0.82rem;
+}
+.ba-box.after { background: var(–teal-light); }
+.ba-box .title {
+font-family: ‘Source Sans 3’, sans-serif; font-weight: 700; font-size: 0.75rem;
+color: var(–muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;
+}
+.ba-box .line { display: flex; justify-content: space-between; padding: 0.15rem 0; }
+.ba-box .line .lbl { color: var(–charcoal); }
+.ba-box .line .val { font-weight: 700; color: var(–ink); }
 
-.col.carries {
-background: var(–green-bg);
-border-top: 4px solid var(–sage);
-}
-.col.breaks {
-background: var(–red-bg);
-border-top: 4px solid var(–coral);
-}
+/* Callouts */
+.callout { padding: 0.9rem 1.1rem; border-radius: 6px; margin: 0.8rem 0; font-size: 0.88rem; }
+.callout.info { background: var(–teal-light); border-left: 3px solid var(–teal); color: var(–teal-dark); }
+.callout.warn { background: var(–amber-light); border-left: 3px solid var(–amber); color: #8B6914; }
+.callout.danger { background: var(–coral-light); border-left: 3px solid var(–coral); color: #8B2E23; }
+.callout strong { font-weight: 700; }
 
-.col-header {
-display: flex;
-align-items: center;
-gap: 0.5rem;
-margin-bottom: 0.8rem;
-padding-bottom: 0.6rem;
-border-bottom: 1px solid rgba(44,40,37,0.1);
+/* Note about transaction codes */
+.tcode-note {
+background: var(–sand); border-radius: 6px; padding: 0.7rem 1rem;
+font-size: 0.8rem; color: var(–muted); font-style: italic; margin: 0.6rem 0;
 }
-.col-icon {
-font-size: 1.4rem;
-}
-.col-title {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.1rem;
-font-weight: 700;
-color: var(–ink);
-}
-.col-subtitle {
-font-size: 0.78rem;
-color: var(–muted);
-font-weight: 500;
-text-transform: uppercase;
-letter-spacing: 0.05em;
-}
-
-/* Mapping rows */
-.row {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 0.5rem;
-padding: 0.5rem 0;
-border-bottom: 1px solid rgba(44,40,37,0.06);
-font-size: 0.83rem;
-}
-.row:last-child { border-bottom: none; }
-
-.row .fund-side {
-color: var(–charcoal);
-font-weight: 500;
-}
-.row .dac-side {
-font-weight: 600;
-color: var(–ink);
-}
-.row .arrow {
-color: var(–muted);
-margin: 0 0.2rem;
-}
-
-.col.carries .dac-side { color: var(–green-dark); }
-.col.breaks .dac-side { color: var(–red-dark); }
-
-/* Why-it-breaks notes */
-.note {
-margin-top: 0.4rem;
-font-size: 0.74rem;
-color: var(–muted);
-font-style: italic;
-padding-left: 0.5rem;
-border-left: 2px solid rgba(44,40,37,0.15);
-grid-column: 1 / -1;
-}
-
-/* Bottom guardrails */
-.guardrails {
-background: var(–white);
-border-radius: 8px;
-padding: 1.1rem 1.25rem;
-margin-bottom: 1rem;
-box-shadow: 0 1px 3px rgba(44,40,37,0.06);
-border-left: 3px solid var(–amber);
-}
-.guardrails h2 {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.05rem;
-font-weight: 700;
-color: var(–ink);
-margin-bottom: 0.6rem;
-}
-.guardrails ol {
-font-size: 0.86rem;
-color: var(–charcoal);
-padding-left: 1.4rem;
-}
-.guardrails li { margin-bottom: 0.3rem; }
-.guardrails strong { color: var(–ink); }
 
 /* Footer */
-.footer {
-text-align: center;
-font-size: 0.72rem;
-color: var(–muted);
-border-top: 1px solid var(–stone);
-padding-top: 0.8rem;
-margin-top: 1rem;
-}
-
-/* Print button */
-.print-btn {
-position: fixed;
-bottom: 20px;
-right: 20px;
-background: var(–teal);
-color: white;
-border: none;
-padding: 0.6rem 1.2rem;
-border-radius: 100px;
-font-family: ‘Source Sans 3’, sans-serif;
-font-weight: 600;
-font-size: 0.85rem;
-cursor: pointer;
-box-shadow: 0 4px 12px rgba(26,122,109,0.3);
-}
-.print-btn:hover { background: var(–teal-dark); }
+.footer { text-align: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 2px solid var(–stone); color: var(–muted); font-size: 0.8rem; }
 </style>
 
 </head>
 <body>
-<div class="page">
+<div class="container">
 
-  <!-- Header -->
+<div class="header">
+  <h1>S110 DAC in Invest One</h1>
+  <p class="sub">Operating a Section 110 DAC SPV as if it were a fund-of-one in Invest One — full journal entries, GTI account references, transaction types, and instruction format</p>
+  <span class="tag">Fund-of-One mental model · Single GTI account · Quarterly dealing</span>
+</div>
 
-  <div class="header">
-    <h1>The PPN-as-Share-Class Analogy</h1>
-    <p class="sub">What carries over from traditional fund accounting &mdash; and what doesn&rsquo;t</p>
-    <span class="badge">Teaching aid &middot; S110 DAC SPV onboarding</span>
+<!-- Intro -->
+
+<div class="intro">
+  <strong>Purpose of this document.</strong> The DAC is set up in Invest One as an SPV with one GTI account representing the sole noteholder (the Investor). This walkthrough translates the S110 DAC mechanics into Invest One terms — instructions, transaction types, and journal entries — so the ops team can process the structure using familiar workflows. The PPN face value plays the role of "units outstanding" and the quarterly coupon plays the role of "distribution." We are using fund language deliberately to bridge the knowledge gap. The underlying mechanics still follow S110 / Trust Deed rules — see the right-column items in the analogy one-pager for what doesn't transfer.
+</div>
+
+<!-- Setup -->
+
+<h2>Setup in Invest One</h2>
+
+<div class="setup-card">
+  <h3 style="margin-top:0">Structure parameters</h3>
+  <p>Configure the DAC as an SPV with a single GTI account. All investor activity flows through this one account. Dealing frequency is monthly for subscriptions/redemptions; distribution frequency is quarterly.</p>
+
+  <div class="setup-grid">
+    <div class="setup-item"><div class="lbl">SPV Code</div><div class="val">DAC-001</div></div>
+    <div class="setup-item"><div class="lbl">Fund / Sub-fund</div><div class="val">DAC-001 (single)</div></div>
+    <div class="setup-item"><div class="lbl">Share Class</div><div class="val">PPN-A (notional)</div></div>
+    <div class="setup-item"><div class="lbl">GTI Account</div><div class="val">GTI-DAC001-001</div></div>
+    <div class="setup-item"><div class="lbl">Investor Name</div><div class="val">The Investor (AUT)</div></div>
+    <div class="setup-item"><div class="lbl">Currency</div><div class="val">EUR</div></div>
+    <div class="setup-item"><div class="lbl">Dealing Frequency</div><div class="val">Monthly (subs/reds)</div></div>
+    <div class="setup-item"><div class="lbl">Distribution Frequency</div><div class="val">Quarterly</div></div>
+    <div class="setup-item"><div class="lbl">NAV Frequency</div><div class="val">Daily</div></div>
+    <div class="setup-item"><div class="lbl">Pricing Convention</div><div class="val">NAV-based, ~1.000000</div></div>
   </div>
 
-  <!-- Analogy summary -->
+  <div class="tcode-note">
+    <strong>Note on transaction codes.</strong> The transaction codes shown (e.g., <code>SUB</code>, <code>RED</code>, <code>DIV</code>) are illustrative — your team should map these to the actual Invest One transaction type codes configured in your environment. The principle (debit/credit pattern, account fields, instruction format) is what matters and applies regardless of the specific code.
+  </div>
+</div>
 
-  <div class="analogy">
-    <h2>The useful mental model</h2>
-    <p>Think of the DAC as a fund-of-one with a single notional share class. The investor (AUT) is the only holder. The PPN face value is the &ldquo;units outstanding.&rdquo; The portfolio of syndicated loans is the &ldquo;underlying holdings.&rdquo; The quarterly coupon is the &ldquo;distribution.&rdquo; This analogy unlocks <strong>roughly 70% of what your FA team already knows</strong> &mdash; daily NAV mechanics, pricing, accruals, audit support. Use it to onboard the team. But know where it breaks before you build the operating model.</p>
+<!-- SCENARIO 1: LAUNCH -->
+
+<h2>Scenario 1 — Launch (Day 1 in-kind subscription)</h2>
+
+<div class="scenario sub">
+  <h3 style="margin-top:0">€20m in-kind subscription by the Investor</h3>
+  <div class="meta">
+    <span><strong>Date:</strong> 1 January</span>
+    <span><strong>Type:</strong> Initial subscription (in-kind)</span>
+    <span><strong>Amount:</strong> €20,000,000</span>
   </div>
 
-  <!-- Two columns -->
+  <p>The Investor transfers 100 syndicated loans and 10 bonds to the DAC at fair value. The DAC issues the PPN at €20m face value. No cash moves.</p>
 
-  <div class="columns">
+  <div class="instruction">
+    <div class="instruction-title">Instruction to Invest One</div>
+    <div class="row"><div class="field">Transaction Type:</div><div class="val">SUB-IK (Subscription, In-Kind)</div></div>
+    <div class="row"><div class="field">GTI Account:</div><div class="val">GTI-DAC001-001</div></div>
+    <div class="row"><div class="field">Trade Date:</div><div class="val">2025-01-01</div></div>
+    <div class="row"><div class="field">Settlement Date:</div><div class="val">2025-01-01</div></div>
+    <div class="row"><div class="field">Subscription Amount:</div><div class="val">EUR 20,000,000.00</div></div>
+    <div class="row"><div class="field">NAV per Unit:</div><div class="val">1.000000</div></div>
+    <div class="row"><div class="field">Units Issued:</div><div class="val">20,000,000.00 (= PPN face value)</div></div>
+    <div class="row"><div class="field">Settlement Method:</div><div class="val">In-Kind (asset transfer schedule attached)</div></div>
+    <div class="row"><div class="field">Asset Schedule:</div><div class="val">100 loans + 10 bonds at FV — attached</div></div>
+  </div>
 
-```
-<!-- LEFT: Carries over -->
-<div class="col carries">
-  <div class="col-header">
-    <div class="col-icon">✓</div>
-    <div>
-      <div class="col-title">What carries over</div>
-      <div class="col-subtitle">Use the fund mental model for these</div>
+  <h3>Journal entries booked in Invest One</h3>
+  <table class="je">
+    <tr><th>Dr/Cr</th><th>GL Account</th><th>Amount (EUR)</th><th>Narrative</th></tr>
+    <tr><td class="dr-col">DR</td><td>Loan Portfolio</td><td>17,500,000.00</td><td class="narr">Receive 100 syndicated loans at FV</td></tr>
+    <tr><td class="dr-col">DR</td><td>Bond Portfolio</td><td>2,500,000.00</td><td class="narr">Receive 10 bonds at FV</td></tr>
+    <tr><td class="cr-col">CR</td><td>PPN Liability (= "Capital Account")</td><td>20,000,000.00</td><td class="narr">Issue PPN to GTI-DAC001-001</td></tr>
+    <tr class="total-row"><td colspan="2">Total</td><td>DR 20,000,000.00 = CR 20,000,000.00</td><td></td></tr>
+  </table>
+
+  <div class="callout info">
+    <strong>Translation note.</strong> In a traditional fund, the credit side would post to "Capital Account" or "Share Capital." For the DAC, this is the <strong>PPN Liability</strong> account because the PPN is debt, not equity. Invest One will treat it as the capital-like line for capstock reporting, but the underlying GL account is a liability.
+  </div>
+</div>
+
+<!-- SCENARIO 2: NEW SUBSCRIPTION -->
+
+<h2>Scenario 2 — Mid-life cash subscription (monthly dealing)</h2>
+
+<div class="scenario sub">
+  <h3 style="margin-top:0">€10m additional cash subscription on a dealing day</h3>
+  <div class="meta">
+    <span><strong>Date:</strong> 15 February (dealing day)</span>
+    <span><strong>Type:</strong> Subscription (cash)</span>
+    <span><strong>Amount:</strong> €10,000,000</span>
+  </div>
+
+  <p>The Investor wires €10m to the DAC bank account. The DAC receives cash; the PPN face value increases by €10m. Issued at a NAV of ~1.040000 (because the portfolio has appreciated since launch).</p>
+
+  <div class="instruction">
+    <div class="instruction-title">Instruction to Invest One</div>
+    <div class="row"><div class="field">Transaction Type:</div><div class="val">SUB (Cash Subscription)</div></div>
+    <div class="row"><div class="field">GTI Account:</div><div class="val">GTI-DAC001-001</div></div>
+    <div class="row"><div class="field">Trade Date:</div><div class="val">2025-02-15</div></div>
+    <div class="row"><div class="field">Settlement Date:</div><div class="val">2025-02-15</div></div>
+    <div class="row"><div class="field">Subscription Amount:</div><div class="val">EUR 10,000,000.00</div></div>
+    <div class="row"><div class="field">NAV per Unit:</div><div class="val">1.040000 (special NAV ratio)</div></div>
+    <div class="row"><div class="field">Units Issued:</div><div class="val">9,615,384.62 (apparent — see note)</div></div>
+    <div class="row"><div class="field">Settlement Method:</div><div class="val">Wire / SWIFT (cash)</div></div>
+    <div class="row"><div class="field">Reference:</div><div class="val">DRAW-DAC001-Q1-2025</div></div>
+  </div>
+
+  <h3>Journal entries booked in Invest One</h3>
+  <table class="je">
+    <tr><th>Dr/Cr</th><th>GL Account</th><th>Amount (EUR)</th><th>Narrative</th></tr>
+    <tr><td class="dr-col">DR</td><td>Cash at Bank</td><td>10,000,000.00</td><td class="narr">Cash received from Investor</td></tr>
+    <tr><td class="cr-col">CR</td><td>PPN Liability</td><td>10,000,000.00</td><td class="narr">Increase PPN face value to €30m</td></tr>
+    <tr class="total-row"><td colspan="2">Total</td><td>DR 10,000,000.00 = CR 10,000,000.00</td><td></td></tr>
+  </table>
+
+  <h3>Before / After GTI account state</h3>
+  <div class="ba-grid">
+    <div class="ba-box">
+      <div class="title">Before (14 February)</div>
+      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€20,000,000</span></div>
+      <div class="line"><span class="lbl">NAV</span><span class="val">€20,800,000</span></div>
+      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.040000</span></div>
+      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€100,000</span></div>
+    </div>
+    <div class="ba-box after">
+      <div class="title">After (15 February)</div>
+      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€30,000,000</span></div>
+      <div class="line"><span class="lbl">NAV</span><span class="val">€30,800,000</span></div>
+      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.026667</span></div>
+      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€10,100,000</span></div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Daily NAV</div>
-    <div class="dac-side">DAC &mdash; Daily NAV</div>
+  <div class="callout warn">
+    <strong>Important — "Units Issued" is a fiction.</strong> Because the Investor is the sole holder and the PPN is a debt instrument with a face value, "units" don't really exist. For Invest One capstock reporting, set <code>Units_Outstanding = PPN face value</code> on the new total. Some Invest One configurations expect a Units_Issued field on the instruction — populate it with the face value increase (€10m) rather than the NAV-implied unit count. Your platform team should confirm which field drives the capstock file output.
   </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Vendor pricing (Bloomberg)</div>
-    <div class="dac-side">DAC &mdash; Vendor pricing (Markit)</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Interest accrual mechanics</div>
-    <div class="dac-side">DAC &mdash; Interest accrual mechanics</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Day count conventions</div>
-    <div class="dac-side">DAC &mdash; Day count conventions</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Independent Price Verification</div>
-    <div class="dac-side">DAC &mdash; Independent Price Verification</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Four-eyes NAV review</div>
-    <div class="dac-side">DAC &mdash; Four-eyes NAV review</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Cash reconciliation discipline</div>
-    <div class="dac-side">DAC &mdash; Cash reconciliation discipline</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; In-kind subscription</div>
-    <div class="dac-side">DAC &mdash; In-kind PPN issuance</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Monthly investor reporting</div>
-    <div class="dac-side">DAC &mdash; Monthly investor reporting</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Annual audit support</div>
-    <div class="dac-side">DAC &mdash; Annual audit support</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; FV hierarchy (L1/L2/L3)</div>
-    <div class="dac-side">DAC &mdash; FV hierarchy (L1/L2/L3)</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Expense accrual</div>
-    <div class="dac-side">DAC &mdash; Expense accrual</div>
+
+  <div class="callout danger">
+    <strong>Hard governance gate.</strong> Do NOT raise this instruction without: (1) Investor drawdown notice received with 5 BD notice, (2) ManCo written approval on file, (3) Trustee written approval on file. Without all three, the PPN face value cannot legally change.
   </div>
 </div>
 
-<!-- RIGHT: Breaks down -->
-<div class="col breaks">
-  <div class="col-header">
-    <div class="col-icon">✗</div>
-    <div>
-      <div class="col-title">What breaks down</div>
-      <div class="col-subtitle">DO NOT carry these assumptions over</div>
+<!-- SCENARIO 3: REDEMPTION -->
+
+<h2>Scenario 3 — Cash redemption (principal paydown to Investor)</h2>
+
+<div class="scenario red">
+  <h3 style="margin-top:0">€5m principal paydown to the Investor</h3>
+  <div class="meta">
+    <span><strong>Date:</strong> 15 May (dealing day)</span>
+    <span><strong>Type:</strong> Redemption (cash)</span>
+    <span><strong>Amount:</strong> €5,000,000</span>
+  </div>
+
+  <p>The reinvestment period has ended. Principal proceeds received from amortising loans are returned to the Investor. The DAC wires €5m; the PPN face value decreases by €5m. This is the principal waterfall output, not the interest coupon.</p>
+
+  <div class="instruction">
+    <div class="instruction-title">Instruction to Invest One</div>
+    <div class="row"><div class="field">Transaction Type:</div><div class="val">RED (Cash Redemption)</div></div>
+    <div class="row"><div class="field">GTI Account:</div><div class="val">GTI-DAC001-001</div></div>
+    <div class="row"><div class="field">Trade Date:</div><div class="val">2025-05-15</div></div>
+    <div class="row"><div class="field">Settlement Date:</div><div class="val">2025-05-15</div></div>
+    <div class="row"><div class="field">Redemption Amount:</div><div class="val">EUR 5,000,000.00</div></div>
+    <div class="row"><div class="field">NAV per Unit:</div><div class="val">1.020000 (at redemption date)</div></div>
+    <div class="row"><div class="field">Units Cancelled:</div><div class="val">5,000,000.00 (= face value reduction)</div></div>
+    <div class="row"><div class="field">Settlement Method:</div><div class="val">Wire / SWIFT (cash)</div></div>
+    <div class="row"><div class="field">Reference:</div><div class="val">PAYDN-DAC001-Q2-2025</div></div>
+    <div class="row"><div class="field">Source:</div><div class="val">Principal waterfall (NOT interest)</div></div>
+  </div>
+
+  <h3>Journal entries booked in Invest One</h3>
+  <table class="je">
+    <tr><th>Dr/Cr</th><th>GL Account</th><th>Amount (EUR)</th><th>Narrative</th></tr>
+    <tr><td class="dr-col">DR</td><td>PPN Liability</td><td>5,000,000.00</td><td class="narr">Reduce PPN face value to €25m</td></tr>
+    <tr><td class="cr-col">CR</td><td>Cash at Bank</td><td>5,000,000.00</td><td class="narr">Cash wired to Investor</td></tr>
+    <tr class="total-row"><td colspan="2">Total</td><td>DR 5,000,000.00 = CR 5,000,000.00</td><td></td></tr>
+  </table>
+
+  <h3>Before / After GTI account state</h3>
+  <div class="ba-grid">
+    <div class="ba-box">
+      <div class="title">Before (14 May)</div>
+      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€30,000,000</span></div>
+      <div class="line"><span class="lbl">NAV</span><span class="val">€30,600,000</span></div>
+      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.020000</span></div>
+      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€5,400,000</span></div>
+    </div>
+    <div class="ba-box after">
+      <div class="title">After (15 May)</div>
+      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€25,000,000</span></div>
+      <div class="line"><span class="lbl">NAV</span><span class="val">€25,600,000</span></div>
+      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.024000</span></div>
+      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€400,000</span></div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Equity share class</div>
-    <div class="dac-side">DAC &mdash; Debt instrument (PPN)</div>
-    <div class="note">PPN must be debt for S110 tax deduction to work. Treating it as equity destroys tax neutrality.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Dividend declaration</div>
-    <div class="dac-side">DAC &mdash; Waterfall residual</div>
-    <div class="note">Coupon amount is calculated by the interest waterfall &mdash; not declared by management.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Single cash flow</div>
-    <div class="dac-side">DAC &mdash; Separate interest/principal waterfalls</div>
-    <div class="note">Mixing the two breaks S110. Interest pays the coupon; principal reinvests or pays down face value.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Expenses paid as incurred</div>
-    <div class="dac-side">DAC &mdash; Trust Deed caps with subordination</div>
-    <div class="note">Over-cap expense amounts drop below the PPN coupon. Paying at senior priority = breach.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Daily TA dealing</div>
-    <div class="dac-side">DAC &mdash; No TA. Contractual events only.</div>
-    <div class="note">No subs/reds desk. Drawdowns happen on event dates with multi-party approvals.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Distribution paid gross</div>
-    <div class="dac-side">DAC &mdash; WHT verification gate before coupon</div>
-    <div class="note">Without confirmed exemption documentation, 20% WHT must be deducted. Hard stop.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; ManCo + Depositary + TA</div>
-    <div class="dac-side">DAC &mdash; ManCo + Trustee + CSP + IM + Paying Agent</div>
-    <div class="note">Six-party contractual governance, not three-party regulatory governance.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Regulated under UCITS/AIFMD</div>
-    <div class="dac-side">DAC &mdash; Companies Act + S110 register</div>
-    <div class="note">CBI Section 18 statistical returns mandatory (not optional). Different rulebook entirely.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Fund financial statements</div>
-    <div class="dac-side">DAC &mdash; FRS 102 corporate accounts</div>
-    <div class="note">Statutory accounts prepared by CSP from FA data pack &mdash; not produced by FA team.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; Investment Undertakings Tax</div>
-    <div class="dac-side">DAC &mdash; Corporation Tax + S110 mechanism</div>
-    <div class="note">Tax-neutral only if PPN coupon = taxable profit. Requires clean interest GL split for ATAD.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; IM provides factsheet input</div>
-    <div class="dac-side">DAC &mdash; IM runs shadow book; 4-number rec required</div>
-    <div class="note">Market practice for private credit. Accrued / cash / distributable / reconciling items.</div>
-  </div>
-  <div class="row">
-    <div class="fund-side">Fund &mdash; FATCA via ManCo on AIF</div>
-    <div class="dac-side">DAC &mdash; DAC itself is a Financial Institution</div>
-    <div class="note">GIIN registration, W-8BEN-E, CRS filings to Revenue. ManCo coordinates; FA provides data.</div>
+  <div class="callout danger">
+    <strong>Critical distinction.</strong> A "redemption" in this structure is ONLY a principal return — it reduces the PPN face value. The quarterly interest coupon is NOT a redemption (see Scenario 4). Mixing the two breaks S110 tax neutrality. Configure Invest One so that the COUPON transaction type does NOT reduce Units_Outstanding, while the RED transaction type does.
   </div>
 </div>
-```
 
+<!-- SCENARIO 4: DISTRIBUTION -->
+
+<h2>Scenario 4 — Quarterly distribution (PPN coupon)</h2>
+
+<div class="scenario dist">
+  <h3 style="margin-top:0">€750k quarterly coupon to the Investor</h3>
+  <div class="meta">
+    <span><strong>Date:</strong> 31 March (quarter-end)</span>
+    <span><strong>Type:</strong> Distribution (interest coupon)</span>
+    <span><strong>Amount:</strong> €750,000 (gross)</span>
   </div>
 
-  <!-- Guardrails -->
+  <p>The interest waterfall residual flows to the Investor as the PPN coupon. WHT exemption is confirmed (DTT relief on file) so gross = net. The face value does NOT change.</p>
 
-  <div class="guardrails">
-    <h2>How to use this analogy safely</h2>
-    <ol>
-      <li><strong>Use the left column for onboarding.</strong> When introducing the structure to the FA team, lean into the fund mental model. It accelerates learning and uses skills they already have.</li>
-      <li><strong>Use the right column for operating model design.</strong> When designing workflows, controls, and tooling, work from what the DAC actually is &mdash; a Section 110 company with a PPN &mdash; not from fund analogies.</li>
-      <li><strong>Flag the right-column items in every training session.</strong> The fund analogy carries dangerous unstated assumptions. Make them explicit so they don&rsquo;t silently propagate into procedures.</li>
-      <li><strong>Build documentation around the right column.</strong> Scope of services, risk register, and procedures should be written from the DAC&rsquo;s actual mechanics &mdash; not the fund analogy.</li>
-      <li><strong>Use the fund language carefully with external parties.</strong> Tax adviser, auditor, ManCo, and Trustee will all be confused if you describe the PPN as &ldquo;a share class.&rdquo; Internally fine; externally use the formal terminology.</li>
-    </ol>
+  <div class="instruction">
+    <div class="instruction-title">Instruction to Invest One</div>
+    <div class="row"><div class="field">Transaction Type:</div><div class="val">DIV (Distribution / Income)</div></div>
+    <div class="row"><div class="field">GTI Account:</div><div class="val">GTI-DAC001-001</div></div>
+    <div class="row"><div class="field">Trade Date:</div><div class="val">2025-03-31</div></div>
+    <div class="row"><div class="field">Pay Date:</div><div class="val">2025-04-15</div></div>
+    <div class="row"><div class="field">Gross Distribution:</div><div class="val">EUR 750,000.00</div></div>
+    <div class="row"><div class="field">WHT Rate:</div><div class="val">0% (DTT exemption confirmed)</div></div>
+    <div class="row"><div class="field">WHT Amount:</div><div class="val">EUR 0.00</div></div>
+    <div class="row"><div class="field">Net to Investor:</div><div class="val">EUR 750,000.00</div></div>
+    <div class="row"><div class="field">Units Outstanding:</div><div class="val">30,000,000.00 (UNCHANGED)</div></div>
+    <div class="row"><div class="field">Settlement Method:</div><div class="val">Wire / SWIFT to Investor nominated account</div></div>
+    <div class="row"><div class="field">Reference:</div><div class="val">COUPON-DAC001-Q1-2025</div></div>
   </div>
 
-  <!-- Footer -->
+  <h3>Journal entries booked in Invest One</h3>
+  <table class="je">
+    <tr><th>Dr/Cr</th><th>GL Account</th><th>Amount (EUR)</th><th>Narrative</th></tr>
+    <tr><td class="dr-col">DR</td><td>PPN Coupon Expense (Interest)</td><td>750,000.00</td><td class="narr">Recognise coupon — S110 deductible</td></tr>
+    <tr><td class="cr-col">CR</td><td>Cash at Bank</td><td>750,000.00</td><td class="narr">Wire to Investor (gross, no WHT)</td></tr>
+    <tr class="total-row"><td colspan="2">Total</td><td>DR 750,000.00 = CR 750,000.00</td><td></td></tr>
+  </table>
 
-  <div class="footer">
-    S110 DAC SPV &middot; Teaching aid for FA team onboarding &middot; Confidential working document
+  <div class="callout info">
+    <strong>If WHT applied (e.g., no DTT relief).</strong> A 20% WHT scenario would post as three lines: DR PPN Coupon Expense €750,000 / CR Cash at Bank €600,000 / CR WHT Payable to Revenue €150,000. The Net to Investor field on the instruction would be €600,000 with WHT Amount €150,000.
   </div>
 
+  <h3>Before / After GTI account state</h3>
+  <div class="ba-grid">
+    <div class="ba-box">
+      <div class="title">Before (31 March)</div>
+      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€30,000,000</span></div>
+      <div class="line"><span class="lbl">NAV</span><span class="val">€30,800,000</span></div>
+      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.026667</span></div>
+      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€1,200,000</span></div>
+    </div>
+    <div class="ba-box after">
+      <div class="title">After (15 April pay date)</div>
+      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€30,000,000</span></div>
+      <div class="line"><span class="lbl">NAV</span><span class="val">€30,050,000</span></div>
+      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.001667</span></div>
+      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€450,000</span></div>
+    </div>
+  </div>
+
+  <div class="callout danger">
+    <strong>The critical Invest One configuration point.</strong> The DIV transaction type must NOT reduce Units_Outstanding. The PPN face value is unchanged by a coupon payment — only NAV and cash change. If Invest One is configured to treat DIV as reducing units (the default for some share class types), the capstock file will be wrong from this point forward. Have your platform admin confirm the DIV transaction code is set to "NAV impact: yes, Unit impact: no" for this SPV.
+  </div>
+
+  <div class="callout warn">
+    <strong>Governance gates before raising this instruction.</strong> All six must be cleared: FA calculation complete + reviewed; shadow book rec to IM clear; IM approval received; ManCo written approval; Directors' resolution (or standing authority); Trustee cash release authorisation. WHT documentation (5 items) must also be current — see the Distribution Calculator module in the specialist app for the full checklist.
+  </div>
 </div>
 
-<button class="print-btn no-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+<!-- Summary timeline -->
 
+<h2>Year-one timeline summary</h2>
+
+<table class="je">
+  <tr>
+    <th>Date</th>
+    <th>Event</th>
+    <th>Inv. One Tx Type</th>
+    <th>Reference</th>
+    <th>PPN Face After</th>
+    <th>Cash Movement</th>
+  </tr>
+  <tr>
+    <td>01 Jan</td><td>Initial in-kind subscription €20m</td>
+    <td>SUB-IK</td><td>INIT-DAC001-2025</td>
+    <td>€20,000,000</td><td>None</td>
+  </tr>
+  <tr>
+    <td>15 Feb</td><td>Cash subscription €10m</td>
+    <td>SUB</td><td>DRAW-DAC001-Q1-2025</td>
+    <td>€30,000,000</td><td>+€10,000,000</td>
+  </tr>
+  <tr>
+    <td>31 Mar</td><td>Q1 coupon €750k (paid 15 Apr)</td>
+    <td>DIV</td><td>COUPON-DAC001-Q1-2025</td>
+    <td>€30,000,000</td><td>-€750,000</td>
+  </tr>
+  <tr>
+    <td>15 May</td><td>Principal paydown to Investor €5m</td>
+    <td>RED</td><td>PAYDN-DAC001-Q2-2025</td>
+    <td>€25,000,000</td><td>-€5,000,000</td>
+  </tr>
+  <tr>
+    <td>30 Jun</td><td>Q2 coupon €620k (paid 15 Jul)</td>
+    <td>DIV</td><td>COUPON-DAC001-Q2-2025</td>
+    <td>€25,000,000</td><td>-€620,000</td>
+  </tr>
+  <tr>
+    <td>30 Sep</td><td>Q3 coupon €640k (paid 15 Oct)</td>
+    <td>DIV</td><td>COUPON-DAC001-Q3-2025</td>
+    <td>€25,000,000</td><td>-€640,000</td>
+  </tr>
+  <tr>
+    <td>31 Dec</td><td>Q4 coupon €650k (paid 15 Jan)</td>
+    <td>DIV</td><td>COUPON-DAC001-Q4-2025</td>
+    <td>€25,000,000</td><td>-€650,000</td>
+  </tr>
+</table>
+
+<!-- Key takeaways for ops -->
+
+<h2>Six key configuration points for the Invest One admin team</h2>
+
+<table class="je">
+  <tr><th>#</th><th>Configuration</th><th>Setting</th><th>Why</th></tr>
+  <tr><td>1</td><td>SPV / Fund setup</td><td>Single fund, single share class (PPN-A), single GTI account</td><td>One investor, one note, no class proliferation</td></tr>
+  <tr><td>2</td><td>Capstock denominator</td><td>Units_Outstanding = PPN face value (not NAV-derived units)</td><td>PPN is debt with a face value, not equity with units</td></tr>
+  <tr><td>3</td><td>SUB transaction type</td><td>Increases Units_Outstanding by subscription amount</td><td>Drawdowns increase face value €-for-€</td></tr>
+  <tr><td>4</td><td>RED transaction type</td><td>Decreases Units_Outstanding by redemption amount</td><td>Principal paydowns reduce face value €-for-€</td></tr>
+  <tr><td>5</td><td>DIV transaction type</td><td>NAV impact: yes. Unit impact: <strong>NO</strong></td><td>Coupon is interest expense — does not reduce face value</td></tr>
+  <tr><td>6</td><td>NAV per Unit display</td><td>Will hover around 1.00 throughout life</td><td>Income distributed quarterly — no NAV growth like a typical fund</td></tr>
+</table>
+
+<div class="callout info" style="margin-top:1.5rem">
+  <strong>Use this document as the Invest One configuration brief.</strong> Hand it to the Invest One platform team alongside the SPV setup request. They can map the transaction codes to your environment's actual codes and configure the share class behaviour accordingly. The journal entry patterns are universal — only the transaction type code names will differ in your specific Invest One configuration.
+</div>
+
+<div class="footer">
+  S110 DAC SPV in Invest One — Operations Bridge Document · Confidential working document
+</div>
+
+</div>
 </body>
 </html>
