@@ -1,493 +1,1062 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>S110 DAC in Invest One — Fund of One Walkthrough</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Asset Manager Cluster Atlas · Top 100 by AUM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
 :root {
-  --cream: #FDFAF5;
-  --white: #FFFFFF;
-  --sand: #F5F0E8;
-  --stone: #E8E2D8;
-  --ink: #2C2825;
-  --charcoal: #4A4541;
-  --muted: #8A837A;
-  --teal: #1A7A6D;
-  --teal-light: #E8F5F2;
-  --teal-dark: #0F5C52;
-  --amber: #C4841D;
-  --amber-light: #FFF4E0;
-  --coral: #C44D3F;
-  --coral-light: #FDE8E5;
-  --sage: #5B8A72;
-  --sage-light: #E8F2EC;
-  --blue: #3668A7;
-  --blue-light: #E8EFF8;
+  --bg-1: #0a121c;
+  --bg-2: #0f1a28;
+  --panel: #142537;
+  --panel-2: #1b2e44;
+  --border: #2a3f57;
+  --border-2: #3d5675;
+  --text: #f4ecdf;
+  --text-dim: #a8a394;
+  --text-faint: #6e6e63;
+  --gold: #d4a648;
+  --gold-bright: #f0c061;
+  --rust: #ec7c4a;
+  --sage: #88a056;
+  --rose: #b974a3;
+  --steel: #6b9bd1;
+  --shadow: 0 1px 0 rgba(255, 240, 200, 0.04), 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-- { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: ‘Source Sans 3’, sans-serif; background: var(–cream); color: var(–ink); line-height: 1.6; }
-  .container { max-width: 1140px; margin: 0 auto; padding: 2.5rem 2rem; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-.header { margin-bottom: 2.5rem; text-align: center; }
-.header h1 { font-family: ‘Playfair Display’, serif; font-size: 2.3rem; font-weight: 700; margin-bottom: 0.4rem; }
-.header .sub { font-size: 1.05rem; color: var(–muted); max-width: 720px; margin: 0 auto; }
-.header .tag { display: inline-block; margin-top: 0.8rem; padding: 0.3rem 1rem; background: var(–teal-light); color: var(–teal-dark); border-radius: 100px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-
-h2 { font-family: ‘Playfair Display’, serif; font-size: 1.5rem; font-weight: 700; color: var(–ink); margin: 2rem 0 0.8rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(–stone); }
-h3 { font-family: ‘Playfair Display’, serif; font-size: 1.15rem; font-weight: 700; color: var(–teal-dark); margin: 1.5rem 0 0.5rem; }
-
-.intro {
-background: var(–amber-light); border-left: 4px solid var(–amber); border-radius: 8px;
-padding: 1.2rem 1.4rem; margin-bottom: 1.5rem;
-}
-.intro strong { font-weight: 700; }
-
-/* Setup card */
-.setup-card {
-background: var(–white); border-radius: 10px; padding: 1.3rem 1.6rem;
-box-shadow: 0 1px 3px rgba(44,40,37,0.06); margin-bottom: 1.5rem;
-}
-.setup-grid {
-display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-gap: 0.8rem; margin-top: 0.8rem;
-}
-.setup-item {
-background: var(–sand); padding: 0.7rem 1rem; border-radius: 6px;
-}
-.setup-item .lbl { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(–muted); }
-.setup-item .val { font-family: ‘JetBrains Mono’, monospace; font-size: 0.95rem; font-weight: 600; color: var(–ink); margin-top: 0.2rem; }
-
-/* Scenario card */
-.scenario {
-background: var(–white); border-radius: 10px; padding: 1.4rem 1.6rem;
-box-shadow: 0 1px 3px rgba(44,40,37,0.06); margin-bottom: 1.5rem;
-border-left: 4px solid var(–teal);
-}
-.scenario.sub { border-left-color: var(–sage); }
-.scenario.red { border-left-color: var(–amber); }
-.scenario.dist { border-left-color: var(–blue); }
-.scenario .meta {
-display: flex; gap: 1.5rem; font-size: 0.85rem; color: var(–muted);
-margin: 0.4rem 0 1rem;
-}
-.scenario .meta span strong { color: var(–ink); }
-
-/* Transaction instruction */
-.instruction {
-background: var(–blue-light); border-radius: 8px; padding: 0.9rem 1.2rem;
-margin: 0.8rem 0; font-family: ‘JetBrains Mono’, monospace; font-size: 0.82rem;
-border-left: 3px solid var(–blue);
-}
-.instruction .row {
-display: grid; grid-template-columns: 180px 1fr; gap: 0.5rem; padding: 0.2rem 0;
-}
-.instruction .row .field { color: var(–muted); font-size: 0.78rem; }
-.instruction .row .val { color: var(–ink); font-weight: 600; }
-.instruction-title {
-font-family: ‘Source Sans 3’, sans-serif; font-weight: 700; font-size: 0.85rem;
-color: var(–blue); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;
+html, body {
+  height: 100%;
+  background: var(--bg-1);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 13.5px;
+  line-height: 1.45;
+  overflow: hidden;
+  letter-spacing: 0.01em;
 }
 
-/* Journal entries table */
-.je {
-border-collapse: collapse; width: 100%; margin: 0.8rem 0;
-font-family: ‘JetBrains Mono’, monospace; font-size: 0.83rem;
-border: 1px solid var(–stone); border-radius: 6px; overflow: hidden;
-}
-.je th {
-background: var(–ink); color: var(–white); padding: 0.55rem 0.8rem;
-text-align: left; font-weight: 600; font-size: 0.72rem; text-transform: uppercase;
-letter-spacing: 0.04em;
-}
-.je td { padding: 0.5rem 0.8rem; border-bottom: 1px solid var(–stone); vertical-align: top; }
-.je tr:nth-child(even) td { background: var(–sand); }
-.je .dr-col { color: var(–sage); font-weight: 600; }
-.je .cr-col { color: var(–coral); font-weight: 600; }
-.je .total-row td { background: var(–teal-light); font-weight: 700; color: var(–ink); }
-.je .narr { font-family: ‘Source Sans 3’, sans-serif; font-style: italic; color: var(–muted); font-size: 0.78rem; }
-
-/* Before/after */
-.ba-grid {
-display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0.8rem 0;
-}
-.ba-box {
-background: var(–sand); border-radius: 6px; padding: 0.8rem 1rem;
-font-family: ‘JetBrains Mono’, monospace; font-size: 0.82rem;
-}
-.ba-box.after { background: var(–teal-light); }
-.ba-box .title {
-font-family: ‘Source Sans 3’, sans-serif; font-weight: 700; font-size: 0.75rem;
-color: var(–muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;
-}
-.ba-box .line { display: flex; justify-content: space-between; padding: 0.15rem 0; }
-.ba-box .line .lbl { color: var(–charcoal); }
-.ba-box .line .val { font-weight: 700; color: var(–ink); }
-
-/* Callouts */
-.callout { padding: 0.9rem 1.1rem; border-radius: 6px; margin: 0.8rem 0; font-size: 0.88rem; }
-.callout.info { background: var(–teal-light); border-left: 3px solid var(–teal); color: var(–teal-dark); }
-.callout.warn { background: var(–amber-light); border-left: 3px solid var(–amber); color: #8B6914; }
-.callout.danger { background: var(–coral-light); border-left: 3px solid var(–coral); color: #8B2E23; }
-.callout strong { font-weight: 700; }
-
-/* Note about transaction codes */
-.tcode-note {
-background: var(–sand); border-radius: 6px; padding: 0.7rem 1rem;
-font-size: 0.8rem; color: var(–muted); font-style: italic; margin: 0.6rem 0;
+body {
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(212, 166, 72, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(107, 155, 209, 0.04) 0%, transparent 50%),
+    var(--bg-1);
 }
 
-/* Footer */
-.footer { text-align: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 2px solid var(–stone); color: var(–muted); font-size: 0.8rem; }
+/* ──────────────── Layout ──────────────── */
+#app {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  height: 100vh;
+  width: 100vw;
+}
+
+header.masthead {
+  padding: 18px 28px 14px 28px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.brand h1 .accent {
+  color: var(--gold);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.brand .subtitle {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.meta-strip {
+  display: flex;
+  gap: 28px;
+  align-items: baseline;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.meta-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+}
+
+.meta-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.meta-value .currency {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-right: 3px;
+}
+
+.meta-value.client-share {
+  color: var(--rust);
+}
+
+/* ──────────────── Controls ──────────────── */
+.controls {
+  padding: 12px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.control-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+}
+
+.select-wrap {
+  position: relative;
+}
+
+select, button, input[type="text"] {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 6px 28px 6px 12px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+select { background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%); background-position: calc(100% - 14px) center, calc(100% - 9px) center; background-size: 5px 5px; background-repeat: no-repeat; }
+
+select:hover, button:hover, input:hover {
+  border-color: var(--border-2);
+  background-color: var(--panel-2);
+}
+
+select:focus, input:focus { border-color: var(--gold); }
+
+button {
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+button.action {
+  background: transparent;
+  border-color: var(--border-2);
+}
+
+button.danger {
+  color: var(--rust);
+  border-color: rgba(236, 124, 74, 0.4);
+}
+
+button.danger:hover {
+  background: rgba(236, 124, 74, 0.08);
+  border-color: var(--rust);
+}
+
+input[type="text"] {
+  padding: 6px 12px;
+  width: 200px;
+  cursor: text;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12.5px;
+}
+
+.toggle-input {
+  appearance: none;
+  width: 32px;
+  height: 18px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.toggle-input::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  top: 2px;
+  left: 3px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.toggle-input:checked {
+  background: rgba(236, 124, 74, 0.2);
+  border-color: var(--rust);
+}
+
+.toggle-input:checked::after {
+  transform: translateX(13px);
+  background: var(--rust);
+}
+
+/* ──────────────── Canvas area ──────────────── */
+.stage {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at center, rgba(212, 166, 72, 0.03) 0%, transparent 70%),
+    var(--bg-1);
+}
+
+svg#canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.firm-node {
+  cursor: pointer;
+  transition: stroke-width 0.15s;
+}
+
+.firm-node.client {
+  stroke: var(--rust);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 4px rgba(236, 124, 74, 0.6));
+}
+
+.firm-node.dimmed {
+  opacity: 0.18;
+}
+
+.firm-node.selected {
+  stroke: var(--gold-bright);
+  stroke-width: 2.5;
+}
+
+.cluster-label {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 11px;
+  fill: var(--text-dim);
+  text-anchor: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  pointer-events: none;
+  font-style: italic;
+}
+
+.cluster-label-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  fill: var(--text-faint);
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+.cluster-divider {
+  stroke: var(--border);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 4;
+  fill: none;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ──────────────── Footer / Legend ──────────────── */
+footer.legend-bar {
+  padding: 11px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-marker-client {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--rust);
+  background: rgba(236, 124, 74, 0.15);
+  flex-shrink: 0;
+  box-shadow: 0 0 4px rgba(236, 124, 74, 0.5);
+}
+
+.footer-note {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+/* ──────────────── Tooltip ──────────────── */
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--panel);
+  border: 1px solid var(--border-2);
+  border-top: 2px solid var(--gold);
+  padding: 14px 16px 12px 16px;
+  border-radius: 2px;
+  box-shadow: var(--shadow);
+  min-width: 280px;
+  max-width: 360px;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.12s, transform 0.12s;
+}
+
+.tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tt-rank {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+}
+
+.tt-firm {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--text);
+  margin: 2px 0 2px 0;
+  line-height: 1.15;
+}
+
+.tt-parent {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.tt-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  font-size: 11.5px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.tt-grid dt {
+  color: var(--text-faint);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  align-self: center;
+}
+
+.tt-grid dd {
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.tt-aum {
+  color: var(--gold) !important;
+  font-weight: 500;
+}
+
+.tt-vehicles {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.tt-vehicles-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+
+.tt-vehicles-list {
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.tt-vehicles-gap {
+  color: var(--rust);
+  margin-top: 4px;
+}
+
+.tt-tech-bar {
+  display: flex;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.tt-tech-cell {
+  width: 18px;
+  height: 5px;
+  background: var(--border);
+}
+
+.tt-tech-cell.active {
+  background: var(--gold);
+}
+
+.tt-client-hint {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--rust);
+}
+
+.tt-client-hint.is-client { color: var(--gold-bright); }
+
+/* ──────────────── Loading shimmer ──────────────── */
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--text-faint);
+  font-size: 14px;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.loading.hidden { opacity: 0; }
+
+/* ──────────────── Responsive trim ──────────────── */
+@media (max-width: 1100px) {
+  .meta-strip { gap: 16px; }
+  .meta-value { font-size: 15px; }
+  .controls { padding: 10px 20px; gap: 14px; }
+  header.masthead { padding: 14px 20px 10px 20px; }
+  footer.legend-bar { padding: 9px 20px; }
+}
+
 </style>
-
 </head>
 <body>
-<div class="container">
+<div id="app">
 
-<div class="header">
-  <h1>S110 DAC in Invest One</h1>
-  <p class="sub">Operating a Section 110 DAC SPV as if it were a fund-of-one in Invest One — full journal entries, GTI account references, transaction types, and instruction format</p>
-  <span class="tag">Fund-of-One mental model · Single GTI account · Quarterly dealing</span>
-</div>
-
-<!-- Intro -->
-
-<div class="intro">
-  <strong>Purpose of this document.</strong> The DAC is set up in Invest One as an SPV with one GTI account representing the sole noteholder (the Investor). This walkthrough translates the S110 DAC mechanics into Invest One terms — instructions, transaction types, and journal entries — so the ops team can process the structure using familiar workflows. The PPN face value plays the role of "units outstanding" and the quarterly coupon plays the role of "distribution." We are using fund language deliberately to bridge the knowledge gap. The underlying mechanics still follow S110 / Trust Deed rules — see the right-column items in the analogy one-pager for what doesn't transfer.
-</div>
-
-<!-- Setup -->
-
-<h2>Setup in Invest One</h2>
-
-<div class="setup-card">
-  <h3 style="margin-top:0">Structure parameters</h3>
-  <p>Configure the DAC as an SPV with a single GTI account. All investor activity flows through this one account. Dealing frequency is monthly for subscriptions/redemptions; distribution frequency is quarterly.</p>
-
-  <div class="setup-grid">
-    <div class="setup-item"><div class="lbl">SPV Code</div><div class="val">DAC-001</div></div>
-    <div class="setup-item"><div class="lbl">Fund / Sub-fund</div><div class="val">DAC-001 (single)</div></div>
-    <div class="setup-item"><div class="lbl">Share Class</div><div class="val">PPN-A (notional)</div></div>
-    <div class="setup-item"><div class="lbl">GTI Account</div><div class="val">GTI-DAC001-001</div></div>
-    <div class="setup-item"><div class="lbl">Investor Name</div><div class="val">The Investor (AUT)</div></div>
-    <div class="setup-item"><div class="lbl">Currency</div><div class="val">EUR</div></div>
-    <div class="setup-item"><div class="lbl">Dealing Frequency</div><div class="val">Monthly (subs/reds)</div></div>
-    <div class="setup-item"><div class="lbl">Distribution Frequency</div><div class="val">Quarterly</div></div>
-    <div class="setup-item"><div class="lbl">NAV Frequency</div><div class="val">Daily</div></div>
-    <div class="setup-item"><div class="lbl">Pricing Convention</div><div class="val">NAV-based, ~1.000000</div></div>
-  </div>
-
-  <div class="tcode-note">
-    <strong>Note on transaction codes.</strong> The transaction codes shown (e.g., <code>SUB</code>, <code>RED</code>, <code>DIV</code>) are illustrative — your team should map these to the actual Invest One transaction type codes configured in your environment. The principle (debit/credit pattern, account fields, instruction format) is what matters and applies regardless of the specific code.
-  </div>
-</div>
-
-<!-- SCENARIO 1: LAUNCH -->
-
-<h2>Scenario 1 — Launch (Day 1 in-kind subscription)</h2>
-
-<div class="scenario sub">
-  <h3 style="margin-top:0">€20m in-kind subscription by the Investor</h3>
-  <div class="meta">
-    <span><strong>Date:</strong> 1 January</span>
-    <span><strong>Type:</strong> Initial subscription (in-kind)</span>
-    <span><strong>Amount:</strong> €20,000,000</span>
-  </div>
-
-  <p>The Investor transfers 100 syndicated loans and 10 bonds to the DAC at fair value. The DAC issues the PPN at €20m face value. No cash moves.</p>
-
-  <div class="instruction">
-    <div class="instruction-title">Instruction to Invest One</div>
-    <div class="row"><div class="field">Transaction Type:</div><div class="val">SUB-IK (Subscription, In-Kind)</div></div>
-    <div class="row"><div class="field">GTI Account:</div><div class="val">GTI-DAC001-001</div></div>
-    <div class="row"><div class="field">Trade Date:</div><div class="val">2025-01-01</div></div>
-    <div class="row"><div class="field">Settlement Date:</div><div class="val">2025-01-01</div></div>
-    <div class="row"><div class="field">Subscription Amount:</div><div class="val">EUR 20,000,000.00</div></div>
-    <div class="row"><div class="field">NAV per Unit:</div><div class="val">1.000000</div></div>
-    <div class="row"><div class="field">Units Issued:</div><div class="val">20,000,000.00 (= PPN face value)</div></div>
-    <div class="row"><div class="field">Settlement Method:</div><div class="val">In-Kind (asset transfer schedule attached)</div></div>
-    <div class="row"><div class="field">Asset Schedule:</div><div class="val">100 loans + 10 bonds at FV — attached</div></div>
-  </div>
-
-  <h3>Journal entries booked in Invest One</h3>
-  <table class="je">
-    <tr><th>Dr/Cr</th><th>GL Account</th><th>Amount (EUR)</th><th>Narrative</th></tr>
-    <tr><td class="dr-col">DR</td><td>Loan Portfolio</td><td>17,500,000.00</td><td class="narr">Receive 100 syndicated loans at FV</td></tr>
-    <tr><td class="dr-col">DR</td><td>Bond Portfolio</td><td>2,500,000.00</td><td class="narr">Receive 10 bonds at FV</td></tr>
-    <tr><td class="cr-col">CR</td><td>PPN Liability (= "Capital Account")</td><td>20,000,000.00</td><td class="narr">Issue PPN to GTI-DAC001-001</td></tr>
-    <tr class="total-row"><td colspan="2">Total</td><td>DR 20,000,000.00 = CR 20,000,000.00</td><td></td></tr>
-  </table>
-
-  <div class="callout info">
-    <strong>Translation note.</strong> In a traditional fund, the credit side would post to "Capital Account" or "Share Capital." For the DAC, this is the <strong>PPN Liability</strong> account because the PPN is debt, not equity. Invest One will treat it as the capital-like line for capstock reporting, but the underlying GL account is a liability.
-  </div>
-</div>
-
-<!-- SCENARIO 2: NEW SUBSCRIPTION -->
-
-<h2>Scenario 2 — Mid-life cash subscription (monthly dealing)</h2>
-
-<div class="scenario sub">
-  <h3 style="margin-top:0">€10m additional cash subscription on a dealing day</h3>
-  <div class="meta">
-    <span><strong>Date:</strong> 15 February (dealing day)</span>
-    <span><strong>Type:</strong> Subscription (cash)</span>
-    <span><strong>Amount:</strong> €10,000,000</span>
-  </div>
-
-  <p>The Investor wires €10m to the DAC bank account. The DAC receives cash; the PPN face value increases by €10m. Issued at a NAV of ~1.040000 (because the portfolio has appreciated since launch).</p>
-
-  <div class="instruction">
-    <div class="instruction-title">Instruction to Invest One</div>
-    <div class="row"><div class="field">Transaction Type:</div><div class="val">SUB (Cash Subscription)</div></div>
-    <div class="row"><div class="field">GTI Account:</div><div class="val">GTI-DAC001-001</div></div>
-    <div class="row"><div class="field">Trade Date:</div><div class="val">2025-02-15</div></div>
-    <div class="row"><div class="field">Settlement Date:</div><div class="val">2025-02-15</div></div>
-    <div class="row"><div class="field">Subscription Amount:</div><div class="val">EUR 10,000,000.00</div></div>
-    <div class="row"><div class="field">NAV per Unit:</div><div class="val">1.040000 (special NAV ratio)</div></div>
-    <div class="row"><div class="field">Units Issued:</div><div class="val">9,615,384.62 (apparent — see note)</div></div>
-    <div class="row"><div class="field">Settlement Method:</div><div class="val">Wire / SWIFT (cash)</div></div>
-    <div class="row"><div class="field">Reference:</div><div class="val">DRAW-DAC001-Q1-2025</div></div>
-  </div>
-
-  <h3>Journal entries booked in Invest One</h3>
-  <table class="je">
-    <tr><th>Dr/Cr</th><th>GL Account</th><th>Amount (EUR)</th><th>Narrative</th></tr>
-    <tr><td class="dr-col">DR</td><td>Cash at Bank</td><td>10,000,000.00</td><td class="narr">Cash received from Investor</td></tr>
-    <tr><td class="cr-col">CR</td><td>PPN Liability</td><td>10,000,000.00</td><td class="narr">Increase PPN face value to €30m</td></tr>
-    <tr class="total-row"><td colspan="2">Total</td><td>DR 10,000,000.00 = CR 10,000,000.00</td><td></td></tr>
-  </table>
-
-  <h3>Before / After GTI account state</h3>
-  <div class="ba-grid">
-    <div class="ba-box">
-      <div class="title">Before (14 February)</div>
-      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€20,000,000</span></div>
-      <div class="line"><span class="lbl">NAV</span><span class="val">€20,800,000</span></div>
-      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.040000</span></div>
-      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€100,000</span></div>
+  <header class="masthead">
+    <div class="brand">
+      <h1>Asset Manager <span class="accent">Cluster Atlas</span></h1>
+      <div class="subtitle">Top 100 by AUM · End-2024 Basis · Click bubbles to tag clients</div>
     </div>
-    <div class="ba-box after">
-      <div class="title">After (15 February)</div>
-      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€30,000,000</span></div>
-      <div class="line"><span class="lbl">NAV</span><span class="val">€30,800,000</span></div>
-      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.026667</span></div>
-      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€10,100,000</span></div>
+    <div class="meta-strip">
+      <div class="meta-item">
+        <span class="meta-label">Firms</span>
+        <span class="meta-value" id="m-firms">100</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Total AUM</span>
+        <span class="meta-value"><span class="currency">$</span><span id="m-aum">—</span><span class="currency">T</span></span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Clients Tagged</span>
+        <span class="meta-value" id="m-clients">0</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Client AUM Share</span>
+        <span class="meta-value client-share" id="m-client-share">0.0%</span>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <div class="callout warn">
-    <strong>Important — "Units Issued" is a fiction.</strong> Because the Investor is the sole holder and the PPN is a debt instrument with a face value, "units" don't really exist. For Invest One capstock reporting, set <code>Units_Outstanding = PPN face value</code> on the new total. Some Invest One configurations expect a Units_Issued field on the instruction — populate it with the face value increase (€10m) rather than the NAV-implied unit count. Your platform team should confirm which field drives the capstock file output.
-  </div>
-
-  <div class="callout danger">
-    <strong>Hard governance gate.</strong> Do NOT raise this instruction without: (1) Investor drawdown notice received with 5 BD notice, (2) ManCo written approval on file, (3) Trustee written approval on file. Without all three, the PPN face value cannot legally change.
-  </div>
-</div>
-
-<!-- SCENARIO 3: REDEMPTION -->
-
-<h2>Scenario 3 — Cash redemption (principal paydown to Investor)</h2>
-
-<div class="scenario red">
-  <h3 style="margin-top:0">€5m principal paydown to the Investor</h3>
-  <div class="meta">
-    <span><strong>Date:</strong> 15 May (dealing day)</span>
-    <span><strong>Type:</strong> Redemption (cash)</span>
-    <span><strong>Amount:</strong> €5,000,000</span>
-  </div>
-
-  <p>The reinvestment period has ended. Principal proceeds received from amortising loans are returned to the Investor. The DAC wires €5m; the PPN face value decreases by €5m. This is the principal waterfall output, not the interest coupon.</p>
-
-  <div class="instruction">
-    <div class="instruction-title">Instruction to Invest One</div>
-    <div class="row"><div class="field">Transaction Type:</div><div class="val">RED (Cash Redemption)</div></div>
-    <div class="row"><div class="field">GTI Account:</div><div class="val">GTI-DAC001-001</div></div>
-    <div class="row"><div class="field">Trade Date:</div><div class="val">2025-05-15</div></div>
-    <div class="row"><div class="field">Settlement Date:</div><div class="val">2025-05-15</div></div>
-    <div class="row"><div class="field">Redemption Amount:</div><div class="val">EUR 5,000,000.00</div></div>
-    <div class="row"><div class="field">NAV per Unit:</div><div class="val">1.020000 (at redemption date)</div></div>
-    <div class="row"><div class="field">Units Cancelled:</div><div class="val">5,000,000.00 (= face value reduction)</div></div>
-    <div class="row"><div class="field">Settlement Method:</div><div class="val">Wire / SWIFT (cash)</div></div>
-    <div class="row"><div class="field">Reference:</div><div class="val">PAYDN-DAC001-Q2-2025</div></div>
-    <div class="row"><div class="field">Source:</div><div class="val">Principal waterfall (NOT interest)</div></div>
-  </div>
-
-  <h3>Journal entries booked in Invest One</h3>
-  <table class="je">
-    <tr><th>Dr/Cr</th><th>GL Account</th><th>Amount (EUR)</th><th>Narrative</th></tr>
-    <tr><td class="dr-col">DR</td><td>PPN Liability</td><td>5,000,000.00</td><td class="narr">Reduce PPN face value to €25m</td></tr>
-    <tr><td class="cr-col">CR</td><td>Cash at Bank</td><td>5,000,000.00</td><td class="narr">Cash wired to Investor</td></tr>
-    <tr class="total-row"><td colspan="2">Total</td><td>DR 5,000,000.00 = CR 5,000,000.00</td><td></td></tr>
-  </table>
-
-  <h3>Before / After GTI account state</h3>
-  <div class="ba-grid">
-    <div class="ba-box">
-      <div class="title">Before (14 May)</div>
-      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€30,000,000</span></div>
-      <div class="line"><span class="lbl">NAV</span><span class="val">€30,600,000</span></div>
-      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.020000</span></div>
-      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€5,400,000</span></div>
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Cluster by</span>
+      <select id="ctrl-cluster">
+        <option value="super">Super-Cluster (default)</option>
+        <option value="region">Region</option>
+        <option value="parent_type">Parent Type</option>
+        <option value="asset_class">Primary Asset Class</option>
+        <option value="ta_tilt">Trad/Alts Tilt</option>
+        <option value="ap_tilt">Active/Passive Tilt</option>
+      </select>
     </div>
-    <div class="ba-box after">
-      <div class="title">After (15 May)</div>
-      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€25,000,000</span></div>
-      <div class="line"><span class="lbl">NAV</span><span class="val">€25,600,000</span></div>
-      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.024000</span></div>
-      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€400,000</span></div>
+    <div class="control-group">
+      <span class="control-label">Colour by</span>
+      <select id="ctrl-color">
+        <option value="region">Region</option>
+        <option value="parent_type">Parent Type</option>
+        <option value="tech_tier">Tech Tier</option>
+        <option value="ap_tilt">Active/Passive Tilt</option>
+        <option value="ta_tilt">Trad/Alts Tilt</option>
+      </select>
     </div>
-  </div>
-
-  <div class="callout danger">
-    <strong>Critical distinction.</strong> A "redemption" in this structure is ONLY a principal return — it reduces the PPN face value. The quarterly interest coupon is NOT a redemption (see Scenario 4). Mixing the two breaks S110 tax neutrality. Configure Invest One so that the COUPON transaction type does NOT reduce Units_Outstanding, while the RED transaction type does.
-  </div>
-</div>
-
-<!-- SCENARIO 4: DISTRIBUTION -->
-
-<h2>Scenario 4 — Quarterly distribution (PPN coupon)</h2>
-
-<div class="scenario dist">
-  <h3 style="margin-top:0">€750k quarterly coupon to the Investor</h3>
-  <div class="meta">
-    <span><strong>Date:</strong> 31 March (quarter-end)</span>
-    <span><strong>Type:</strong> Distribution (interest coupon)</span>
-    <span><strong>Amount:</strong> €750,000 (gross)</span>
-  </div>
-
-  <p>The interest waterfall residual flows to the Investor as the PPN coupon. WHT exemption is confirmed (DTT relief on file) so gross = net. The face value does NOT change.</p>
-
-  <div class="instruction">
-    <div class="instruction-title">Instruction to Invest One</div>
-    <div class="row"><div class="field">Transaction Type:</div><div class="val">DIV (Distribution / Income)</div></div>
-    <div class="row"><div class="field">GTI Account:</div><div class="val">GTI-DAC001-001</div></div>
-    <div class="row"><div class="field">Trade Date:</div><div class="val">2025-03-31</div></div>
-    <div class="row"><div class="field">Pay Date:</div><div class="val">2025-04-15</div></div>
-    <div class="row"><div class="field">Gross Distribution:</div><div class="val">EUR 750,000.00</div></div>
-    <div class="row"><div class="field">WHT Rate:</div><div class="val">0% (DTT exemption confirmed)</div></div>
-    <div class="row"><div class="field">WHT Amount:</div><div class="val">EUR 0.00</div></div>
-    <div class="row"><div class="field">Net to Investor:</div><div class="val">EUR 750,000.00</div></div>
-    <div class="row"><div class="field">Units Outstanding:</div><div class="val">30,000,000.00 (UNCHANGED)</div></div>
-    <div class="row"><div class="field">Settlement Method:</div><div class="val">Wire / SWIFT to Investor nominated account</div></div>
-    <div class="row"><div class="field">Reference:</div><div class="val">COUPON-DAC001-Q1-2025</div></div>
-  </div>
-
-  <h3>Journal entries booked in Invest One</h3>
-  <table class="je">
-    <tr><th>Dr/Cr</th><th>GL Account</th><th>Amount (EUR)</th><th>Narrative</th></tr>
-    <tr><td class="dr-col">DR</td><td>PPN Coupon Expense (Interest)</td><td>750,000.00</td><td class="narr">Recognise coupon — S110 deductible</td></tr>
-    <tr><td class="cr-col">CR</td><td>Cash at Bank</td><td>750,000.00</td><td class="narr">Wire to Investor (gross, no WHT)</td></tr>
-    <tr class="total-row"><td colspan="2">Total</td><td>DR 750,000.00 = CR 750,000.00</td><td></td></tr>
-  </table>
-
-  <div class="callout info">
-    <strong>If WHT applied (e.g., no DTT relief).</strong> A 20% WHT scenario would post as three lines: DR PPN Coupon Expense €750,000 / CR Cash at Bank €600,000 / CR WHT Payable to Revenue €150,000. The Net to Investor field on the instruction would be €600,000 with WHT Amount €150,000.
-  </div>
-
-  <h3>Before / After GTI account state</h3>
-  <div class="ba-grid">
-    <div class="ba-box">
-      <div class="title">Before (31 March)</div>
-      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€30,000,000</span></div>
-      <div class="line"><span class="lbl">NAV</span><span class="val">€30,800,000</span></div>
-      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.026667</span></div>
-      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€1,200,000</span></div>
+    <div class="control-group">
+      <span class="control-label">Search</span>
+      <input type="text" id="ctrl-search" placeholder="Firm name…" autocomplete="off">
     </div>
-    <div class="ba-box after">
-      <div class="title">After (15 April pay date)</div>
-      <div class="line"><span class="lbl">PPN Face Value</span><span class="val">€30,000,000</span></div>
-      <div class="line"><span class="lbl">NAV</span><span class="val">€30,050,000</span></div>
-      <div class="line"><span class="lbl">NAV per Unit</span><span class="val">1.001667</span></div>
-      <div class="line"><span class="lbl">Cash at Bank</span><span class="val">€450,000</span></div>
+    <label class="toggle">
+      <input type="checkbox" class="toggle-input" id="ctrl-clients-only">
+      <span>Clients only</span>
+    </label>
+    <div style="flex: 1"></div>
+    <button class="action danger" id="ctrl-reset">Reset clients</button>
+  </div>
+
+  <div class="stage">
+    <svg id="canvas"></svg>
+    <div class="loading" id="loading">Arranging the universe…</div>
+  </div>
+
+  <footer class="legend-bar">
+    <div class="legend" id="legend">
+      <!-- populated dynamically -->
     </div>
-  </div>
-
-  <div class="callout danger">
-    <strong>The critical Invest One configuration point.</strong> The DIV transaction type must NOT reduce Units_Outstanding. The PPN face value is unchanged by a coupon payment — only NAV and cash change. If Invest One is configured to treat DIV as reducing units (the default for some share class types), the capstock file will be wrong from this point forward. Have your platform admin confirm the DIV transaction code is set to "NAV impact: yes, Unit impact: no" for this SPV.
-  </div>
-
-  <div class="callout warn">
-    <strong>Governance gates before raising this instruction.</strong> All six must be cleared: FA calculation complete + reviewed; shadow book rec to IM clear; IM approval received; ManCo written approval; Directors' resolution (or standing authority); Trustee cash release authorisation. WHT documentation (5 items) must also be current — see the Distribution Calculator module in the specialist app for the full checklist.
-  </div>
-</div>
-
-<!-- Summary timeline -->
-
-<h2>Year-one timeline summary</h2>
-
-<table class="je">
-  <tr>
-    <th>Date</th>
-    <th>Event</th>
-    <th>Inv. One Tx Type</th>
-    <th>Reference</th>
-    <th>PPN Face After</th>
-    <th>Cash Movement</th>
-  </tr>
-  <tr>
-    <td>01 Jan</td><td>Initial in-kind subscription €20m</td>
-    <td>SUB-IK</td><td>INIT-DAC001-2025</td>
-    <td>€20,000,000</td><td>None</td>
-  </tr>
-  <tr>
-    <td>15 Feb</td><td>Cash subscription €10m</td>
-    <td>SUB</td><td>DRAW-DAC001-Q1-2025</td>
-    <td>€30,000,000</td><td>+€10,000,000</td>
-  </tr>
-  <tr>
-    <td>31 Mar</td><td>Q1 coupon €750k (paid 15 Apr)</td>
-    <td>DIV</td><td>COUPON-DAC001-Q1-2025</td>
-    <td>€30,000,000</td><td>-€750,000</td>
-  </tr>
-  <tr>
-    <td>15 May</td><td>Principal paydown to Investor €5m</td>
-    <td>RED</td><td>PAYDN-DAC001-Q2-2025</td>
-    <td>€25,000,000</td><td>-€5,000,000</td>
-  </tr>
-  <tr>
-    <td>30 Jun</td><td>Q2 coupon €620k (paid 15 Jul)</td>
-    <td>DIV</td><td>COUPON-DAC001-Q2-2025</td>
-    <td>€25,000,000</td><td>-€620,000</td>
-  </tr>
-  <tr>
-    <td>30 Sep</td><td>Q3 coupon €640k (paid 15 Oct)</td>
-    <td>DIV</td><td>COUPON-DAC001-Q3-2025</td>
-    <td>€25,000,000</td><td>-€640,000</td>
-  </tr>
-  <tr>
-    <td>31 Dec</td><td>Q4 coupon €650k (paid 15 Jan)</td>
-    <td>DIV</td><td>COUPON-DAC001-Q4-2025</td>
-    <td>€25,000,000</td><td>-€650,000</td>
-  </tr>
-</table>
-
-<!-- Key takeaways for ops -->
-
-<h2>Six key configuration points for the Invest One admin team</h2>
-
-<table class="je">
-  <tr><th>#</th><th>Configuration</th><th>Setting</th><th>Why</th></tr>
-  <tr><td>1</td><td>SPV / Fund setup</td><td>Single fund, single share class (PPN-A), single GTI account</td><td>One investor, one note, no class proliferation</td></tr>
-  <tr><td>2</td><td>Capstock denominator</td><td>Units_Outstanding = PPN face value (not NAV-derived units)</td><td>PPN is debt with a face value, not equity with units</td></tr>
-  <tr><td>3</td><td>SUB transaction type</td><td>Increases Units_Outstanding by subscription amount</td><td>Drawdowns increase face value €-for-€</td></tr>
-  <tr><td>4</td><td>RED transaction type</td><td>Decreases Units_Outstanding by redemption amount</td><td>Principal paydowns reduce face value €-for-€</td></tr>
-  <tr><td>5</td><td>DIV transaction type</td><td>NAV impact: yes. Unit impact: <strong>NO</strong></td><td>Coupon is interest expense — does not reduce face value</td></tr>
-  <tr><td>6</td><td>NAV per Unit display</td><td>Will hover around 1.00 throughout life</td><td>Income distributed quarterly — no NAV growth like a typical fund</td></tr>
-</table>
-
-<div class="callout info" style="margin-top:1.5rem">
-  <strong>Use this document as the Invest One configuration brief.</strong> Hand it to the Invest One platform team alongside the SPV setup request. They can map the transaction codes to your environment's actual codes and configure the share class behaviour accordingly. The journal entry patterns are universal — only the transaction type code names will differ in your specific Invest One configuration.
-</div>
-
-<div class="footer">
-  S110 DAC SPV in Invest One — Operations Bridge Document · Confidential working document
-</div>
+    <div class="footer-note">Bubble area ∝ AUM · Click to toggle client status · Hover for detail</div>
+  </footer>
 
 </div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ──────────────────────────────────────────────────────────────────────────
+// Embedded dataset (built end-2024 basis; see asset_managers_top100.json)
+// ──────────────────────────────────────────────────────────────────────────
+const DATASET = {"_meta":{"title":"Top 100 Global Asset Managers \u2014 D3 Cluster Dataset","basis":"end-2024 AUM","vehicle_keys":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicle_labels":{"ucits":"UCITS (EU)","usmf":"US 1940-Act Mutual Funds","etf":"ETFs","cit":"Collective Investment Trusts","sma":"Separate Accounts / SMAs","hf":"Hedge Funds","pe":"Private Equity Funds","pc":"Private Credit Funds","realassets":"Real Estate / Infrastructure","evergreen":"Interval / Evergreen / Tender-Offer Funds"},"sources":["Thinking Ahead Institute / P&I 500 2025","IPE Top 500 Asset Managers 2025","ADV Ratings America's Top 50","Living Group Top 100 Asset Managers 2025"]},"firms":[{"rank":1,"firm":"BlackRock","parent":"BlackRock Inc.","aum_usd_bn":11550,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Independent","ap_tilt":2,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":5,"tech_notes":"Aladdin is the industry-defining risk/portfolio platform; eFront for alts; heavy AI investment","living_engagement_score":85,"cluster":"Mega-Index-Plus-Alts","rank_source":"IPE 2025"},{"rank":2,"firm":"Vanguard","parent":"The Vanguard Group, Inc.","aum_usd_bn":10400,"hq":"USA","region":"North America","ownership":"Mutual","parent_type":"Independent","ap_tilt":1,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma"],"vehicles_not_offered":["hf","pe","pc","realassets","evergreen"],"vehicle_count":5,"tech_tier":4,"tech_notes":"Heavy proprietary tech, mutual ownership model reinvests in tech and fees; no hedge fund/PE/PC products","living_engagement_score":78,"cluster":"Mega-Index","rank_source":"IPE 2025"},{"rank":3,"firm":"Fidelity Investments","parent":"FMR LLC","aum_usd_bn":5900,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":5,"tech_notes":"Major proprietary platforms; largest US 401(k) recordkeeper; strong AI rollout via FidelityGPT","living_engagement_score":72,"cluster":"Diversified-Retail-Giant","rank_source":"IPE 2025"},{"rank":4,"firm":"State Street Investment Management","parent":"State Street Corp.","aum_usd_bn":4720,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Bank","ap_tilt":1,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["evergreen"],"vehicle_count":9,"tech_tier":5,"tech_notes":"SPDR ETFs; Charles River + Alpha platform; deep custody/admin integration","living_engagement_score":85,"cluster":"Mega-Index","rank_source":"IPE 2025"},{"rank":5,"firm":"J.P. Morgan Asset Management","parent":"JPMorgan Chase & Co.","aum_usd_bn":3990,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Bank","ap_tilt":3,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":4,"tech_notes":"Spectrum/Morgan Money platforms; rapid alts buildout; Onyx blockchain initiatives","living_engagement_score":80,"cluster":"Bank-AM-Diversified","rank_source":"IPE 2025"},{"rank":6,"firm":"Capital Group","parent":"The Capital Group Companies","aum_usd_bn":2840,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":5,"ta_tilt":1,"asset_class":"Equity","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","cit","sma"],"vehicles_not_offered":["etf","hf","pe","pc","realassets","evergreen"],"vehicle_count":4,"tech_tier":4,"tech_notes":"Quietly tech-heavy; American Funds DC franchise; recent ETF launches broke historic holdout","living_engagement_score":78,"cluster":"Active-Active-Equity","rank_source":"IPE 2025"},{"rank":7,"firm":"Goldman Sachs Asset Management","parent":"Goldman Sachs Group","aum_usd_bn":3100,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Bank","ap_tilt":3,"ta_tilt":4,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":5,"tech_notes":"Marquee platform; major alts buildout; growing wealth focus; deep capital markets integration","living_engagement_score":74,"cluster":"Bank-AM-Alts-Tilt","rank_source":"IPE 2025"},{"rank":8,"firm":"Amundi","parent":"Cr\u00e9dit Agricole / Soci\u00e9t\u00e9 G\u00e9n\u00e9rale","aum_usd_bn":2300,"hq":"France","region":"Europe","ownership":"Public","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":4,"tech_notes":"ALTO proprietary platform; Amundi Technology sells B2B servicing; AXA IM JV pending integration","living_engagement_score":71,"cluster":"EU-Bank-AM","rank_source":"IPE 2025"},{"rank":9,"firm":"BNY Investments","parent":"Bank of New York Mellon","aum_usd_bn":2100,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["evergreen"],"vehicle_count":9,"tech_tier":4,"tech_notes":"Multi-boutique under BNY; integrates with Pershing/Eagle; recently rebranded from BNY Mellon IM","living_engagement_score":78,"cluster":"Bank-AM-Multiboutique","rank_source":"IPE 2025"},{"rank":10,"firm":"PIMCO","parent":"Allianz Group","aum_usd_bn":2010,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":2,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pc","realassets","evergreen"],"vehicles_not_offered":["pe"],"vehicle_count":9,"tech_tier":4,"tech_notes":"Proprietary FI analytics; PIMCO Pro platform; deep quant fixed income infrastructure","living_engagement_score":76,"cluster":"Pure-Play-FI","rank_source":"IPE 2025"},{"rank":11,"firm":"Invesco","parent":"Invesco Ltd.","aum_usd_bn":1940,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Independent","ap_tilt":2,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["evergreen"],"vehicle_count":9,"tech_tier":3,"tech_notes":"QQQ franchise; Intelliflo advisor tech; consolidating legacy platforms post-multiple acquisitions","living_engagement_score":75,"cluster":"Diversified-ETF-Heavy","rank_source":"IPE 2025"},{"rank":12,"firm":"UBS Asset Management","parent":"UBS Group AG","aum_usd_bn":2900,"hq":"Switzerland","region":"Europe","ownership":"Public","parent_type":"Bank","ap_tilt":2,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":4,"tech_notes":"Post-Credit Suisse integration ongoing; UBS One Wealth platform; quant arm O'Connor","living_engagement_score":72,"cluster":"EU-Bank-AM-WealthLed","rank_source":"IPE 2025 (post-CS)"},{"rank":13,"firm":"Morgan Stanley Investment Management","parent":"Morgan Stanley","aum_usd_bn":1670,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Bank","ap_tilt":3,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":4,"tech_notes":"Eaton Vance Parametric direct indexing; strong wealth integration; AIQ AI program","living_engagement_score":70,"cluster":"Bank-AM-WealthLed","rank_source":"IPE 2025"},{"rank":14,"firm":"T. Rowe Price","parent":"T. Rowe Price Group","aum_usd_bn":1620,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Independent","ap_tilt":5,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","pe","pc","evergreen"],"vehicles_not_offered":["hf","realassets"],"vehicle_count":8,"tech_tier":4,"tech_notes":"Target-date franchise; OHA added private credit; substantial in-house engineering","living_engagement_score":71,"cluster":"Active-Active-DC-Heavy","rank_source":"IPE 2025"},{"rank":15,"firm":"Franklin Templeton","parent":"Franklin Resources Inc.","aum_usd_bn":1580,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Independent","ap_tilt":3,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":3,"tech_notes":"Multi-boutique post-Legg Mason/Lexington; ongoing legacy system consolidation; tokenisation pilots (BENJI)","living_engagement_score":68,"cluster":"Diversified-Multiboutique","rank_source":"IPE 2025"},{"rank":16,"firm":"Edward Jones","parent":"The Jones Financial Companies","aum_usd_bn":2300,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Wealth-Brokerage","ap_tilt":4,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":false,"wholesale":true,"retail":true,"dc":false},"vehicles_offered":["usmf","sma"],"vehicles_not_offered":["ucits","etf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":2,"tech_tier":2,"tech_notes":"Advisor-distribution model; minimal product manufacturing; selects external managers","living_engagement_score":null,"cluster":"Wealth-Distributor","rank_source":"Public AUM disclosure"},{"rank":17,"firm":"Charles Schwab Investment Management","parent":"Charles Schwab Corp.","aum_usd_bn":1240,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Wealth-Brokerage","ap_tilt":2,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["usmf","etf","cit","sma"],"vehicles_not_offered":["ucits","hf","pe","pc","realassets","evergreen"],"vehicle_count":4,"tech_tier":4,"tech_notes":"Schwab platform synergy; major ETF/index franchise; passive-led product set","living_engagement_score":70,"cluster":"Wealth-Index","rank_source":"IPE 2025"},{"rank":18,"firm":"Legal & General Investment Management","parent":"Legal & General Group","aum_usd_bn":1370,"hq":"UK","region":"UK","ownership":"Public","parent_type":"Insurance","ap_tilt":1,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["usmf","cit"],"vehicle_count":8,"tech_tier":3,"tech_notes":"Strong LDI/solutions franchise; major UK DC presence; in middle of platform modernisation","living_engagement_score":71,"cluster":"UK-Insurance-LDI","rank_source":"IPE 2025"},{"rank":19,"firm":"Geode Capital Management","parent":"Independent (Fidelity-affiliated)","aum_usd_bn":1300,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":1,"ta_tilt":1,"asset_class":"Equity","distribution":{"institutional":true,"wholesale":false,"retail":false,"dc":false},"vehicles_offered":["usmf","etf","cit","sma"],"vehicles_not_offered":["ucits","hf","pe","pc","realassets","evergreen"],"vehicle_count":4,"tech_tier":4,"tech_notes":"Sub-advisor to Fidelity index funds; lean index-tracking ops; institutional only","living_engagement_score":45,"cluster":"Index-Sub-Advisor","rank_source":"IPE 2025"},{"rank":20,"firm":"Natixis Investment Managers","parent":"BPCE / Groupe BPCE","aum_usd_bn":1340,"hq":"France","region":"Europe","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Multi-affiliate model (Loomis Sayles, Harris, Ostrum, Mirova); integration ongoing","living_engagement_score":68,"cluster":"EU-Bank-AM-Multiboutique","rank_source":"IPE 2025"},{"rank":21,"firm":"Northern Trust Asset Management","parent":"Northern Trust Corporation","aum_usd_bn":1280,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Trust","ap_tilt":2,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","pc","realassets"],"vehicles_not_offered":["hf","pe","evergreen"],"vehicle_count":7,"tech_tier":4,"tech_notes":"Quant-heavy; FlexShares ETFs; integrated with custody/admin parent","living_engagement_score":74,"cluster":"Trust-AM-Quant","rank_source":"IPE 2025"},{"rank":22,"firm":"Wellington Management","parent":"Wellington Management Co. LLP","aum_usd_bn":1300,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":5,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","cit","sma","hf","pe","pc"],"vehicles_not_offered":["etf","realassets","evergreen"],"vehicle_count":7,"tech_tier":4,"tech_notes":"Sub-advisor giant; partnership-owned; major institutional fixed income and equity","living_engagement_score":71,"cluster":"Active-Sub-Advisor-Giant","rank_source":"IPE 2025"},{"rank":23,"firm":"Nuveen","parent":"TIAA (Teachers Insurance and Annuity Association)","aum_usd_bn":1300,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":3,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":4,"tech_notes":"Real assets (timberland, farmland, RE) standout; TIAA parent provides DC distribution","living_engagement_score":81,"cluster":"Insurance-AM-RealAssets","rank_source":"IPE 2025"},{"rank":24,"firm":"Blackstone","parent":"Blackstone Inc.","aum_usd_bn":1180,"hq":"USA","region":"North America","ownership":"Public","parent_type":"PE-Alts","ap_tilt":5,"ta_tilt":5,"asset_class":"Alts","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["ucits","usmf","etf","cit"],"vehicle_count":6,"tech_tier":5,"tech_notes":"Industry-defining alts platform; BXPE, BCRED retail interval/evergreen products; major tech investment","living_engagement_score":72,"cluster":"Pure-Play-Alts-Giant","rank_source":"IPE 2025"},{"rank":25,"firm":"DWS Group","parent":"Deutsche Bank AG","aum_usd_bn":1080,"hq":"Germany","region":"Europe","ownership":"Public","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Xtrackers ETFs; FundsHub platform; substantial separation from DB parent post-IPO","living_engagement_score":66,"cluster":"EU-Bank-AM","rank_source":"IPE 2025"},{"rank":26,"firm":"Cr\u00e9dit Mutuel Alliance F\u00e9d\u00e9rale AM","parent":"Cr\u00e9dit Mutuel","aum_usd_bn":800,"hq":"France","region":"Europe","ownership":"Private","parent_type":"Bank","ap_tilt":4,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma"],"vehicles_not_offered":["usmf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":3,"tech_tier":2,"tech_notes":"Mutual-bank model; primarily domestic distribution; limited alts","living_engagement_score":null,"cluster":"EU-Bank-AM-Domestic","rank_source":"Est. \u2014 public AUM"},{"rank":27,"firm":"Sumitomo Mitsui Trust Asset Management","parent":"Sumitomo Mitsui Trust Holdings","aum_usd_bn":850,"hq":"Japan","region":"Japan","ownership":"Subsidiary","parent_type":"Trust","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["usmf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["ucits","etf","cit","evergreen"],"vehicle_count":6,"tech_tier":3,"tech_notes":"Major Japanese trust bank AM; growing global product set; private markets push","living_engagement_score":49,"cluster":"Japan-Trust-AM","rank_source":"IPE 2025"},{"rank":28,"firm":"Brookfield Asset Management","parent":"Brookfield Corp.","aum_usd_bn":1060,"hq":"Canada","region":"North America","ownership":"Public","parent_type":"PE-Alts","ap_tilt":5,"ta_tilt":5,"asset_class":"Alts","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["ucits","usmf","etf","cit"],"vehicle_count":6,"tech_tier":5,"tech_notes":"Real assets dominance (infra, RE, renewables); Oaktree platform; growing retail evergreens","living_engagement_score":72,"cluster":"Pure-Play-Alts-RealAssets","rank_source":"IPE 2025"},{"rank":29,"firm":"RBC Global Asset Management","parent":"Royal Bank of Canada","aum_usd_bn":600,"hq":"Canada","region":"North America","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","pe","pc","realassets"],"vehicles_not_offered":["cit","hf","evergreen"],"vehicle_count":7,"tech_tier":3,"tech_notes":"Largest Canadian bank-AM; BlueBay (UK) for institutional FI; growing alts","living_engagement_score":null,"cluster":"Bank-AM-Canada","rank_source":"Est. \u2014 public AUM"},{"rank":30,"firm":"Schroders","parent":"Schroders plc","aum_usd_bn":1010,"hq":"UK","region":"UK","ownership":"Public","parent_type":"Independent","ap_tilt":4,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Schroders Capital private markets push; Solutions Hub; major UK wealth (Cazenove)","living_engagement_score":74,"cluster":"UK-Independent-Diversified","rank_source":"IPE 2025"},{"rank":31,"firm":"Federated Hermes","parent":"Federated Hermes Inc.","aum_usd_bn":800,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Independent","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["cit","evergreen"],"vehicle_count":8,"tech_tier":3,"tech_notes":"Money market fund leader; ESG via Hermes/EOS stewardship; specialist scale","living_engagement_score":72,"cluster":"MMF-Specialist","rank_source":"IPE 2025"},{"rank":32,"firm":"PGIM (incl. PGIM Fixed Income + PGIM Investments)","parent":"Prudential Financial","aum_usd_bn":1450,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":3,"ta_tilt":3,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":4,"tech_notes":"Major insurance-affiliated multi-boutique; FI strength; PGIM Real Estate prominent","living_engagement_score":73,"cluster":"Insurance-AM-Diversified","rank_source":"IPE 2025 (combined)"},{"rank":33,"firm":"Northwestern Mutual Investment Services","parent":"Northwestern Mutual","aum_usd_bn":627,"hq":"USA","region":"North America","ownership":"Mutual","parent_type":"Insurance","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":false,"wholesale":true,"retail":true,"dc":false},"vehicles_offered":["usmf","sma","pc"],"vehicles_not_offered":["ucits","etf","cit","hf","pe","realassets","evergreen"],"vehicle_count":3,"tech_tier":2,"tech_notes":"Largely captive distribution to NM agents; conservative product set","living_engagement_score":null,"cluster":"Insurance-AM-Captive","rank_source":"Est. \u2014 public AUM"},{"rank":34,"firm":"Ameriprise Financial Total AM (incl. Columbia TI)","parent":"Ameriprise Financial Inc.","aum_usd_bn":1080,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Wealth-Brokerage","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","pe","pc","realassets"],"vehicles_not_offered":["hf","evergreen"],"vehicle_count":8,"tech_tier":3,"tech_notes":"Wealth-led platform; Columbia Threadneedle is the asset management arm","living_engagement_score":null,"cluster":"Wealth-AM-Diversified","rank_source":"Est. (ADV Ratings)"},{"rank":35,"firm":"Insight Investment","parent":"BNY Investments (subsidiary)","aum_usd_bn":950,"hq":"UK","region":"UK","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":4,"ta_tilt":2,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","sma","hf","pc","realassets"],"vehicles_not_offered":["etf","cit","pe","evergreen"],"vehicle_count":6,"tech_tier":3,"tech_notes":"LDI franchise post-Mercury; major UK pension solutions; FI specialist","living_engagement_score":72,"cluster":"UK-LDI-Specialist","rank_source":"IPE 2025"},{"rank":36,"firm":"Dimensional Fund Advisors","parent":"Dimensional Holdings Inc.","aum_usd_bn":770,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":2,"ta_tilt":1,"asset_class":"Equity","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma"],"vehicles_not_offered":["hf","pe","pc","realassets","evergreen"],"vehicle_count":5,"tech_tier":4,"tech_notes":"Factor-tilt indexing; recent ETF expansion; institutional academic heritage","living_engagement_score":73,"cluster":"Factor-Specialist","rank_source":"IPE 2025"},{"rank":37,"firm":"BNP Paribas Asset Management (incl. AXA IM)","parent":"BNP Paribas","aum_usd_bn":1700,"hq":"France","region":"Europe","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Post-AXA IM combination creates Europe's largest insurer-affiliated AM; integration phase","living_engagement_score":70,"cluster":"EU-Bank-AM","rank_source":"IPE 2025 (post-AXA combo)"},{"rank":38,"firm":"Apollo Global Management","parent":"Apollo Global Management Inc.","aum_usd_bn":750,"hq":"USA","region":"North America","ownership":"Public","parent_type":"PE-Alts","ap_tilt":5,"ta_tilt":5,"asset_class":"Alts","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["ucits","usmf","etf","cit"],"vehicle_count":6,"tech_tier":5,"tech_notes":"Athene insurance/retirement integration; private credit at scale; ACRA tokenisation","living_engagement_score":74,"cluster":"Pure-Play-Alts-PrivateCredit","rank_source":"IPE 2025"},{"rank":39,"firm":"HSBC Asset Management","parent":"HSBC Holdings plc","aum_usd_bn":750,"hq":"UK","region":"UK","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["cit","evergreen"],"vehicle_count":8,"tech_tier":3,"tech_notes":"Strong Asia distribution; UCITS/AIF range; consolidating onto unified platform","living_engagement_score":66,"cluster":"Bank-AM-Asia-Tilt","rank_source":"IPE 2025"},{"rank":40,"firm":"Manulife Investment Management","parent":"Manulife Financial Corporation","aum_usd_bn":770,"hq":"Canada","region":"North America","ownership":"Public","parent_type":"Insurance","ap_tilt":4,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Insurance affiliate; significant Asia presence; growing alts (PE, real assets)","living_engagement_score":62,"cluster":"Insurance-AM-Diversified","rank_source":"IPE 2025"},{"rank":41,"firm":"New York Life Investments","parent":"New York Life Insurance Co.","aum_usd_bn":770,"hq":"USA","region":"North America","ownership":"Mutual","parent_type":"Insurance","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["evergreen"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Multi-boutique: MacKay Shields, Candriam, NYL Investors; PE/credit growth","living_engagement_score":62,"cluster":"Insurance-AM-Multiboutique","rank_source":"IPE 2025"},{"rank":42,"firm":"Affiliated Managers Group","parent":"Affiliated Managers Group Inc.","aum_usd_bn":730,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Independent","ap_tilt":5,"ta_tilt":4,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":[],"vehicle_count":10,"tech_tier":3,"tech_notes":"Multi-affiliate holding co; equity stakes in many boutiques (Pantheon, AQR etc.)","living_engagement_score":74,"cluster":"Multi-Affiliate-Holdco","rank_source":"IPE 2025"},{"rank":43,"firm":"BMO Global Asset Management","parent":"Bank of Montreal","aum_usd_bn":460,"hq":"Canada","region":"North America","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","pe","pc","realassets"],"vehicles_not_offered":["cit","hf","evergreen"],"vehicle_count":7,"tech_tier":3,"tech_notes":"Canadian bank-AM; some US/EMEA reach (BMO ETFs); growing alts","living_engagement_score":null,"cluster":"Bank-AM-Canada","rank_source":"Est."},{"rank":44,"firm":"Columbia Threadneedle Investments","parent":"Ameriprise Financial Inc.","aum_usd_bn":640,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Wealth-Brokerage","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["evergreen"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Trans-Atlantic combination of Columbia (US) + Threadneedle (UK); platform consolidation","living_engagement_score":66,"cluster":"Wealth-AM-Diversified","rank_source":"IPE 2025"},{"rank":45,"firm":"APG Asset Management","parent":"APG Groep N.V.","aum_usd_bn":700,"hq":"Netherlands","region":"Europe","ownership":"Mutual","parent_type":"Independent","ap_tilt":3,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":false,"retail":false,"dc":false},"vehicles_offered":["sma","hf","pe","pc","realassets"],"vehicles_not_offered":["ucits","usmf","etf","cit","evergreen"],"vehicle_count":5,"tech_tier":4,"tech_notes":"Captive Dutch pension fund AM (ABP, BpfBouw); innovative direct investing","living_engagement_score":71,"cluster":"Pension-Captive-AM","rank_source":"IPE 2025"},{"rank":46,"firm":"MUFG Asset Management","parent":"Mitsubishi UFJ Financial Group","aum_usd_bn":700,"hq":"Japan","region":"Japan","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["usmf","sma","pe","pc","realassets"],"vehicles_not_offered":["ucits","etf","cit","hf","evergreen"],"vehicle_count":5,"tech_tier":2,"tech_notes":"Major Japanese bank AM; consolidated multiple Mitsubishi UFJ AM entities; growing global","living_engagement_score":24,"cluster":"Japan-Bank-AM","rank_source":"IPE 2025"},{"rank":47,"firm":"KKR & Co.","parent":"KKR & Co. Inc.","aum_usd_bn":640,"hq":"USA","region":"North America","ownership":"Public","parent_type":"PE-Alts","ap_tilt":5,"ta_tilt":5,"asset_class":"Alts","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["ucits","usmf","etf","cit"],"vehicle_count":6,"tech_tier":5,"tech_notes":"Major PE/credit/infra platform; Global Atlantic insurance integration; growing retail evergreens","living_engagement_score":72,"cluster":"Pure-Play-Alts-Diversified","rank_source":"IPE 2025"},{"rank":48,"firm":"Mercer","parent":"Marsh McLennan","aum_usd_bn":540,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Independent","ap_tilt":3,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":true},"vehicles_offered":["ucits","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["usmf","etf","cit","evergreen"],"vehicle_count":6,"tech_tier":3,"tech_notes":"OCIO/delegated solutions leader; consulting heritage; growing manager-of-managers","living_engagement_score":74,"cluster":"OCIO-Consulting","rank_source":"IPE 2025"},{"rank":49,"firm":"MFS Investment Management","parent":"Sun Life Financial","aum_usd_bn":660,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":5,"ta_tilt":1,"asset_class":"Equity","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","cit","sma"],"vehicles_not_offered":["etf","hf","pe","pc","realassets","evergreen"],"vehicle_count":4,"tech_tier":3,"tech_notes":"Pure active equity; insurance-owned; oldest US mutual fund manager (1924)","living_engagement_score":73,"cluster":"Active-Equity-Specialist","rank_source":"IPE 2025"},{"rank":50,"firm":"MetLife Investment Management","parent":"MetLife Inc.","aum_usd_bn":600,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":3,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":false},"vehicles_offered":["usmf","sma","pe","pc","realassets"],"vehicles_not_offered":["ucits","etf","cit","hf","evergreen"],"vehicle_count":5,"tech_tier":3,"tech_notes":"Insurance GA-led; private credit/infra growth; major third-party FI","living_engagement_score":62,"cluster":"Insurance-AM-FI","rank_source":"IPE 2025"},{"rank":51,"firm":"Allianz Global Investors","parent":"Allianz Group","aum_usd_bn":650,"hq":"Germany","region":"Europe","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pc","realassets","evergreen"],"vehicles_not_offered":["cit","pe"],"vehicle_count":8,"tech_tier":3,"tech_notes":"Distinct from PIMCO within Allianz; UCITS/AIF range; structured products specialist","living_engagement_score":68,"cluster":"Insurance-AM-Active","rank_source":"IPE 2025"},{"rank":52,"firm":"BBVA Asset Management","parent":"Banco Bilbao Vizcaya Argentaria","aum_usd_bn":250,"hq":"Spain","region":"Europe","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","sma"],"vehicles_not_offered":["usmf","etf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":2,"tech_tier":2,"tech_notes":"Spanish bank-AM; LatAm reach via parent; primarily long-only","living_engagement_score":null,"cluster":"EU-Bank-AM-Regional","rank_source":"Est."},{"rank":53,"firm":"Macquarie Asset Management","parent":"Macquarie Group","aum_usd_bn":600,"hq":"Australia","region":"Asia ex-Japan","ownership":"Public","parent_type":"Bank","ap_tilt":3,"ta_tilt":4,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":4,"tech_notes":"Real assets/infra global leader; Delaware Investments (US); investment bank parent","living_engagement_score":62,"cluster":"Bank-AM-Infra","rank_source":"IPE 2025"},{"rank":54,"firm":"Nomura Asset Management","parent":"Nomura Holdings","aum_usd_bn":540,"hq":"Japan","region":"Japan","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["etf","cit","evergreen"],"vehicle_count":7,"tech_tier":2,"tech_notes":"Largest Japanese securities-firm AM; growing UCITS range; investment bank parent","living_engagement_score":24,"cluster":"Japan-Bank-AM","rank_source":"IPE 2025"},{"rank":55,"firm":"Fidelity International","parent":"FIL Holdings (UK) Ltd.","aum_usd_bn":870,"hq":"UK","region":"UK","ownership":"Private","parent_type":"Independent","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["usmf","cit"],"vehicle_count":8,"tech_tier":4,"tech_notes":"Separate from US Fidelity since 1980; strong Asia/EMEA; in-house platform tech","living_engagement_score":66,"cluster":"Global-Independent","rank_source":"IPE 2025"},{"rank":56,"firm":"Principal Global Investors","parent":"Principal Financial Group","aum_usd_bn":560,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Insurance","ap_tilt":3,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["evergreen"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Insurance/retirement integration; multi-boutique; real estate specialist","living_engagement_score":68,"cluster":"Insurance-AM-Diversified","rank_source":"IPE 2025"},{"rank":57,"firm":"Allspring Global Investments","parent":"GTCR / Reverence Capital","aum_usd_bn":580,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","pc","realassets"],"vehicles_not_offered":["hf","pe","evergreen"],"vehicle_count":7,"tech_tier":3,"tech_notes":"Former Wells Fargo AM; PE-backed independence (2021); platform modernisation","living_engagement_score":77,"cluster":"Active-Diversified","rank_source":"IPE 2025"},{"rank":58,"firm":"Union Investment","parent":"DZ Bank Group","aum_usd_bn":540,"hq":"Germany","region":"Europe","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma"],"vehicles_not_offered":["usmf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":3,"tech_tier":2,"tech_notes":"Cooperative-bank AM; primarily German retail/institutional","living_engagement_score":66,"cluster":"EU-Bank-AM-Domestic","rank_source":"IPE 2025"},{"rank":59,"firm":"Neuberger Berman","parent":"Neuberger Berman Group LLC","aum_usd_bn":500,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":4,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Employee-owned; multi-strategy; meaningful private equity/credit","living_engagement_score":71,"cluster":"Independent-Diversified","rank_source":"IPE 2025"},{"rank":60,"firm":"Stifel Financial","parent":"Stifel Financial Corp.","aum_usd_bn":480,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Wealth-Brokerage","ap_tilt":3,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":false,"wholesale":true,"retail":true,"dc":false},"vehicles_offered":["usmf","sma"],"vehicles_not_offered":["ucits","etf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":2,"tech_tier":2,"tech_notes":"Wealth/broker-dealer led; advisor distribution model","living_engagement_score":62,"cluster":"Wealth-Distributor","rank_source":"IPE 2025"},{"rank":61,"firm":"Daiwa Asset Management","parent":"Daiwa Securities Group","aum_usd_bn":290,"hq":"Japan","region":"Japan","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","sma","pe","pc","realassets"],"vehicles_not_offered":["etf","cit","hf","evergreen"],"vehicle_count":6,"tech_tier":2,"tech_notes":"Second-largest Japanese broker AM; growing UCITS and global product","living_engagement_score":null,"cluster":"Japan-Bank-AM","rank_source":"Est."},{"rank":62,"firm":"Ares Management","parent":"Ares Management Corporation","aum_usd_bn":470,"hq":"USA","region":"North America","ownership":"Public","parent_type":"PE-Alts","ap_tilt":5,"ta_tilt":5,"asset_class":"Alts","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["ucits","usmf","etf","cit"],"vehicle_count":6,"tech_tier":5,"tech_notes":"Private credit specialist; growing real estate and PE; major institutional","living_engagement_score":73,"cluster":"Pure-Play-Alts-PrivateCredit","rank_source":"IPE 2025"},{"rank":63,"firm":"Anima Holding","parent":"Anima Holding S.p.A.","aum_usd_bn":220,"hq":"Italy","region":"Europe","ownership":"Public","parent_type":"Independent","ap_tilt":4,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","sma"],"vehicles_not_offered":["usmf","etf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":2,"tech_tier":2,"tech_notes":"Largest independent Italian AM; distribution via BPM/MPS/Poste","living_engagement_score":null,"cluster":"EU-Independent-Regional","rank_source":"Est."},{"rank":64,"firm":"RBC BlueBay Asset Management","parent":"Royal Bank of Canada","aum_usd_bn":480,"hq":"UK","region":"UK","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":4,"ta_tilt":2,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pc","realassets"],"vehicles_not_offered":["cit","pe","evergreen"],"vehicle_count":7,"tech_tier":3,"tech_notes":"UK-based FI/credit specialist; institutional and intermediary distribution","living_engagement_score":74,"cluster":"FI-Specialist-Bank","rank_source":"IPE 2025"},{"rank":65,"firm":"Aberdeen Investments","parent":"Aberdeen Group plc","aum_usd_bn":700,"hq":"UK","region":"UK","ownership":"Public","parent_type":"Independent","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["cit"],"vehicle_count":9,"tech_tier":3,"tech_notes":"Rebranded from abrdn 2025; restructured post-Phoenix Wealth; refocused on core AM","living_engagement_score":77,"cluster":"UK-Independent-Diversified","rank_source":"IPE 2025"},{"rank":66,"firm":"Asset Management One","parent":"Mizuho FG / Dai-ichi Life","aum_usd_bn":510,"hq":"Japan","region":"Japan","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","sma","pe","pc","realassets"],"vehicles_not_offered":["etf","cit","hf","evergreen"],"vehicle_count":6,"tech_tier":2,"tech_notes":"Merger of DIAM/Mizuho/Shinko AMs; global expansion via Asset Management One International","living_engagement_score":null,"cluster":"Japan-Bank-AM","rank_source":"IPE 2025"},{"rank":67,"firm":"Carlyle Group","parent":"The Carlyle Group Inc.","aum_usd_bn":450,"hq":"USA","region":"North America","ownership":"Public","parent_type":"PE-Alts","ap_tilt":5,"ta_tilt":5,"asset_class":"Alts","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["ucits","usmf","etf","cit"],"vehicle_count":6,"tech_tier":5,"tech_notes":"Global PE leader; growing credit (CLO/direct lending) and real assets","living_engagement_score":70,"cluster":"Pure-Play-Alts-Diversified","rank_source":"IPE 2025"},{"rank":68,"firm":"Ostrum Asset Management","parent":"Natixis IM / BPCE","aum_usd_bn":400,"hq":"France","region":"Europe","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":4,"ta_tilt":1,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":false},"vehicles_offered":["ucits","sma","pc"],"vehicles_not_offered":["usmf","etf","cit","hf","pe","realassets","evergreen"],"vehicle_count":3,"tech_tier":3,"tech_notes":"European insurance-FI specialist; large captive flows from BPCE insurance arms","living_engagement_score":62,"cluster":"FI-Specialist-Insurance","rank_source":"IPE 2025"},{"rank":69,"firm":"Barings","parent":"Massachusetts Mutual Life Insurance","aum_usd_bn":440,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":4,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["etf","cit"],"vehicle_count":8,"tech_tier":3,"tech_notes":"MassMutual-owned; FI/private credit/structured products specialist","living_engagement_score":70,"cluster":"Insurance-AM-FI-PC","rank_source":"IPE 2025"},{"rank":70,"firm":"Eurizon Capital","parent":"Intesa Sanpaolo","aum_usd_bn":400,"hq":"Italy","region":"Europe","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","pc"],"vehicles_not_offered":["usmf","cit","hf","pe","realassets","evergreen"],"vehicle_count":4,"tech_tier":2,"tech_notes":"Largest Italian bank AM; primarily UCITS; distribution-driven","living_engagement_score":null,"cluster":"EU-Bank-AM-Regional","rank_source":"IPE 2025"},{"rank":71,"firm":"TD Asset Management","parent":"Toronto-Dominion Bank","aum_usd_bn":400,"hq":"Canada","region":"North America","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["usmf","etf","sma","pe","pc","realassets"],"vehicles_not_offered":["ucits","cit","hf","evergreen"],"vehicle_count":6,"tech_tier":3,"tech_notes":"Largest Canadian AM by AUM; mutual funds plus growing institutional","living_engagement_score":73,"cluster":"Bank-AM-Canada","rank_source":"IPE 2025"},{"rank":72,"firm":"Dodge & Cox","parent":"Dodge & Cox","aum_usd_bn":430,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":5,"ta_tilt":1,"asset_class":"Equity","distribution":{"institutional":false,"wholesale":true,"retail":true,"dc":false},"vehicles_offered":["usmf","sma"],"vehicles_not_offered":["ucits","etf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":2,"tech_tier":2,"tech_notes":"Boutique pure-active value; partnership-owned; long fund track records","living_engagement_score":62,"cluster":"Active-Equity-Boutique","rank_source":"IPE 2025"},{"rank":73,"firm":"Mitsubishi UFJ Trust & Banking AM division","parent":"Mitsubishi UFJ Trust Holdings","aum_usd_bn":380,"hq":"Japan","region":"Japan","ownership":"Subsidiary","parent_type":"Trust","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":false},"vehicles_offered":["usmf","sma","pe","pc","realassets"],"vehicles_not_offered":["ucits","etf","cit","hf","evergreen"],"vehicle_count":5,"tech_tier":2,"tech_notes":"Japanese trust bank; institutional pension AM focus; growing global","living_engagement_score":null,"cluster":"Japan-Trust-AM","rank_source":"Est."},{"rank":74,"firm":"Generali Asset Management","parent":"Assicurazioni Generali S.p.A.","aum_usd_bn":660,"hq":"Italy","region":"Europe","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":2,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":false},"vehicles_offered":["ucits","etf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["usmf","cit","evergreen"],"vehicle_count":7,"tech_tier":3,"tech_notes":"Insurance-led; major European insurance GA manager; growing third-party","living_engagement_score":63,"cluster":"Insurance-AM-Europe","rank_source":"IPE 2025"},{"rank":75,"firm":"BlackRock Cash Management (separate disclosure)","parent":"BlackRock Inc.","aum_usd_bn":850,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Independent","ap_tilt":1,"ta_tilt":1,"asset_class":"Cash/MMF","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":false},"vehicles_offered":["usmf","sma"],"vehicles_not_offered":["ucits","etf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":2,"tech_tier":5,"tech_notes":"Often reported separately; included for completeness \u2014 primarily aggregated into BlackRock #1","living_engagement_score":null,"cluster":"MMF-Specialist","rank_source":"Disclosed sub-AUM"},{"rank":76,"firm":"Loomis, Sayles & Company","parent":"Natixis Investment Managers","aum_usd_bn":380,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":5,"ta_tilt":1,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","cit","sma","pc"],"vehicles_not_offered":["etf","hf","pe","realassets","evergreen"],"vehicle_count":5,"tech_tier":3,"tech_notes":"FI-focused affiliate of Natixis; institutional fixed income specialist","living_engagement_score":74,"cluster":"FI-Boutique","rank_source":"IPE 2025"},{"rank":77,"firm":"M&G Investments","parent":"M&G plc","aum_usd_bn":420,"hq":"UK","region":"UK","ownership":"Public","parent_type":"Insurance","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["cit","evergreen"],"vehicle_count":8,"tech_tier":3,"tech_notes":"Demerged from Prudential plc (UK); strong UK retail + institutional FI","living_engagement_score":65,"cluster":"UK-Insurance-AM","rank_source":"IPE 2025"},{"rank":78,"firm":"Janus Henderson Investors","parent":"Janus Henderson Group plc","aum_usd_bn":425,"hq":"UK","region":"UK","ownership":"Public","parent_type":"Independent","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","cit","sma","hf","pc","realassets"],"vehicles_not_offered":["pe","evergreen"],"vehicle_count":8,"tech_tier":3,"tech_notes":"Trans-Atlantic merger 2017; substantial UCITS/40-Act overlap; growing ETF","living_engagement_score":71,"cluster":"Active-Diversified-Independent","rank_source":"IPE 2025"},{"rank":79,"firm":"MEAG Munich Ergo Asset Management","parent":"Munich Re / ERGO","aum_usd_bn":380,"hq":"Germany","region":"Europe","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":3,"ta_tilt":3,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":false},"vehicles_offered":["ucits","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["usmf","etf","cit","evergreen"],"vehicle_count":6,"tech_tier":2,"tech_notes":"Insurance-led; Munich Re/ERGO captive plus selected third-party","living_engagement_score":63,"cluster":"Insurance-AM-Europe","rank_source":"IPE 2025"},{"rank":80,"firm":"Mizuho Asset Management (consolidated)","parent":"Mizuho Financial Group","aum_usd_bn":290,"hq":"Japan","region":"Japan","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["usmf","sma","pe","pc","realassets"],"vehicles_not_offered":["ucits","etf","cit","hf","evergreen"],"vehicle_count":5,"tech_tier":2,"tech_notes":"Japanese megabank AM; part of broader Asset Management One integration history","living_engagement_score":null,"cluster":"Japan-Bank-AM","rank_source":"Est."},{"rank":81,"firm":"Aegon Asset Management","parent":"Aegon Ltd.","aum_usd_bn":340,"hq":"Netherlands","region":"Europe","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":2,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["etf","cit","evergreen"],"vehicle_count":7,"tech_tier":3,"tech_notes":"Insurance-affiliated; Transamerica (US); FI/credit specialist","living_engagement_score":63,"cluster":"Insurance-AM-Europe","rank_source":"IPE 2025"},{"rank":82,"firm":"Hartford Funds","parent":"The Hartford Financial Services Group","aum_usd_bn":220,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":false,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["usmf","etf","cit","sma"],"vehicles_not_offered":["ucits","hf","pe","pc","realassets","evergreen"],"vehicle_count":4,"tech_tier":2,"tech_notes":"Insurance distribution arm; sub-advises mostly to Wellington","living_engagement_score":null,"cluster":"Insurance-Distributor","rank_source":"Est."},{"rank":83,"firm":"Blue Owl Capital","parent":"Blue Owl Capital Inc.","aum_usd_bn":280,"hq":"USA","region":"North America","ownership":"Public","parent_type":"PE-Alts","ap_tilt":5,"ta_tilt":5,"asset_class":"Alts","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["ucits","usmf","etf","cit"],"vehicle_count":6,"tech_tier":4,"tech_notes":"PE-credit specialist (post-Owl Rock/Dyal merger); retail evergreens push","living_engagement_score":71,"cluster":"Pure-Play-Alts-PrivateCredit","rank_source":"IPE 2025"},{"rank":84,"firm":"Voya Investment Management","parent":"Voya Financial Inc.","aum_usd_bn":340,"hq":"USA","region":"North America","ownership":"Public","parent_type":"Insurance","ap_tilt":4,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["usmf","etf","cit","sma","pc"],"vehicles_not_offered":["ucits","hf","pe","realassets","evergreen"],"vehicle_count":5,"tech_tier":3,"tech_notes":"Insurance heritage; retirement-focused; growing private markets via Allianz JV","living_engagement_score":66,"cluster":"Insurance-AM-Retirement","rank_source":"IPE 2025"},{"rank":85,"firm":"Russell Investments","parent":"TA Associates / Reverence Capital","aum_usd_bn":320,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":4,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":true},"vehicles_offered":["ucits","usmf","cit","sma","hf","pe","pc","realassets","evergreen"],"vehicles_not_offered":["etf"],"vehicle_count":9,"tech_tier":3,"tech_notes":"OCIO and multi-manager solutions specialist; index licensing legacy","living_engagement_score":79,"cluster":"OCIO-Multi-Manager","rank_source":"IPE 2025"},{"rank":86,"firm":"Swisscanto (Z\u00fcrcher Kantonalbank)","parent":"Z\u00fcrcher Kantonalbank","aum_usd_bn":270,"hq":"Switzerland","region":"Europe","ownership":"State","parent_type":"Bank","ap_tilt":2,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","pe","pc","realassets"],"vehicles_not_offered":["usmf","cit","hf","evergreen"],"vehicle_count":6,"tech_tier":3,"tech_notes":"State-owned cantonal bank AM; Swiss pension fund focus","living_engagement_score":66,"cluster":"EU-Bank-AM-Regional","rank_source":"IPE 2025"},{"rank":87,"firm":"CDPQ (Caisse de d\u00e9p\u00f4t et placement du Qu\u00e9bec)","parent":"Government of Qu\u00e9bec","aum_usd_bn":470,"hq":"Canada","region":"North America","ownership":"State","parent_type":"State-Sponsored","ap_tilt":3,"ta_tilt":4,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":false,"retail":false,"dc":false},"vehicles_offered":["sma","hf","pe","pc","realassets"],"vehicles_not_offered":["ucits","usmf","etf","cit","evergreen"],"vehicle_count":5,"tech_tier":4,"tech_notes":"Quebec public pension manager; major direct investing in infra/PE/real assets","living_engagement_score":62,"cluster":"Pension-Captive-Alts","rank_source":"IPE 2025"},{"rank":88,"firm":"Nordea Asset Management","parent":"Nordea Bank Abp","aum_usd_bn":280,"hq":"Sweden","region":"Europe","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","pe","pc","realassets"],"vehicles_not_offered":["usmf","cit","hf","evergreen"],"vehicle_count":6,"tech_tier":3,"tech_notes":"Nordic bank-AM; sustainable investing pedigree; Pan-Nordic distribution","living_engagement_score":66,"cluster":"EU-Bank-AM-Regional","rank_source":"IPE 2025"},{"rank":89,"firm":"Swiss Life Asset Managers","parent":"Swiss Life Holding AG","aum_usd_bn":280,"hq":"Switzerland","region":"Europe","ownership":"Public","parent_type":"Insurance","ap_tilt":4,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":true},"vehicles_offered":["ucits","sma","pe","pc","realassets"],"vehicles_not_offered":["usmf","etf","cit","hf","evergreen"],"vehicle_count":5,"tech_tier":3,"tech_notes":"Real estate/infra heritage; insurance-led; growing third-party","living_engagement_score":66,"cluster":"Insurance-AM-Europe","rank_source":"IPE 2025"},{"rank":90,"firm":"Santander Asset Management","parent":"Banco Santander","aum_usd_bn":230,"hq":"Spain","region":"Europe","ownership":"Subsidiary","parent_type":"Bank","ap_tilt":3,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","pe","pc","realassets"],"vehicles_not_offered":["usmf","cit","hf","evergreen"],"vehicle_count":6,"tech_tier":3,"tech_notes":"Spanish/LatAm/UK bank-AM footprint; primarily distribution-driven","living_engagement_score":66,"cluster":"EU-Bank-AM-Regional","rank_source":"IPE 2025"},{"rank":91,"firm":"Pictet Asset Management","parent":"Pictet Group (partnership)","aum_usd_bn":270,"hq":"Switzerland","region":"Europe","ownership":"Private","parent_type":"Independent","ap_tilt":5,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["usmf","cit","evergreen"],"vehicle_count":7,"tech_tier":4,"tech_notes":"Swiss partnership; thematic equity franchise; private wealth integration","living_engagement_score":72,"cluster":"Active-Specialist-Independent","rank_source":"IPE 2025"},{"rank":92,"firm":"TCW Group","parent":"Carlyle / TCW management","aum_usd_bn":210,"hq":"USA","region":"North America","ownership":"Private","parent_type":"PE-Alts","ap_tilt":4,"ta_tilt":3,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","etf","sma","hf","pc","realassets"],"vehicles_not_offered":["cit","pe","evergreen"],"vehicle_count":7,"tech_tier":3,"tech_notes":"FI specialist (MetWest, formerly TCW); Carlyle stake; structured credit","living_engagement_score":72,"cluster":"FI-Specialist","rank_source":"IPE 2025"},{"rank":93,"firm":"MetLife Insurance General Account (separate)","parent":"MetLife Inc.","aum_usd_bn":220,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":3,"asset_class":"Fixed Income","distribution":{"institutional":false,"wholesale":true,"retail":false,"dc":false},"vehicles_offered":["sma","pe","pc","realassets"],"vehicles_not_offered":["ucits","usmf","etf","cit","hf","evergreen"],"vehicle_count":4,"tech_tier":2,"tech_notes":"Insurance GA only (often aggregated with #50); included for visibility","living_engagement_score":null,"cluster":"Insurance-GA","rank_source":"Est. sub-AUM"},{"rank":94,"firm":"Western Asset Management Company","parent":"Franklin Resources Inc.","aum_usd_bn":380,"hq":"USA","region":"North America","ownership":"Subsidiary","parent_type":"Independent","ap_tilt":4,"ta_tilt":1,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","cit","sma","pc"],"vehicles_not_offered":["etf","hf","pe","realassets","evergreen"],"vehicle_count":5,"tech_tier":3,"tech_notes":"Major FI franchise within Franklin; recent SEC issues impacting flows","living_engagement_score":62,"cluster":"FI-Specialist","rank_source":"IPE 2025"},{"rank":95,"firm":"Pictet Wealth + Banque Pictet AM combined disclosure","parent":"Pictet Group","aum_usd_bn":720,"hq":"Switzerland","region":"Europe","ownership":"Private","parent_type":"Independent","ap_tilt":5,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","hf","pe","pc","realassets"],"vehicles_not_offered":["usmf","cit","evergreen"],"vehicle_count":7,"tech_tier":4,"tech_notes":"Includes wealth-managed assets; partnership; Swiss high-quality brand","living_engagement_score":null,"cluster":"Wealth-AM-Swiss","rank_source":"Est. group-level"},{"rank":96,"firm":"Geode Cash Management (subset)","parent":"Geode Capital Management","aum_usd_bn":200,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":1,"ta_tilt":1,"asset_class":"Cash/MMF","distribution":{"institutional":true,"wholesale":false,"retail":false,"dc":false},"vehicles_offered":["usmf","sma"],"vehicles_not_offered":["ucits","etf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":2,"tech_tier":4,"tech_notes":"Cash sleeve of #19; included for visibility","living_engagement_score":null,"cluster":"MMF-Specialist","rank_source":"Est. sub-AUM"},{"rank":97,"firm":"SLC Management","parent":"Sun Life Financial","aum_usd_bn":280,"hq":"Canada","region":"North America","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":4,"ta_tilt":3,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","usmf","sma","hf","pc","realassets","evergreen"],"vehicles_not_offered":["etf","cit","pe"],"vehicle_count":7,"tech_tier":3,"tech_notes":"Sun Life's institutional AM; FI/private markets focus (BentallGreenOak, Crescent Capital)","living_engagement_score":74,"cluster":"Insurance-AM-Diversified","rank_source":"IPE 2025"},{"rank":98,"firm":"Nissay Asset Management","parent":"Nippon Life Insurance Company","aum_usd_bn":250,"hq":"Japan","region":"Japan","ownership":"Subsidiary","parent_type":"Insurance","ap_tilt":3,"ta_tilt":1,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":false,"dc":false},"vehicles_offered":["usmf","sma"],"vehicles_not_offered":["ucits","etf","cit","hf","pe","pc","realassets","evergreen"],"vehicle_count":2,"tech_tier":2,"tech_notes":"Largest Japanese life insurer AM; primarily domestic","living_engagement_score":24,"cluster":"Japan-Insurance-AM","rank_source":"IPE 2025"},{"rank":99,"firm":"Robeco","parent":"ORIX Corporation","aum_usd_bn":220,"hq":"Netherlands","region":"Europe","ownership":"Subsidiary","parent_type":"Independent","ap_tilt":4,"ta_tilt":2,"asset_class":"Mixed","distribution":{"institutional":true,"wholesale":true,"retail":true,"dc":true},"vehicles_offered":["ucits","etf","sma","pc"],"vehicles_not_offered":["usmf","cit","hf","pe","realassets","evergreen"],"vehicle_count":4,"tech_tier":4,"tech_notes":"Sustainable/quant equity heritage; Dutch independent under Japanese parent","living_engagement_score":71,"cluster":"Sustainable-Quant","rank_source":"IPE 2025"},{"rank":100,"firm":"NISA Investment Advisors","parent":"NISA Investment Advisors LLC","aum_usd_bn":470,"hq":"USA","region":"North America","ownership":"Private","parent_type":"Independent","ap_tilt":4,"ta_tilt":1,"asset_class":"Fixed Income","distribution":{"institutional":true,"wholesale":false,"retail":false,"dc":false},"vehicles_offered":["sma","pc"],"vehicles_not_offered":["ucits","usmf","etf","cit","hf","pe","realassets","evergreen"],"vehicle_count":2,"tech_tier":3,"tech_notes":"LDI/derivatives overlay specialist; institutional pension/insurance focus","living_engagement_score":72,"cluster":"LDI-Specialist","rank_source":"IPE 2025"}]};
+const FIRMS = DATASET.firms;
+const VEHICLE_LABELS = DATASET._meta.vehicle_labels;
+
+// Vehicle label map (display friendly)
+const VLABEL_SHORT = {
+  ucits: "UCITS",
+  usmf: "40-Act MF",
+  etf: "ETF",
+  cit: "CIT",
+  sma: "SMA",
+  hf: "Hedge",
+  pe: "PE",
+  pc: "Pvt Credit",
+  realassets: "Real Assets",
+  evergreen: "Interval/Evgrn"
+};
+
+// ──────────────────────────────────────────────────────────────────────────
+// Colour palettes
+// ──────────────────────────────────────────────────────────────────────────
+const PALETTES = {
+  region: {
+    "North America": "#6b9bd1",
+    "UK":            "#c47557",
+    "Europe":        "#88a056",
+    "Japan":         "#b974a3",
+    "Asia ex-Japan": "#d4a648",
+    "Other":         "#888888",
+  },
+  parent_type: {
+    "Independent":      "#d4a648",
+    "Bank":             "#6b9bd1",
+    "Insurance":        "#88a056",
+    "Trust":            "#b974a3",
+    "PE-Alts":          "#ec7c4a",
+    "Wealth-Brokerage": "#c47ec4",
+    "State-Sponsored":  "#6e6e6e",
+  },
+  tech_tier: {
+    1: "#3d556e",
+    2: "#5a7a99",
+    3: "#88a3bd",
+    4: "#d4a648",
+    5: "#ec7c4a",
+  },
+  ap_tilt: {
+    1: "#6b9bd1",
+    2: "#82a9c4",
+    3: "#9fa896",
+    4: "#c7a062",
+    5: "#ec7c4a",
+  },
+  ta_tilt: {
+    1: "#6b9bd1",
+    2: "#82a9c4",
+    3: "#9fa896",
+    4: "#c7a062",
+    5: "#ec7c4a",
+  },
+};
+
+// ──────────────────────────────────────────────────────────────────────────
+// Super-cluster derivation — 10ish meaningful buckets for layout
+// ──────────────────────────────────────────────────────────────────────────
+function superCluster(d) {
+  if (d.aum_usd_bn >= 2000) return "Trillion-Plus";
+  if (d.parent_type === "PE-Alts") return "Alts Specialists";
+  if (d.parent_type === "Trust") return "Trust Banks";
+  if (d.parent_type === "State-Sponsored") return "State/Pension";
+  if (d.parent_type === "Insurance") {
+    if (d.region === "Europe" || d.region === "UK") return "Insurance — EU/UK";
+    if (d.region === "Japan") return "Insurance — Japan";
+    return "Insurance — Other";
+  }
+  if (d.parent_type === "Bank") {
+    if (d.region === "Japan") return "Japan Banks";
+    if (d.region === "Europe" || d.region === "UK") return "EU/UK Banks";
+    return "Banks — Other";
+  }
+  if (d.parent_type === "Wealth-Brokerage") return "Wealth-Led";
+  if (d.ap_tilt <= 2) return "Passive/Index";
+  if (d.ap_tilt >= 4) return "Active Specialists";
+  return "Diversified Independent";
+}
+
+// Pre-compute super-cluster on each firm
+FIRMS.forEach(f => { f.super = superCluster(f); });
+
+// Accessor function for the currently selected clustering dimension
+function clusterAccessor(mode) {
+  if (mode === "super") return d => d.super;
+  if (mode === "region") return d => d.region;
+  if (mode === "parent_type") return d => d.parent_type;
+  if (mode === "asset_class") return d => d.asset_class;
+  if (mode === "ta_tilt") return d => "Trad↔Alts tier " + d.ta_tilt;
+  if (mode === "ap_tilt") return d => "Active↔Passive tier " + d.ap_tilt;
+  return d => d.super;
+}
+
+// Colour accessor
+function colorFor(mode, d) {
+  if (mode === "region")      return PALETTES.region[d.region] || "#888";
+  if (mode === "parent_type") return PALETTES.parent_type[d.parent_type] || "#888";
+  if (mode === "tech_tier")   return PALETTES.tech_tier[d.tech_tier] || "#888";
+  if (mode === "ap_tilt")     return PALETTES.ap_tilt[d.ap_tilt] || "#888";
+  if (mode === "ta_tilt")     return PALETTES.ta_tilt[d.ta_tilt] || "#888";
+  return "#888";
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Client state — persisted in localStorage so PB's client list survives
+// page reloads on his own machine.
+// ──────────────────────────────────────────────────────────────────────────
+const CLIENT_KEY = "amca.clients.v1";
+let CLIENTS = new Set();
+try {
+  const raw = localStorage.getItem(CLIENT_KEY);
+  if (raw) CLIENTS = new Set(JSON.parse(raw));
+} catch (e) {}
+
+function saveClients() {
+  try { localStorage.setItem(CLIENT_KEY, JSON.stringify([...CLIENTS])); } catch (e) {}
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// SVG setup
+// ──────────────────────────────────────────────────────────────────────────
+const svg = d3.select("#canvas");
+const stage = document.querySelector(".stage");
+
+let WIDTH = stage.clientWidth;
+let HEIGHT = stage.clientHeight;
+
+svg.attr("viewBox", [0, 0, WIDTH, HEIGHT]);
+
+const gClusters = svg.append("g").attr("class", "cluster-labels-layer");
+const gNodes = svg.append("g").attr("class", "nodes-layer");
+
+// ──────────────────────────────────────────────────────────────────────────
+// Bubble size — square-root scale on AUM (so area ∝ AUM)
+// ──────────────────────────────────────────────────────────────────────────
+const aumMax = d3.max(FIRMS, d => d.aum_usd_bn);
+const r = d3.scaleSqrt().domain([0, aumMax]).range([3.5, 56]);
+
+// Initial positions — random scatter so the simulation has something to settle from
+FIRMS.forEach(f => {
+  f.x = WIDTH / 2 + (Math.random() - 0.5) * WIDTH * 0.6;
+  f.y = HEIGHT / 2 + (Math.random() - 0.5) * HEIGHT * 0.6;
+  f.r = r(f.aum_usd_bn);
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// Cluster centroid layout — arrange centroids on a deterministic grid,
+// sized by member count, sorted by total AUM (biggest cluster top-left)
+// ──────────────────────────────────────────────────────────────────────────
+function computeCentroids(clusterFn) {
+  const groups = d3.rollup(
+    FIRMS,
+    v => ({ count: v.length, aum: d3.sum(v, d => d.aum_usd_bn) }),
+    clusterFn
+  );
+  const arr = [...groups, ].map(([key, val]) => ({ key, ...val }));
+  arr.sort((a, b) => b.aum - a.aum);
+
+  // grid dimensions
+  const n = arr.length;
+  const cols = Math.ceil(Math.sqrt(n * (WIDTH / HEIGHT)));
+  const rows = Math.ceil(n / cols);
+
+  const padX = 80, padY = 70;
+  const labelGutter = 26;
+  const stepX = (WIDTH - padX * 2) / cols;
+  const stepY = (HEIGHT - padY * 2 - labelGutter) / rows;
+
+  const positions = {};
+  arr.forEach((c, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    positions[c.key] = {
+      x: padX + stepX * col + stepX / 2,
+      y: padY + labelGutter + stepY * row + stepY / 2,
+      count: c.count,
+      aum: c.aum,
+      key: c.key,
+    };
+  });
+  return { positions, arr };
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Simulation
+// ──────────────────────────────────────────────────────────────────────────
+let currentCluster = "super";
+let currentColor = "region";
+let currentSearch = "";
+let clientsOnly = false;
+let centroids = computeCentroids(clusterAccessor(currentCluster));
+
+const simulation = d3.forceSimulation(FIRMS)
+  .alphaDecay(0.04)
+  .velocityDecay(0.55)
+  .force("x", d3.forceX(d => centroids.positions[clusterAccessor(currentCluster)(d)].x).strength(0.18))
+  .force("y", d3.forceY(d => centroids.positions[clusterAccessor(currentCluster)(d)].y).strength(0.20))
+  .force("collide", d3.forceCollide(d => d.r + 1.5).strength(0.9))
+  .force("charge", d3.forceManyBody().strength(-3))
+  .on("tick", ticked);
+
+// ──────────────────────────────────────────────────────────────────────────
+// Render bubbles
+// ──────────────────────────────────────────────────────────────────────────
+const nodes = gNodes.selectAll("circle.firm-node")
+  .data(FIRMS, d => d.firm)
+  .join("circle")
+    .attr("class", "firm-node")
+    .attr("r", d => d.r)
+    .attr("fill", d => colorFor(currentColor, d))
+    .attr("fill-opacity", 0.78)
+    .attr("stroke", d => d3.color(colorFor(currentColor, d)).darker(0.6))
+    .attr("stroke-width", 0.6)
+    .on("mouseenter", onHover)
+    .on("mousemove", onMove)
+    .on("mouseleave", onLeave)
+    .on("click", onClick);
+
+// Apply client state
+nodes.classed("client", d => CLIENTS.has(d.firm));
+
+function ticked() {
+  nodes
+    .attr("cx", d => d.x = Math.max(d.r + 4, Math.min(WIDTH - d.r - 4, d.x)))
+    .attr("cy", d => d.y = Math.max(d.r + 30, Math.min(HEIGHT - d.r - 8, d.y)));
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Cluster labels (drawn above the bubble field)
+// ──────────────────────────────────────────────────────────────────────────
+function renderClusterLabels() {
+  const data = Object.values(centroids.positions);
+  const labels = gClusters.selectAll("g.cluster-label-group")
+    .data(data, d => d.key)
+    .join(
+      enter => {
+        const g = enter.append("g").attr("class", "cluster-label-group")
+          .attr("transform", d => `translate(${d.x}, ${d.y - 65})`)
+          .style("opacity", 0);
+        g.append("text")
+          .attr("class", "cluster-label")
+          .attr("y", 0)
+          .text(d => d.key);
+        g.append("text")
+          .attr("class", "cluster-label-count")
+          .attr("y", 14)
+          .text(d => `${d.count} · $${(d.aum / 1000).toFixed(1)}T`);
+        g.transition().duration(500).style("opacity", 1);
+        return g;
+      },
+      update => {
+        update.transition().duration(600)
+          .attr("transform", d => `translate(${d.x}, ${d.y - 65})`);
+        update.select(".cluster-label-count")
+          .text(d => `${d.count} · $${(d.aum / 1000).toFixed(1)}T`);
+        return update;
+      },
+      exit => exit.transition().duration(300).style("opacity", 0).remove()
+    );
+}
+
+renderClusterLabels();
+
+// ──────────────────────────────────────────────────────────────────────────
+// Tooltip
+// ──────────────────────────────────────────────────────────────────────────
+const tooltip = d3.select("#tooltip");
+
+function onHover(event, d) {
+  tooltip.classed("visible", true);
+  renderTooltip(d);
+  d3.select(this).raise();
+}
+
+function onMove(event, d) {
+  const pad = 16;
+  const ttRect = tooltip.node().getBoundingClientRect();
+  let x = event.clientX + pad;
+  let y = event.clientY + pad;
+  if (x + ttRect.width > window.innerWidth - 12) x = event.clientX - ttRect.width - pad;
+  if (y + ttRect.height > window.innerHeight - 12) y = event.clientY - ttRect.height - pad;
+  tooltip.style("left", x + "px").style("top", y + "px");
+}
+
+function onLeave() {
+  tooltip.classed("visible", false);
+}
+
+function renderTooltip(d) {
+  const offered = d.vehicles_offered.map(k => VLABEL_SHORT[k]);
+  const notOffered = d.vehicles_not_offered.map(k => VLABEL_SHORT[k]);
+  const techBar = [1,2,3,4,5].map(i =>
+    `<span class="tt-tech-cell ${i <= d.tech_tier ? 'active' : ''}"></span>`
+  ).join("");
+  const isClient = CLIENTS.has(d.firm);
+
+  tooltip.html(`
+    <div class="tt-rank">RANK #${d.rank.toString().padStart(3, "0")}</div>
+    <div class="tt-firm">${d.firm}</div>
+    <div class="tt-parent">${d.parent}</div>
+    <dl class="tt-grid">
+      <dt>AUM</dt><dd class="tt-aum">$${(d.aum_usd_bn).toLocaleString()}bn</dd>
+      <dt>HQ</dt><dd>${d.hq} · ${d.region}</dd>
+      <dt>Ownership</dt><dd>${d.ownership} · ${d.parent_type}</dd>
+      <dt>Asset Mix</dt><dd>${d.asset_class} · A/P ${d.ap_tilt} · T/A ${d.ta_tilt}</dd>
+      <dt>Tech Tier</dt><dd><div class="tt-tech-bar">${techBar}</div></dd>
+      <dt>Cluster</dt><dd style="color: var(--gold);">${d.cluster}</dd>
+    </dl>
+    <div class="tt-vehicles">
+      <div class="tt-vehicles-label">Vehicles offered (${offered.length}/10)</div>
+      <div class="tt-vehicles-list">${offered.join(" · ")}</div>
+      ${notOffered.length ? `<div class="tt-vehicles-gap">Gaps: ${notOffered.join(" · ")}</div>` : ""}
+    </div>
+    <div class="tt-client-hint ${isClient ? 'is-client' : ''}">
+      ${isClient ? '✓ Tagged as client · click to remove' : 'Click bubble to tag as client'}
+    </div>
+  `);
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Click to tag client
+// ──────────────────────────────────────────────────────────────────────────
+function onClick(event, d) {
+  if (CLIENTS.has(d.firm)) CLIENTS.delete(d.firm);
+  else CLIENTS.add(d.firm);
+  saveClients();
+  nodes.classed("client", n => CLIENTS.has(n.firm));
+  updateStats();
+  renderTooltip(d);
+  applyFilters();
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Stats / counters
+// ──────────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const totalAum = d3.sum(FIRMS, d => d.aum_usd_bn);
+  const clientFirms = FIRMS.filter(d => CLIENTS.has(d.firm));
+  const clientAum = d3.sum(clientFirms, d => d.aum_usd_bn);
+  const share = totalAum > 0 ? (clientAum / totalAum) * 100 : 0;
+
+  document.getElementById("m-firms").textContent = FIRMS.length;
+  document.getElementById("m-aum").textContent = (totalAum / 1000).toFixed(1);
+  document.getElementById("m-clients").textContent = clientFirms.length;
+  document.getElementById("m-client-share").textContent = share.toFixed(1) + "%";
+}
+
+updateStats();
+
+// ──────────────────────────────────────────────────────────────────────────
+// Legend
+// ──────────────────────────────────────────────────────────────────────────
+function renderLegend() {
+  const legendEl = document.getElementById("legend");
+  const palette = PALETTES[currentColor];
+  let label;
+  if (currentColor === "region") label = "Region";
+  else if (currentColor === "parent_type") label = "Parent Type";
+  else if (currentColor === "tech_tier") label = "Tech Tier (1=legacy, 5=industry-defining)";
+  else if (currentColor === "ap_tilt") label = "Active/Passive (1=passive, 5=active)";
+  else if (currentColor === "ta_tilt") label = "Trad/Alts (1=traditional, 5=alts)";
+
+  const items = Object.entries(palette).map(([key, col]) =>
+    `<div class="legend-item"><span class="legend-swatch" style="background:${col}"></span>${key}</div>`
+  ).join("");
+
+  legendEl.innerHTML = `
+    <span class="control-label">${label}</span>
+    ${items}
+    <span style="width: 12px"></span>
+    <div class="legend-item"><span class="legend-marker-client"></span>Client</div>
+  `;
+}
+
+renderLegend();
+
+// ──────────────────────────────────────────────────────────────────────────
+// Filtering — search + clients-only
+// ──────────────────────────────────────────────────────────────────────────
+function applyFilters() {
+  const q = currentSearch.trim().toLowerCase();
+  nodes.classed("dimmed", d => {
+    if (clientsOnly && !CLIENTS.has(d.firm)) return true;
+    if (q && !d.firm.toLowerCase().includes(q) && !d.parent.toLowerCase().includes(q)) return true;
+    return false;
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Control wiring
+// ──────────────────────────────────────────────────────────────────────────
+document.getElementById("ctrl-cluster").addEventListener("change", (e) => {
+  currentCluster = e.target.value;
+  centroids = computeCentroids(clusterAccessor(currentCluster));
+  simulation
+    .force("x", d3.forceX(d => centroids.positions[clusterAccessor(currentCluster)(d)].x).strength(0.18))
+    .force("y", d3.forceY(d => centroids.positions[clusterAccessor(currentCluster)(d)].y).strength(0.20))
+    .alpha(0.7).restart();
+  renderClusterLabels();
+});
+
+document.getElementById("ctrl-color").addEventListener("change", (e) => {
+  currentColor = e.target.value;
+  nodes
+    .transition().duration(450)
+    .attr("fill", d => colorFor(currentColor, d))
+    .attr("stroke", d => d3.color(colorFor(currentColor, d)).darker(0.6));
+  renderLegend();
+});
+
+document.getElementById("ctrl-search").addEventListener("input", (e) => {
+  currentSearch = e.target.value;
+  applyFilters();
+});
+
+document.getElementById("ctrl-clients-only").addEventListener("change", (e) => {
+  clientsOnly = e.target.checked;
+  applyFilters();
+});
+
+document.getElementById("ctrl-reset").addEventListener("click", () => {
+  if (CLIENTS.size === 0) return;
+  if (!confirm(`Clear all ${CLIENTS.size} tagged clients?`)) return;
+  CLIENTS.clear();
+  saveClients();
+  nodes.classed("client", false);
+  updateStats();
+  applyFilters();
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// Resize handler
+// ──────────────────────────────────────────────────────────────────────────
+window.addEventListener("resize", () => {
+  WIDTH = stage.clientWidth;
+  HEIGHT = stage.clientHeight;
+  svg.attr("viewBox", [0, 0, WIDTH, HEIGHT]);
+  centroids = computeCentroids(clusterAccessor(currentCluster));
+  simulation
+    .force("x", d3.forceX(d => centroids.positions[clusterAccessor(currentCluster)(d)].x).strength(0.18))
+    .force("y", d3.forceY(d => centroids.positions[clusterAccessor(currentCluster)(d)].y).strength(0.20))
+    .alpha(0.5).restart();
+  renderClusterLabels();
+});
+
+// Hide loading after a beat
+setTimeout(() => {
+  document.getElementById("loading").classList.add("hidden");
+  setTimeout(() => document.getElementById("loading").remove(), 500);
+}, 600);
+
+</script>
 </body>
 </html>
