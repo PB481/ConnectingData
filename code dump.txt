@@ -3,579 +3,186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fund Structure — Plain-Language Handout</title>
+<title>CSV → SQLite → JSON</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-  :root {
-    --ink: #1a1d29;
-    --ink-soft: #3d4156;
-    --muted: #6b6f82;
-    --line: #d8d4c8;
-    --paper: #f7f4ec;
-    --paper-2: #fdfbf5;
-    --accent: #1f5c4d;       /* deep green — assets/loans */
-    --accent-2: #8a5a2b;     /* warm brown — DAC */
-    --accent-3: #2f4a7a;     /* navy — investor */
-    --gold: #b08628;
-    --flag: #9a3a2e;
-    --box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px -12px rgba(26,29,41,0.18);
+  :root{
+    --bg:#0f1115; --panel:#161a21; --line:#262d38; --ink:#e6e9ef;
+    --dim:#8b95a5; --acc:#d9a441; --acc2:#5fb3a3; --err:#e06c75;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--paper);
-    background-image:
-      radial-gradient(circle at 20% 10%, rgba(176,134,40,0.04), transparent 40%),
-      radial-gradient(circle at 80% 90%, rgba(31,92,77,0.04), transparent 40%);
-    color: var(--ink);
-    font-family: 'Newsreader', Georgia, serif;
-    font-size: 16px;
-    line-height: 1.55;
-    padding: 48px 24px 80px;
-    -webkit-font-smoothing: antialiased;
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'IBM Plex Mono',monospace; font-size:13px;
+    padding:32px; min-height:100vh;
+    background-image:radial-gradient(circle at 12% 0%,rgba(217,164,65,.06),transparent 40%);
   }
-
-  .sheet {
-    max-width: 940px;
-    margin: 0 auto;
+  h1{font-family:'Fraunces',serif; font-weight:600; font-size:28px; letter-spacing:-.5px; margin-bottom:4px}
+  .sub{color:var(--dim); font-size:12px; margin-bottom:24px}
+  .pipe{color:var(--acc)}
+  .bar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px}
+  button,label.file{
+    font-family:inherit; font-size:12px; cursor:pointer;
+    background:var(--panel); color:var(--ink); border:1px solid var(--line);
+    padding:9px 16px; border-radius:6px; transition:.15s; font-weight:500;
   }
-
-  /* ---- Masthead ---- */
-  .masthead {
-    border-bottom: 2px solid var(--ink);
-    padding-bottom: 18px;
-    margin-bottom: 8px;
+  button:hover,label.file:hover{border-color:var(--acc); color:var(--acc)}
+  button:disabled{opacity:.35; cursor:not-allowed}
+  button:disabled:hover{border-color:var(--line); color:var(--ink)}
+  .accent{background:var(--acc); color:#1a1205; border-color:var(--acc)}
+  .accent:hover{background:#e8b659; color:#1a1205; border-color:#e8b659}
+  input[type=file]{display:none}
+  .query{
+    width:100%; font-family:inherit; font-size:12px; background:var(--panel);
+    color:var(--acc2); border:1px solid var(--line); border-radius:6px;
+    padding:10px 12px; margin-bottom:14px; resize:vertical; min-height:42px;
   }
-  .eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  h1 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    font-size: 38px;
-    line-height: 1.05;
-    letter-spacing: -0.01em;
-    margin: 14px 0 6px;
-  }
-  .subtitle {
-    font-size: 17px;
-    color: var(--ink-soft);
-    font-style: italic;
-    max-width: 70ch;
-  }
-
-  /* ---- One-sentence callout ---- */
-  .nutshell {
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-left: 4px solid var(--gold);
-    padding: 18px 22px;
-    margin: 30px 0 38px;
-    box-shadow: var(--box-shadow);
-  }
-  .nutshell .lbl {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold);
-    display: block;
-    margin-bottom: 6px;
-  }
-  .nutshell p { font-size: 17.5px; line-height: 1.5; }
-
-  section { margin-bottom: 42px; }
-
-  .sec-head {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-  .sec-num {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 600;
-  }
-  .sec-head h2 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    font-size: 23px;
-    letter-spacing: -0.01em;
-  }
-  .sec-head .rule {
-    flex: 1;
-    height: 1px;
-    background: var(--line);
-    align-self: center;
-  }
-
-  /* ---- The stack diagram ---- */
-  .stack { display: flex; flex-direction: column; align-items: center; gap: 0; }
-
-  .layer {
-    width: 100%;
-    max-width: 620px;
-    border-radius: 10px;
-    padding: 18px 24px;
-    position: relative;
-    box-shadow: var(--box-shadow);
-    border: 1px solid rgba(0,0,0,0.06);
-  }
-  .layer .tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    opacity: 0.8;
-  }
-  .layer .name {
-    font-family: 'Fraunces', serif;
-    font-size: 21px;
-    font-weight: 600;
-    margin: 3px 0 4px;
-  }
-  .layer .desc { font-size: 14.5px; line-height: 1.45; }
-
-  .layer.investor { background: #eef1f8; border-color: #c5cfe4; color: var(--accent-3); }
-  .layer.dac      { background: #f4ece1; border-color: #ddc7ab; color: var(--accent-2); }
-  .layer.assets   { background: #e8f0ec; border-color: #b9d2c6; color: var(--accent); }
-  .layer .desc, .layer .pill-row { color: var(--ink-soft); }
-
-  .pill-row { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-  .pill {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.04em;
-    background: rgba(255,255,255,0.7);
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 20px;
-    padding: 3px 11px;
-  }
-
-  /* connector between layers */
-  .connector {
-    height: 56px;
-    width: 100%;
-    max-width: 620px;
-    position: relative;
-    display: flex;
-    justify-content: center;
-  }
-  .connector .spine {
-    width: 2px;
-    background: linear-gradient(var(--ink-soft), var(--ink-soft));
-    height: 100%;
-    position: relative;
-  }
-  .connector .label-up, .connector .label-down {
-    position: absolute;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    background: var(--paper);
-    padding: 2px 8px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  .connector .label-up { right: 50%; margin-right: 14px; color: var(--accent); text-align: right; }
-  .connector .label-down { left: 50%; margin-left: 14px; color: var(--accent-3); }
-  .arrowhead { position: absolute; left: 50%; transform: translateX(-50%); font-size: 13px; color: var(--ink-soft); }
-  .arrowhead.top { top: -2px; }
-  .arrowhead.bot { bottom: -2px; }
-
-  .flowkey {
-    margin-top: 22px;
-    font-size: 13.5px;
-    color: var(--muted);
-    text-align: center;
-    font-style: italic;
-  }
-
-  /* ---- Two returns ---- */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .card {
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 20px 22px;
-    box-shadow: var(--box-shadow);
-  }
-  .card .ctag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--gold);
-  }
-  .card h3 {
-    font-family: 'Fraunces', serif;
-    font-size: 19px;
-    font-weight: 600;
-    margin: 5px 0 9px;
-    color: var(--ink);
-  }
-  .card p { font-size: 14.5px; color: var(--ink-soft); }
-  .card .freq {
-    display: inline-block;
-    margin-top: 12px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    background: var(--ink);
-    color: var(--paper-2);
-    padding: 4px 12px;
-    border-radius: 4px;
-    letter-spacing: 0.05em;
-  }
-  .same-money {
-    grid-column: 1 / -1;
-    text-align: center;
-    font-style: italic;
-    font-size: 15px;
-    color: var(--accent-2);
-    padding: 4px 0;
-  }
-
-  /* ---- NAV four lines ---- */
-  .nav-calc {
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: var(--box-shadow);
-    max-width: 640px;
-  }
-  .nav-row {
-    display: flex;
-    align-items: center;
-    padding: 13px 22px;
-    border-bottom: 1px solid var(--line);
-    gap: 16px;
-  }
-  .nav-row:last-child { border-bottom: none; }
-  .nav-op {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 18px;
-    font-weight: 600;
-    width: 26px;
-    text-align: center;
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-  .nav-txt { font-size: 15.5px; }
-  .nav-row.total {
-    background: #e8f0ec;
-    border-top: 2px solid var(--accent);
-  }
-  .nav-row.total .nav-op, .nav-row.total .nav-txt { color: var(--accent); font-weight: 600; }
-  .nav-row.total .nav-txt { font-family: 'Fraunces', serif; font-size: 17px; }
-
-  /* ---- Who does what ---- */
-  .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .role {
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    padding: 15px 18px;
-    background: var(--paper-2);
-  }
-  .role .who {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    font-size: 16px;
-    margin-bottom: 4px;
-  }
-  .role .what { font-size: 13.5px; color: var(--ink-soft); }
-  .role.us { border-left: 4px solid var(--accent); }
-  .role.mgr { border-left: 4px solid var(--accent-3); }
-  .role.maples { border-left: 4px solid var(--accent-2); }
-  .role.depo { border-left: 4px solid var(--flag); background: #fbf0ee; }
-  .role.depo .who { color: var(--flag); }
-
-  /* ---- Watch list ---- */
-  .watch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .watch-item {
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-top: 3px solid var(--flag);
-    border-radius: 8px;
-    padding: 16px 18px;
-  }
-  .watch-item .wn {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--flag);
-    line-height: 1;
-  }
-  .watch-item h4 {
-    font-family: 'Fraunces', serif;
-    font-size: 16px;
-    font-weight: 600;
-    margin: 8px 0 6px;
-  }
-  .watch-item p { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
-
-  /* ---- Caveat footer ---- */
-  .caveat {
-    margin-top: 38px;
-    background: #fbf0ee;
-    border: 1px solid #e0c3bd;
-    border-left: 4px solid var(--flag);
-    border-radius: 8px;
-    padding: 18px 22px;
-  }
-  .caveat .lbl {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--flag);
-    display: block;
-    margin-bottom: 7px;
-  }
-  .caveat p { font-size: 14.5px; color: var(--ink-soft); }
-  .caveat strong { color: var(--ink); }
-
-  .footer-note {
-    margin-top: 30px;
-    padding-top: 16px;
-    border-top: 1px solid var(--line);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    color: var(--muted);
-    letter-spacing: 0.04em;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  @media (max-width: 680px) {
-    body { padding: 28px 14px 60px; }
-    h1 { font-size: 30px; }
-    .two-col, .roles, .watch { grid-template-columns: 1fr; }
-    .connector .label-up, .connector .label-down { font-size: 9.5px; }
-  }
-
-  @media print {
-    body { background: #fff; padding: 0; font-size: 13px; }
-    .sheet { max-width: 100%; }
-    section { margin-bottom: 26px; page-break-inside: avoid; }
-    .layer, .card, .nav-calc, .role, .watch-item { box-shadow: none; }
-  }
+  .query:focus{outline:none; border-color:var(--acc2)}
+  .status{color:var(--dim); font-size:11px; margin-bottom:14px; min-height:16px}
+  .status.err{color:var(--err)}
+  .wrap{border:1px solid var(--line); border-radius:8px; overflow:auto; max-height:46vh; background:var(--panel)}
+  table{border-collapse:collapse; width:100%; font-size:12px}
+  th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap}
+  th{position:sticky; top:0; background:#1b2029; color:var(--acc); font-weight:600; z-index:1}
+  td{color:var(--ink)}
+  td[contenteditable]{cursor:text}
+  td[contenteditable]:focus{outline:1px solid var(--acc2); background:#1b2029}
+  tr:hover td{background:rgba(95,179,163,.05)}
+  .empty{padding:40px; text-align:center; color:var(--dim)}
+  pre{background:#0a0c10; border:1px solid var(--line); border-radius:8px; padding:16px;
+    overflow:auto; max-height:30vh; font-size:11.5px; color:var(--acc2); margin-top:14px; display:none}
 </style>
 </head>
 <body>
-<div class="sheet">
+  <h1>CSV <span class="pipe">→</span> SQLite <span class="pipe">→</span> JSON</h1>
+  <div class="sub">In-browser pipeline · sql.js (WASM) · no server, no upload — data never leaves this page</div>
 
-  <header class="masthead">
-    <div class="eyebrow">
-      <span>Fund Accounting · Onboarding Brief</span>
-      <span>Plain-Language Reference · v1 Draft</span>
-    </div>
-    <h1>How This Fund Works</h1>
-    <p class="subtitle">A bespoke single-investor structure. This sheet explains the moving parts in everyday language so the team can review and prepare their own notes.</p>
-  </header>
-
-  <div class="nutshell">
-    <span class="lbl">In one sentence</span>
-    <p>An Australian Unit Trust puts money into an Irish company (the DAC). The DAC buys European loans. The income from those loans flows back to the investor two ways — a <strong>quarterly coupon</strong> (cash) and a <strong>daily change in value</strong> (the NAV). Our job is to value it daily and make sure the money moving in and out is correct.</p>
+  <div class="bar">
+    <label class="file">Load CSV<input type="file" id="csv" accept=".csv,.tsv,.txt"></label>
+    <button id="run" disabled>Run query</button>
+    <button id="addRow" disabled>+ Row</button>
+    <button id="json" class="accent" disabled>Export JSON</button>
+    <button id="dbExport" disabled>Export .sqlite</button>
   </div>
 
-  <!-- THE STACK -->
-  <section>
-    <div class="sec-head">
-      <span class="sec-num">01</span>
-      <h2>The Picture — a stack of three layers</h2>
-      <span class="rule"></span>
-    </div>
+  <textarea class="query" id="sql" spellcheck="false" disabled>SELECT * FROM data</textarea>
+  <div class="status" id="status">Waiting for a CSV…</div>
 
-    <div class="stack">
-      <div class="layer investor">
-        <span class="tag">Layer 1 · The Investor</span>
-        <div class="name">Australian Unit Trust</div>
-        <div class="desc">One single investor. Wants to see a value every day, and can put money in or take it out once a month.</div>
-        <div class="pill-row">
-          <span class="pill">Daily NAV</span>
-          <span class="pill">Monthly liquidity</span>
-          <span class="pill">Sole investor</span>
-        </div>
-      </div>
+  <div class="wrap"><div id="grid"><div class="empty">No data loaded</div></div></div>
+  <pre id="out"></pre>
 
-      <div class="connector">
-        <div class="spine">
-          <span class="arrowhead top">▲</span>
-          <span class="arrowhead bot">▼</span>
-        </div>
-        <span class="label-up">value &amp; coupon flow up</span>
-        <span class="label-down">cash for investing flows down</span>
-      </div>
+<script>
+let SQL, db, cols=[], rows=[];
+const $=id=>document.getElementById(id);
+const status=(m,e=false)=>{const s=$('status'); s.textContent=m; s.className='status'+(e?' err':'')};
 
-      <div class="layer dac">
-        <span class="tag">Layer 2 · The Irish SPV</span>
-        <div class="name">The DAC (Section 110 company)</div>
-        <div class="desc">The company in the middle. The investor's money sits here as a <strong>Profit Participation Note (PPN)</strong> — think of the PPN as the pipe that carries all the DAC's profit up to the investor.</div>
-        <div class="pill-row">
-          <span class="pill">PPN = the investor's holding</span>
-          <span class="pill">Pays coupon quarterly</span>
-        </div>
-      </div>
+initSqlJs({locateFile:f=>`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`})
+  .then(s=>{SQL=s; status('Ready. Load a CSV to begin.')})
+  .catch(e=>status('Failed to load SQLite engine: '+e,true));
 
-      <div class="connector">
-        <div class="spine">
-          <span class="arrowhead top">▲</span>
-          <span class="arrowhead bot">▼</span>
-        </div>
-        <span class="label-up">interest &amp; value</span>
-        <span class="label-down">money to buy loans</span>
-      </div>
+// Minimal CSV parser (handles quotes, commas, newlines, escaped quotes)
+function parseCSV(text){
+  const delim = text.indexOf('\t')>-1 && text.indexOf(',')===-1 ? '\t' : ',';
+  const out=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(q){
+      if(c==='"'&&n==='"'){cur+='"';i++}
+      else if(c==='"'){q=false}
+      else cur+=c;
+    } else {
+      if(c==='"')q=true;
+      else if(c===delim){row.push(cur);cur=''}
+      else if(c==='\n'){row.push(cur);out.push(row);row=[];cur=''}
+      else if(c==='\r'){}
+      else cur+=c;
+    }
+  }
+  if(cur!==''||row.length){row.push(cur);out.push(row)}
+  return out.filter(r=>r.length>1||r[0]!=='');
+}
 
-      <div class="layer assets">
-        <span class="tag">Layer 3 · The Assets</span>
-        <div class="name">European Syndicated Loans</div>
-        <div class="desc">What the DAC actually owns. They earn interest and move up and down in value. These prices are what drive the daily NAV.</div>
-        <div class="pill-row">
-          <span class="pill">Not exchange-traded</span>
-          <span class="pill">Slow to settle</span>
-        </div>
-      </div>
-    </div>
+function uniqCols(raw){
+  const seen={}; return raw.map((c,i)=>{
+    let name=(c||`col${i+1}`).trim().replace(/[^A-Za-z0-9_]/g,'_')||`col${i+1}`;
+    if(/^[0-9]/.test(name))name='_'+name;
+    if(seen[name]!==undefined){seen[name]++;name+='_'+seen[name]} else seen[name]=0;
+    return name;
+  });
+}
 
-    <p class="flowkey">Money &amp; value flow <strong>up</strong> the stack (loans → DAC → investor). Cash for investing flows <strong>down</strong> (investor → DAC → loans).</p>
-  </section>
+$('csv').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const parsed=parseCSV(r.result);
+      if(parsed.length<1){status('CSV appears empty',true);return}
+      cols=uniqCols(parsed[0]);
+      const body=parsed.slice(1);
+      if(db)db.close();
+      db=new SQL.Database();
+      db.run(`CREATE TABLE data (${cols.map(c=>`"${c}" TEXT`).join(',')})`);
+      const stmt=db.prepare(`INSERT INTO data VALUES (${cols.map(()=>'?').join(',')})`);
+      body.forEach(row=>{
+        const vals=cols.map((_,i)=>row[i]!==undefined?row[i]:null);
+        stmt.run(vals);
+      });
+      stmt.free();
+      ['run','addRow','json','dbExport','sql'].forEach(id=>$(id).disabled=false);
+      status(`Loaded "${f.name}" → ${body.length} rows × ${cols.length} cols into table "data".`);
+      runQuery();
+    }catch(err){status('Parse error: '+err.message,true)}
+  };
+  r.readAsText(f);
+});
 
-  <!-- TWO RETURNS -->
-  <section>
-    <div class="sec-head">
-      <span class="sec-num">02</span>
-      <h2>The two things the investor gets back</h2>
-      <span class="rule"></span>
-    </div>
+function runQuery(){
+  try{
+    const res=db.exec($('sql').value);
+    if(!res.length){rows=[];cols=[];render();status('Query OK — no rows returned.');return}
+    cols=res[0].columns; rows=res[0].values.map(v=>v.slice());
+    render();
+    status(`Query returned ${rows.length} row(s).`);
+  }catch(err){status('SQL error: '+err.message,true)}
+}
 
-    <div class="two-col">
-      <div class="card">
-        <span class="ctag">Return A</span>
-        <h3>Daily value — the NAV</h3>
-        <p>Every day we value the loans, add the income earned so far, take off the DAC's costs. What's left is the value of the PPN — and that's the investor's NAV. It changes daily because loan prices and accrued income change daily.</p>
-        <span class="freq">EVERY DAY</span>
-      </div>
-      <div class="card">
-        <span class="ctag">Return B</span>
-        <h3>Quarterly coupon — cash</h3>
-        <p>Four times a year, the profit built up inside the DAC is paid out to the investor as cash. The coupon is <strong>not extra</strong> — it's profit that was already sitting in the daily NAV, now being paid out.</p>
-        <span class="freq">EVERY QUARTER</span>
-      </div>
-      <p class="same-money">It's the same money — it just moves from “value” to “cash” on payment day. When the coupon is paid, the NAV steps down by that amount.</p>
-    </div>
-  </section>
+function render(){
+  const g=$('grid');
+  if(!rows.length){g.innerHTML='<div class="empty">No rows</div>';return}
+  let h='<table><thead><tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  rows.forEach((r,ri)=>{
+    h+='<tr>'+r.map((v,ci)=>`<td contenteditable data-r="${ri}" data-c="${ci}">${v??''}</td>`).join('')+'</tr>';
+  });
+  g.innerHTML=h+'</tbody></table>';
+  g.querySelectorAll('td[contenteditable]').forEach(td=>{
+    td.addEventListener('blur',()=>{rows[td.dataset.r][td.dataset.c]=td.textContent});
+  });
+}
 
-  <!-- NAV FOUR LINES -->
-  <section>
-    <div class="sec-head">
-      <span class="sec-num">03</span>
-      <h2>How the daily NAV is built — just four lines</h2>
-      <span class="rule"></span>
-    </div>
+$('run').addEventListener('click',runQuery);
+$('addRow').addEventListener('click',()=>{rows.push(cols.map(()=>''));render()});
 
-    <div class="nav-calc">
-      <div class="nav-row">
-        <span class="nav-op"></span>
-        <span class="nav-txt">Value of the loans <em>(today's prices)</em></span>
-      </div>
-      <div class="nav-row">
-        <span class="nav-op">+</span>
-        <span class="nav-txt">Income earned but not yet paid <em>(accrued interest)</em></span>
-      </div>
-      <div class="nav-row">
-        <span class="nav-op">−</span>
-        <span class="nav-txt">The DAC's costs and the small margin it keeps</span>
-      </div>
-      <div class="nav-row total">
-        <span class="nav-op">=</span>
-        <span class="nav-txt">Value of the PPN = the investor's NAV</span>
-      </div>
-    </div>
-    <p class="flowkey" style="text-align:left; max-width:640px; margin-top:14px;">If you can produce these four lines from the standard reports, you understand the engine. The <strong>coupon</strong> comes from the same numbers — loan income, less costs, less the retained margin. <strong>We should be able to calculate it ourselves; the Manager confirms it, they don't hand us a number we can't reproduce.</strong></p>
-  </section>
+$('json').addEventListener('click',()=>{
+  const data=rows.map(r=>Object.fromEntries(cols.map((c,i)=>[c,r[i]])));
+  const txt=JSON.stringify(data,null,2);
+  $('out').style.display='block'; $('out').textContent=txt;
+  dl(new Blob([txt],{type:'application/json'}),'data.json');
+  status(`Exported ${data.length} row(s) to JSON.`);
+});
 
-  <!-- WHO DOES WHAT -->
-  <section>
-    <div class="sec-head">
-      <span class="sec-num">04</span>
-      <h2>Who does what</h2>
-      <span class="rule"></span>
-    </div>
+$('dbExport').addEventListener('click',()=>{
+  dl(new Blob([db.export()],{type:'application/octet-stream'}),'data.sqlite');
+  status('Exported SQLite database file.');
+});
 
-    <div class="roles">
-      <div class="role us">
-        <div class="who">Us · Fund Accounting</div>
-        <div class="what">Value the loans daily, produce the NAV, calculate the coupon, check the cash.</div>
-      </div>
-      <div class="role mgr">
-        <div class="who">The Manager · PE Firm</div>
-        <div class="what">Decides which loans to buy/sell, instructs cash movements, confirms the coupon.</div>
-      </div>
-      <div class="role maples">
-        <div class="who">Maples · Corporate Services &amp; Trustee</div>
-        <div class="what">Keeps the Irish company alive and legal — company secretary, directors, filings — and acts as trustee. Does <strong>not</strong> do the daily accounting; that's us.</div>
-      </div>
-      <div class="role depo">
-        <div class="who">No Depositary</div>
-        <div class="what">There's no extra independent watchdog above us. That means <strong>our checks are the main safeguard</strong> — which raises the importance of what the team does.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- WATCH LIST -->
-  <section>
-    <div class="sec-head">
-      <span class="sec-num">05</span>
-      <h2>Three things to watch</h2>
-      <span class="rule"></span>
-    </div>
-
-    <div class="watch">
-      <div class="watch-item">
-        <div class="wn">01</div>
-        <h4>Loan pricing</h4>
-        <p>These loans don't trade on an exchange, so a reliable daily price is the hardest part of the NAV. Stale or missing prices need a documented process — not a guess.</p>
-      </div>
-      <div class="watch-item">
-        <div class="wn">02</div>
-        <h4>The coupon hand-off</h4>
-        <p>Make sure profit paid out as the coupon doesn't <em>also</em> stay sitting in the NAV (no double-counting), and that the NAV steps down correctly on payment day.</p>
-      </div>
-      <div class="watch-item">
-        <div class="wn">03</div>
-        <h4>Cash timing</h4>
-        <p>The investor can redeem monthly, but loans take weeks to sell. Cash out may be needed before cash comes in. Every Manager cash instruction is checked against the NAV and actual cash before release.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- CAVEAT -->
-  <div class="caveat">
-    <span class="lbl">The one caveat — keep this straight</span>
-    <p>It behaves <strong>like</strong> a feeder fund into a master fund — the Unit Trust is the feeder, the DAC is the master, the loans are the master's portfolio. That's the right mental model for how it runs day to day. <strong>But legally the DAC is a debt-issuing company and the investor holds a note, not fund units.</strong> So we say it <em>operates like</em> a master-feeder — we don't call it one in the legal or regulatory documents.</p>
-  </div>
-
-  <div class="footer-note">
-    <span>Internal working draft · for team review &amp; note preparation</span>
-    <span>Not legal or regulatory advice · confirm terms against PPN documentation</span>
-  </div>
-
-</div>
+function dl(blob,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+</script>
 </body>
 </html>
