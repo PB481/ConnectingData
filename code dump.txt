@@ -3,619 +3,296 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fund Launch Onboarding</title>
+<title>NAV Oversight — Current vs Future State</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
   :root{
-    --ink:#10231C;        /* deep prospectus green-black */
-    --paper:#F6F4EC;      /* aged document paper */
-    --line:#C9C3B0;       /* hairline rule */
-    --accent:#1E5C3A;     /* registry green */
-    --accent-soft:#E3EDE6;
-    --suggest:#8A6D1F;    /* gold = unconfirmed suggestion */
-    --suggest-soft:#F3EAD2;
-    --locked:#1E5C3A;
-    --danger:#9B2C2C;
-    --muted:#5C6660;
+    --ink:#0a1018;
+    --panel:#0e1722;
+    --panel2:#111d2b;
+    --hair:#1d2c3d;
+    --mute:#5b7080;
+    --txt:#c7d6e3;
+    --txt-dim:#7a8ea0;
+    --cyan:#36d6c3;
+    --cyan-dim:#1d8a7e;
+    --amber:#e8a13a;
+    --red:#e3565b;
+    --green:#3fb98a;
+    --gold:#d8b15a;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
-    background:var(--paper);color:var(--ink);
-    line-height:1.5;-webkit-font-smoothing:antialiased;
-    padding:clamp(16px,4vw,48px);
-  }
-  .wrap{max-width:820px;margin:0 auto}
+  html,body{background:var(--ink);color:var(--txt);font-family:"DM Sans",-apple-system,system-ui,sans-serif}
+  body{padding:48px 32px 80px;max-width:1320px;margin:0 auto}
+  .eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan-dim);margin-bottom:14px}
+  h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(28px,4vw,46px);line-height:1.05;letter-spacing:-.01em;color:#eef5fb;margin-bottom:10px}
+  h1 em{font-style:italic;color:var(--cyan)}
+  .sub{max-width:680px;color:var(--txt-dim);font-size:15px;line-height:1.55;margin-bottom:8px}
+  .principle{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px;color:var(--gold);letter-spacing:.02em;margin:18px 0 38px;padding-left:14px;border-left:2px solid var(--gold)}
 
-  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:8px}
-  .eyebrow{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
-  h1{font-size:clamp(28px,5vw,40px);font-weight:600;letter-spacing:-.01em;margin-top:6px;line-height:1.05}
-  .sub{color:var(--muted);margin-top:8px;font-size:15px;max-width:60ch}
+  .toggle{display:flex;gap:6px;margin-bottom:30px;background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:5px;width:fit-content}
+  .toggle button{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:transparent;border:none;color:var(--txt-dim);padding:10px 22px;border-radius:7px;cursor:pointer;transition:all .25s}
+  .toggle button.active{background:var(--panel2);color:var(--cyan)}
+  .toggle button.active.future{color:var(--gold)}
 
-  .progress{display:flex;align-items:center;gap:10px;margin:22px 0 8px;font-family:ui-monospace,monospace;font-size:12px;color:var(--muted)}
-  .bar{flex:1;height:3px;background:var(--line);position:relative;overflow:hidden}
-  .bar > i{position:absolute;inset:0 100% 0 0;background:var(--accent);transition:right .4s ease}
+  .stage-wrap{display:grid;grid-template-columns:1fr;gap:0}
+  .board{background:var(--panel);border:1px solid var(--hair);border-radius:16px;overflow:hidden;position:relative}
+  .board-head{display:flex;justify-content:space-between;align-items:center;padding:20px 26px;border-bottom:1px solid var(--hair)}
+  .board-title{font-family:"JetBrains Mono",monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+  .badge{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;border-radius:20px;border:1px solid}
+  .badge.cur{color:var(--red);border-color:#3a2024;background:rgba(227,86,91,.07)}
+  .badge.fut{color:var(--gold);border-color:#3a3120;background:rgba(216,177,90,.07)}
+  svg{display:block;width:100%;height:auto}
 
-  .card{border:1px solid var(--line);background:#fff;padding:22px clamp(16px,3vw,28px);margin:18px 0;position:relative}
-  .card.gated{opacity:.45;filter:saturate(.4)}
-  .card .qnum{position:absolute;top:-1px;left:-1px;background:var(--ink);color:var(--paper);font-family:ui-monospace,monospace;font-size:11px;padding:4px 9px;letter-spacing:.1em}
-  .card .qtext{font-size:19px;font-weight:600;margin:14px 0 4px;padding-left:2px}
-  .card .qhelp{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+  .legend{display:flex;flex-wrap:wrap;gap:22px;padding:16px 26px;border-top:1px solid var(--hair);font-size:12px;color:var(--txt-dim)}
+  .legend span{display:flex;align-items:center;gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%}
 
-  .opts{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
-  .opt{display:flex;align-items:flex-start;gap:11px;border:1px solid var(--line);padding:11px 13px;cursor:pointer;background:#fff;transition:border-color .15s,background .15s;font-size:15px}
-  .opt:hover{border-color:var(--accent)}
-  .opt input{margin-top:3px;accent-color:var(--accent);flex:none}
-  .opt.sel{border-color:var(--accent);background:var(--accent-soft)}
-  .opt.suggested{border-color:var(--suggest);background:var(--suggest-soft)}
-  .opt .tag{margin-left:auto;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--suggest);align-self:center;flex:none}
+  .takeaways{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:780px){.takeaways{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:22px 24px}
+  .card h3{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+  .card.cur h3{color:var(--red)}
+  .card.fut h3{color:var(--gold)}
+  .card p{font-size:13.5px;line-height:1.6;color:var(--txt-dim);margin-bottom:9px}
+  .card strong{color:var(--txt);font-weight:600}
 
-  input[type=text],input[type=number],textarea,select{
-    width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid var(--line);background:#fff;color:var(--ink)
-  }
-  input.suggested,textarea.suggested,select.suggested{border-color:var(--suggest);background:var(--suggest-soft)}
-  textarea{min-height:80px;resize:vertical}
-  label.flbl{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-
-  .confirmrow{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
-  .confirmrow .note{font-size:12.5px;color:var(--suggest);font-family:ui-monospace,monospace}
-  .confirmrow .note.done{color:var(--locked)}
-  .cbtn{font:inherit;font-size:13px;border:1px solid var(--accent);background:#fff;color:var(--accent);padding:7px 16px;cursor:pointer;letter-spacing:.02em}
-  .cbtn:hover{background:var(--accent);color:#fff}
-  .cbtn.locked{background:var(--accent);color:#fff;cursor:default}
-
-  .footer{position:sticky;bottom:0;background:var(--paper);border-top:2px solid var(--ink);padding:14px 0;margin-top:30px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .btn{font:inherit;font-size:14px;padding:10px 18px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;letter-spacing:.02em}
-  .btn.ghost{background:transparent;color:var(--ink)}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .footer .stat{font-family:ui-monospace,monospace;font-size:12px;color:var(--muted);margin-left:auto}
-
-  dialog{border:2px solid var(--ink);background:var(--paper);max-width:680px;width:92vw;padding:0}
-  dialog::backdrop{background:rgba(16,35,28,.55)}
-  .dhead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
-  .dhead h3{font-size:16px}
-  .dhead button{font:inherit;border:none;background:none;cursor:pointer;font-size:20px;color:var(--muted)}
-  pre.json{margin:0;padding:18px;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:55vh;overflow:auto;color:var(--ink)}
-  .dfoot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .flow-label{font-family:"JetBrains Mono",monospace;font-size:11px;fill:var(--txt-dim)}
+  .node-label{font-family:"DM Sans",sans-serif;font-size:13px;fill:#dce8f2;font-weight:600}
+  .node-sub{font-family:"JetBrains Mono",monospace;font-size:10px;fill:var(--txt-dim)}
+  .axis-note{font-family:"JetBrains Mono",monospace;font-size:10px;fill:#4a6076;letter-spacing:.08em}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="eyebrow">Onboarding · Fund Administration</div>
-    <h1>Fund Launch Questionnaire</h1>
-    <p class="sub">Answer in sequence. Gold fields are suggestions inferred from your earlier choices — review and confirm each before it is recorded. Export to JSON when complete.</p>
-  </header>
+  <div class="eyebrow">NAV Oversight · Jane Street Operating Model Applied</div>
+  <h1>From <em>chasing causes</em> to <em>gating outputs</em></h1>
+  <p class="sub">The same NAV strike, run two ways. Current state pushes a fund accountant through every recon break hunting root causes. Future state inverts it — deterministic recompute and uncorrelated checks gate the output, and the human resolves only what telemetry structurally can't see.</p>
+  <p class="principle">// the halt is automatic and fast — the diagnosis needs a human who knows what a normal number looks like</p>
 
-  <div class="progress">
-    <span id="pctText">0%</span>
-    <div class="bar"><i id="barFill" style="right:100%"></i></div>
-    <span id="confText">0 confirmed</span>
+  <div class="toggle">
+    <button id="btn-cur" class="active" onclick="show('cur')">Current state</button>
+    <button id="btn-fut" class="future" onclick="show('fut')">Future state</button>
   </div>
 
-  <div id="form"></div>
+  <div class="stage-wrap">
+    <div class="board">
+      <div class="board-head">
+        <div class="board-title" id="bt"></div>
+        <div class="badge" id="bd"></div>
+      </div>
+      <svg id="canvas" viewBox="0 0 1180 560" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="legend" id="leg"></div>
+    </div>
+  </div>
 
-  <div class="footer">
-    <button class="btn" id="encExportBtn" disabled>Export encrypted</button>
-    <button class="btn ghost" id="exportBtn" disabled>Export plain JSON</button>
-    <button class="btn ghost" id="importBtn">Import JSON</button>
-    <button class="btn ghost" id="decryptBtn">Decrypt a returned file</button>
-    <button class="btn ghost" id="resetBtn">Reset</button>
-    <input type="file" id="fileInput" accept="application/json" style="display:none">
-    <input type="file" id="decFileInput" accept="application/json,.json,.enc" style="display:none">
-    <span class="stat" id="footStat"></span>
+  <div class="takeaways">
+    <div class="card cur">
+      <h3>◣ What current state costs</h3>
+      <p><strong>Correlated blind spots.</strong> Recon and NAV read the same stale price, so both go green while the output is wrong. Two controls agree because they share a source.</p>
+      <p><strong>Cause-first triage.</strong> The accountant works every feed error by hand, ranked by noise, not by whether the NAV actually moved. Effort scales with alerts, not with risk.</p>
+      <p><strong>No hard stop.</strong> A wrong NAV can publish because nothing structurally prevents release — the Knight Capital failure mode: a missing halt.</p>
+    </div>
+    <div class="card fut">
+      <h3>◢ What future state changes</h3>
+      <p><strong>Uncorrelated redundancy.</strong> An independent shadow-NAV path catches what recon can't, because it doesn't share the blind spot. Defense in depth, by different authors.</p>
+      <p><strong>Symptom-first, "too good" alerting.</strong> The feed surfaces outputs that look wrong — including a return that's implausibly <em>smooth</em> — ranked by materiality, not error count.</p>
+      <p><strong>The strike-gate holds.</strong> NAV cannot publish while a material exception is open. The human signs the release; the model never posts, reverses, or signs.</p>
+    </div>
   </div>
-</div>
-
-<dialog id="jsonDlg">
-  <div class="dhead"><h3>Export — database-ready JSON</h3><button id="dlgClose">×</button></div>
-  <pre class="json" id="jsonOut"></pre>
-  <div class="dfoot">
-    <button class="btn ghost" id="copyBtn">Copy</button>
-    <button class="btn" id="downloadBtn">Download .json</button>
-  </div>
-</dialog>
-
-<dialog id="encDlg">
-  <div class="dhead"><h3>Export encrypted</h3><button id="encClose">×</button></div>
-  <div style="padding:18px">
-    <p style="font-size:14px;color:var(--muted);margin-bottom:14px">
-      Your answers are encrypted in this browser (AES-256-GCM) before download. The plain data never
-      leaves your device. Email the encrypted file to your contact, and share the passphrase by a
-      <strong>separate channel</strong> — phone or text, never the same email.
-    </p>
-    <label class="flbl">Passphrase (min 12 characters)</label>
-    <input type="password" id="encPass" placeholder="A long passphrase you'll share out-of-band" autocomplete="new-password">
-    <label class="flbl" style="margin-top:12px">Re-enter passphrase</label>
-    <input type="password" id="encPass2" placeholder="Confirm" autocomplete="new-password">
-    <div id="encStrength" style="font-family:ui-monospace,monospace;font-size:12px;margin-top:10px;color:var(--muted)"></div>
-  </div>
-  <div class="dfoot">
-    <button class="btn ghost" id="encCancel">Cancel</button>
-    <button class="btn" id="encGo">Encrypt &amp; download</button>
-  </div>
-</dialog>
-
-<dialog id="decDlg">
-  <div class="dhead"><h3>Decrypt a returned file</h3><button id="decClose">×</button></div>
-  <div style="padding:18px">
-    <p style="font-size:14px;color:var(--muted);margin-bottom:14px" id="decPrompt">
-      Choose an encrypted file, then enter the passphrase the sender shared with you out-of-band.
-    </p>
-    <button class="btn ghost" id="decPick">Choose encrypted file…</button>
-    <span id="decFileName" style="font-size:13px;color:var(--muted);margin-left:10px"></span>
-    <label class="flbl" style="margin-top:14px">Passphrase</label>
-    <input type="password" id="decPass" placeholder="Passphrase from sender" autocomplete="off">
-    <div id="decMsg" style="font-family:ui-monospace,monospace;font-size:12px;margin-top:10px"></div>
-    <pre class="json" id="decOut" style="display:none;margin-top:12px;max-height:40vh"></pre>
-  </div>
-  <div class="dfoot">
-    <button class="btn ghost" id="decCancel">Close</button>
-    <button class="btn ghost" id="decCopy" style="display:none">Copy JSON</button>
-    <button class="btn" id="decGo">Decrypt</button>
-  </div>
-</dialog>
 
 <script>
-/* ============================================================
-   SCHEMA  —  edit this block to change the questionnaire.
-   Every question is data. No code changes needed to add/reorder.
-   ------------------------------------------------------------
-   type:        "single" | "multi" | "text" | "number" | "textarea"
-   show:        optional fn(answers) => bool   (conditional branching)
-   options:     for single/multi  [{value,label}]
-   suggest:     optional fn(answers) => value(s)  -> pre-fills, flagged gold
-   placeholder/help/unit optional
-============================================================ */
-const SCHEMA = [
-  {
-    id:"intent", type:"single", q:"What are you onboarding?",
-    help:"Drives the rest of the questionnaire.",
-    options:[
-      {value:"launch",   label:"Launching a new fund"},
-      {value:"shareclass",label:"Adding a share class to an existing fund"},
-      {value:"migration",label:"Migrating an existing fund to us"}
-    ]
-  },
-  {
-    id:"strategy", type:"single", q:"What is the fund's investment strategy?",
-    show:a=>a.intent==="launch"||a.intent==="migration",
-    options:[
-      {value:"equity_long",  label:"Long-only equity"},
-      {value:"fixed_income", label:"Fixed income"},
-      {value:"multi_asset",  label:"Multi-asset / balanced"},
-      {value:"money_market", label:"Money market"},
-      {value:"alternatives", label:"Alternatives / hedge"},
-      {value:"private_assets",label:"Private assets (PE / RE / infra / debt)"}
-    ]
-  },
-  {
-    id:"vehicle", type:"single", q:"What legal vehicle?",
-    show:a=>!!a.strategy,
-    help:"Suggested from strategy — confirm or override.",
-    suggest:a=>{
-      if(a.strategy==="private_assets") return "qiaif";
-      if(a.strategy==="money_market")   return "ucits";
-      if(["equity_long","fixed_income","multi_asset"].includes(a.strategy)) return "ucits";
-      if(a.strategy==="alternatives")   return "qiaif";
-      return null;
-    },
-    options:[
-      {value:"ucits", label:"UCITS"},
-      {value:"qiaif", label:"QIAIF (RIAIF/QIAIF AIF)"},
-      {value:"riaif", label:"RIAIF"},
-      {value:"s110",  label:"Section 110 DAC"}
-    ]
-  },
-  {
-    id:"structure", type:"single", q:"Fund structure?",
-    show:a=>!!a.vehicle,
-    suggest:a=> a.vehicle==="s110" ? "standalone" : "icav_umbrella",
-    options:[
-      {value:"icav_umbrella", label:"ICAV — umbrella with sub-funds"},
-      {value:"icav_standalone",label:"ICAV — standalone"},
-      {value:"plc",           label:"Investment company (PLC)"},
-      {value:"ucits_ct",      label:"Unit trust / CCF"},
-      {value:"standalone",    label:"Standalone DAC"}
-    ]
-  },
-  {
-    id:"navfreq", type:"single", q:"NAV calculation frequency?",
-    show:a=>!!a.vehicle,
-    help:"Suggested from vehicle and strategy.",
-    suggest:a=>{
-      if(a.strategy==="private_assets") return "monthly";
-      if(a.strategy==="money_market")   return "daily";
-      if(a.vehicle==="ucits")           return "daily";
-      return "daily";
-    },
-    options:[
-      {value:"daily",   label:"Daily"},
-      {value:"weekly",  label:"Weekly"},
-      {value:"biweekly",label:"Bi-weekly"},
-      {value:"monthly", label:"Monthly"},
-      {value:"quarterly",label:"Quarterly"}
-    ]
-  },
-  {
-    id:"baseccy", type:"single", q:"Base currency?",
-    show:a=>!!a.navfreq,
-    suggest:()=>"EUR",
-    options:[
-      {value:"EUR",label:"EUR"},{value:"USD",label:"USD"},
-      {value:"GBP",label:"GBP"},{value:"CHF",label:"CHF"}
-    ]
-  },
-  {
-    id:"domicile", type:"single", q:"Domicile / regulator?",
-    show:a=>!!a.vehicle,
-    suggest:a=> a.baseccy==="USD" ? "lux" : "ie",
-    options:[
-      {value:"ie",  label:"Ireland (CBI)"},
-      {value:"lux", label:"Luxembourg (CSSF)"}
-    ]
-  },
-  {
-    id:"liquidity", type:"single", q:"Dealing / liquidity terms?",
-    show:a=>!!a.strategy,
-    suggest:a=>{
-      if(a.strategy==="private_assets") return "closed";
-      if(a.strategy==="alternatives")   return "monthly_deal";
-      return "daily_deal";
-    },
-    options:[
-      {value:"daily_deal",  label:"Open-ended, daily dealing"},
-      {value:"monthly_deal",label:"Open-ended, monthly dealing + notice"},
-      {value:"closed",      label:"Closed-ended"}
-    ]
-  },
-  {
-    id:"share_classes", type:"multi", q:"Which share classes at launch?",
-    show:a=>a.intent!=="migration",
-    suggest:a=> a.baseccy ? ["acc_"+a.baseccy.toLowerCase()] : null,
-    options:[
-      {value:"acc_eur",label:"Accumulating — EUR"},
-      {value:"acc_usd",label:"Accumulating — USD"},
-      {value:"acc_gbp",label:"Accumulating — GBP"},
-      {value:"dist_eur",label:"Distributing — EUR"},
-      {value:"hedged_usd",label:"Currency-hedged — USD"},
-      {value:"inst",label:"Institutional (seed)"}
-    ]
-  },
-  {
-    id:"target_aum", type:"number", q:"Target AUM at 12 months?",
-    show:a=>!!a.strategy, unit:"million, base ccy",
-    placeholder:"e.g. 250"
-  },
-  {
-    id:"launch_date", type:"text", q:"Target launch / go-live date?",
-    show:a=>!!a.vehicle, placeholder:"YYYY-MM-DD"
-  },
-  {
-    id:"notes", type:"textarea", q:"Anything else operations should know?",
-    show:a=>!!a.vehicle, placeholder:"Side pockets, performance fees, complex instruments, key dependencies…"
-  }
-];
+const W=1180,H=560;
+const svg=d3.select("#canvas");
 
-/* ============================================================
-   ENGINE  —  generic. Renders schema, handles branching,
-   suggestion-then-confirm, progress, and JSON export.
-============================================================ */
-const answers = {};     // id -> value (string | array)
-const confirmed = {};   // id -> true once user confirms
-const isSuggested = {}; // id -> true if current value came from a suggestion (unconfirmed)
-const form = document.getElementById("form");
+// ---------- data ----------
+const current={
+  title:"Current state — recon queue, cause-first",
+  badge:"Effort scales with alerts",
+  badgeCls:"cur",
+  legend:[
+    {c:"var(--green)",t:"green control / passes"},
+    {c:"var(--amber)",t:"manual review"},
+    {c:"var(--red)",t:"silent blind spot"}
+  ],
+  nodes:[
+    {id:"feed",x:90,y:280,label:"Price + expense feeds",sub:"vendor, custody, accruals",col:"var(--txt-dim)"},
+    {id:"nav",x:340,y:180,label:"Accounting platform",sub:"strikes NAV off last snapshot",col:"var(--txt-dim)"},
+    {id:"recon",x:340,y:380,label:"Recon controls",sub:"three-way, balanced",col:"var(--green)"},
+    {id:"queue",x:610,y:280,label:"Recon break queue",sub:"every break, ranked by noise",col:"var(--amber)"},
+    {id:"fa",x:860,y:280,label:"Fund accountant",sub:"works each cause by hand",col:"var(--amber)"},
+    {id:"pub",x:1075,y:280,label:"NAV published",sub:"no hard stop",col:"var(--txt-dim)"}
+  ],
+  links:[
+    {s:"feed",t:"nav",kind:"normal"},
+    {s:"feed",t:"recon",kind:"normal"},
+    {s:"nav",t:"queue",kind:"normal"},
+    {s:"recon",t:"queue",kind:"normal"},
+    {s:"queue",t:"fa",kind:"manual"},
+    {s:"fa",t:"pub",kind:"manual"},
+    {s:"feed",t:"nav",kind:"blind"} // the silent stale path
+  ],
+  blindNote:{x:215,y:130,t:"stale price flows through — both NAV and recon read it, both stay green"}
+};
 
-function visibleQuestions(){ return SCHEMA.filter(q=>!q.show || q.show(answers)); }
+const future={
+  title:"Future state — strike-gate, symptom-first",
+  badge:"Effort scales with risk",
+  badgeCls:"fut",
+  legend:[
+    {c:"var(--green)",t:"deterministic proof"},
+    {c:"var(--cyan)",t:"uncorrelated check"},
+    {c:"var(--gold)",t:"human sign-off"},
+    {c:"var(--red)",t:"gate held"}
+  ],
+  nodes:[
+    {id:"feed",x:80,y:280,label:"Price + expense feeds",sub:"vendor, custody, accruals",col:"var(--txt-dim)"},
+    {id:"recompute",x:300,y:150,label:"Deterministic recompute",sub:"reproduces NAV to the cent",col:"var(--green)"},
+    {id:"shadow",x:300,y:290,label:"Shadow-NAV (independent path)",sub:"different price snapshot",col:"var(--cyan)"},
+    {id:"iso",x:300,y:430,label:"Isolation Forest + EWMA",sub:"multivariate outliers",col:"var(--cyan)"},
+    {id:"symptom",x:560,y:290,label:"Symptom feed",sub:'"too smooth" / divergence, ranked',col:"var(--cyan)"},
+    {id:"gate",x:790,y:290,label:"Strike-gate",sub:"holds while exception open",col:"var(--red)"},
+    {id:"fa",x:1000,y:160,label:"Fund accountant",sub:"resolves 6, not 40 — signs release",col:"var(--gold)"},
+    {id:"pub",x:1000,y:430,label:"NAV published",sub:"proof + signature attached",col:"var(--green)"}
+  ],
+  links:[
+    {s:"feed",t:"recompute",kind:"normal"},
+    {s:"feed",t:"shadow",kind:"check"},
+    {s:"feed",t:"iso",kind:"check"},
+    {s:"recompute",t:"symptom",kind:"normal"},
+    {s:"shadow",t:"symptom",kind:"check"},
+    {s:"iso",t:"symptom",kind:"check"},
+    {s:"symptom",t:"gate",kind:"normal"},
+    {s:"gate",t:"fa",kind:"human"},
+    {s:"fa",t:"gate",kind:"return"},
+    {s:"gate",t:"pub",kind:"release"}
+  ],
+  blindNote:null
+};
 
-function applySuggestions(){
-  visibleQuestions().forEach(q=>{
-    if(!q.suggest) return;
-    if(confirmed[q.id]) return;               // never overwrite confirmed
-    if(answers[q.id]!==undefined && !isSuggested[q.id]) return; // user typed their own
-    const s = q.suggest(answers);
-    if(s===null||s===undefined) return;
-    answers[q.id] = s;
-    isSuggested[q.id] = true;
+const palette={
+  normal:"#2c4358",
+  manual:"var(--amber)",
+  blind:"var(--red)",
+  check:"var(--cyan)",
+  human:"var(--gold)",
+  return:"var(--gold)",
+  release:"var(--green)"
+};
+
+function nodeById(data,id){return data.nodes.find(n=>n.id===id);}
+
+let particleTimers=[];
+function clearTimers(){particleTimers.forEach(t=>clearInterval(t));particleTimers=[];}
+
+function render(data){
+  clearTimers();
+  svg.selectAll("*").remove();
+
+  // defs: glow
+  const defs=svg.append("defs");
+  ["var(--cyan)","var(--gold)","var(--red)","var(--green)"].forEach((c,i)=>{
+    const f=defs.append("filter").attr("id","glow"+i).attr("x","-50%").attr("y","-50%").attr("width","200%").attr("height","200%");
+    f.append("feGaussianBlur").attr("stdDeviation","3.2").attr("result","b");
+    const m=f.append("feMerge");m.append("feMergeNode").attr("in","b");m.append("feMergeNode").attr("in","SourceGraphic");
   });
-}
 
-function setValue(id,val){
-  answers[id]=val;
-  isSuggested[id]=false;     // user touched it -> no longer a raw suggestion
-  confirmed[id]=false;       // editing un-confirms
-  applySuggestions();
-  render();
-}
-
-function confirm(id){ confirmed[id]=true; isSuggested[id]=false; render(); }
-
-function render(){
-  const vis = visibleQuestions();
-  form.innerHTML="";
-  let prevAnswered = true;
-
-  vis.forEach((q,i)=>{
-    const hasVal = answers[q.id]!==undefined && answers[q.id]!=="" &&
-                   !(Array.isArray(answers[q.id]) && answers[q.id].length===0);
-    const needsConfirm = q.type!=="text" && q.type!=="number" && q.type!=="textarea"
-                          ? hasVal : hasVal;   // all answered fields require a confirm tick
-    const gated = !prevAnswered;
-
-    const card=document.createElement("div");
-    card.className="card"+(gated?" gated":"");
-    card.innerHTML=`<span class="qnum">Q${i+1}</span>`;
-
-    const qt=document.createElement("div");qt.className="qtext";qt.textContent=q.q;card.appendChild(qt);
-    if(q.help){const h=document.createElement("div");h.className="qhelp";h.textContent=q.help;card.appendChild(h);}
-
-    const flagged = isSuggested[q.id];
-
-    if(q.type==="single"||q.type==="multi"){
-      const wrap=document.createElement("div");wrap.className="opts";
-      q.options.forEach(o=>{
-        const sel = q.type==="single" ? answers[q.id]===o.value
-                                      : Array.isArray(answers[q.id])&&answers[q.id].includes(o.value);
-        const opt=document.createElement("label");
-        opt.className="opt"+(sel?(flagged?" suggested":" sel"):"");
-        opt.innerHTML=`<input type="${q.type==="single"?"radio":"checkbox"}" name="${q.id}" ${sel?"checked":""}>
-          <span>${o.label}</span>${sel&&flagged?'<span class="tag">suggested</span>':''}`;
-        opt.querySelector("input").addEventListener("change",()=>{
-          if(q.type==="single") setValue(q.id,o.value);
-          else{
-            const cur=Array.isArray(answers[q.id])?[...answers[q.id]]:[];
-            const ix=cur.indexOf(o.value);
-            ix>-1?cur.splice(ix,1):cur.push(o.value);
-            setValue(q.id,cur);
-          }
-        });
-        wrap.appendChild(opt);
-      });
-      card.appendChild(wrap);
-    } else {
-      const lbl=document.createElement("label");lbl.className="flbl";
-      lbl.textContent=q.unit?("Value ("+q.unit+")"):"Your answer";
-      card.appendChild(lbl);
-      let el;
-      if(q.type==="textarea"){el=document.createElement("textarea");}
-      else{el=document.createElement("input");el.type=q.type==="number"?"number":"text";}
-      el.placeholder=q.placeholder||"";
-      el.value=answers[q.id]??"";
-      if(flagged)el.classList.add("suggested");
-      el.addEventListener("input",e=>{
-        answers[q.id]= q.type==="number" ? (e.target.value===""?"":Number(e.target.value)) : e.target.value;
-        isSuggested[q.id]=false;confirmed[q.id]=false;
-        updateMeta();exportBtnState();
-      });
-      el.addEventListener("blur",()=>{applySuggestions();render();});
-      card.appendChild(el);
+  // links
+  const linkLayer=svg.append("g");
+  const pathFor=(l)=>{
+    const a=nodeById(data,l.s),b=nodeById(data,l.t);
+    const mx=(a.x+b.x)/2;
+    if(l.kind==="return"){ // curve back, offset
+      return `M${b.x-14},${b.y+18} C${mx},${b.y+70} ${mx},${a.y+70} ${a.x+14},${a.y+18}`;
     }
+    return `M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}`;
+  };
 
-    if(hasVal){
-      const row=document.createElement("div");row.className="confirmrow";
-      const note=document.createElement("span");
-      note.className="note"+(confirmed[q.id]?" done":"");
-      note.textContent = confirmed[q.id] ? "✓ Confirmed" :
-        (flagged ? "Suggested from earlier answers — confirm to record" : "Confirm to record");
-      const btn=document.createElement("button");
-      btn.className="cbtn"+(confirmed[q.id]?" locked":"");
-      btn.textContent=confirmed[q.id]?"Confirmed":"Confirm";
-      if(!confirmed[q.id])btn.addEventListener("click",()=>confirm(q.id));
-      row.appendChild(btn);row.appendChild(note);card.appendChild(row);
+  data.links.forEach((l,i)=>{
+    const col=palette[l.kind]||"#2c4358";
+    const dash=(l.kind==="blind")?"2,6":(l.kind==="check"?"1,7":null);
+    const p=linkLayer.append("path")
+      .attr("d",pathFor(l))
+      .attr("fill","none")
+      .attr("stroke",col)
+      .attr("stroke-width",l.kind==="blind"?2:1.6)
+      .attr("opacity",0);
+    if(dash)p.attr("stroke-dasharray",dash);
+    const len=p.node().getTotalLength();
+    p.attr("stroke-dasharray",dash?dash:len+" "+len)
+     .attr("stroke-dashoffset",dash?0:len)
+     .transition().delay(200+i*120).duration(700)
+     .attr("opacity",l.kind==="blind"?0.85:0.55)
+     .attr("stroke-dashoffset",0)
+     .on("end",function(){if(dash)d3.select(this).attr("stroke-dasharray",dash);});
+
+    // flowing particles (skip blind = static danger line)
+    if(l.kind!=="blind"){
+      const t=setInterval(()=>{
+        const dot=linkLayer.append("circle").attr("r",2.6).attr("fill",col).attr("opacity",0.9);
+        dot.transition().duration(1600).ease(d3.easeLinear)
+          .attrTween("transform",()=>{return tt=>{const pt=p.node().getPointAtLength(tt*len);return `translate(${pt.x},${pt.y})`;};})
+          .attr("opacity",0).remove();
+      },900+Math.random()*400);
+      particleTimers.push(t);
     }
-
-    form.appendChild(card);
-    prevAnswered = hasVal && confirmed[q.id];
   });
 
-  updateMeta();exportBtnState();
-}
-
-function updateMeta(){
-  const vis=visibleQuestions();
-  const done=vis.filter(q=>confirmed[q.id]).length;
-  const pct=vis.length?Math.round(done/vis.length*100):0;
-  document.getElementById("pctText").textContent=pct+"%";
-  document.getElementById("barFill").style.right=(100-pct)+"%";
-  document.getElementById("confText").textContent=done+" of "+vis.length+" confirmed";
-  document.getElementById("footStat").textContent=
-    done===vis.length&&vis.length?"All sections confirmed — ready to export":"";
-}
-
-function exportBtnState(){
-  const vis=visibleQuestions();
-  const all=vis.length>0 && vis.every(q=>confirmed[q.id]);
-  document.getElementById("exportBtn").disabled=!all;
-  document.getElementById("encExportBtn").disabled=!all;
-}
-
-/* ---- export payload ---- */
-function buildPayload(){
-  const vis=visibleQuestions();
-  const labelFor=(q,v)=>{
-    if(q.options){const o=q.options.find(o=>o.value===v);return o?o.label:v;}
-    return v;
-  };
-  const fields={};
-  vis.forEach(q=>{
-    let val=answers[q.id], label;
-    if(Array.isArray(val)) label=val.map(v=>labelFor(q,v));
-    else label=labelFor(q,val);
-    fields[q.id]={question:q.q,value:val,label,confirmed:!!confirmed[q.id]};
-  });
-  return {
-    schema_version:"1.0",
-    form:"fund_launch_onboarding",
-    generated_at:new Date().toISOString(),
-    record_complete:vis.every(q=>confirmed[q.id]),
-    answers:Object.fromEntries(vis.map(q=>[q.id,answers[q.id]])), // flat, DB-friendly
-    fields                                                         // rich, with labels + audit
-  };
-}
-
-const dlg=document.getElementById("jsonDlg");
-document.getElementById("exportBtn").onclick=()=>{
-  document.getElementById("jsonOut").textContent=JSON.stringify(buildPayload(),null,2);
-  dlg.showModal();
-};
-document.getElementById("dlgClose").onclick=()=>dlg.close();
-document.getElementById("copyBtn").onclick=()=>{
-  navigator.clipboard.writeText(document.getElementById("jsonOut").textContent);
-  document.getElementById("copyBtn").textContent="Copied";
-  setTimeout(()=>document.getElementById("copyBtn").textContent="Copy",1500);
-};
-document.getElementById("downloadBtn").onclick=()=>{
-  const blob=new Blob([document.getElementById("jsonOut").textContent],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-  a.download="fund_launch_"+Date.now()+".json";a.click();
-};
-
-/* ---- import / reset ---- */
-document.getElementById("importBtn").onclick=()=>document.getElementById("fileInput").click();
-document.getElementById("fileInput").onchange=e=>{
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const d=JSON.parse(r.result);const src=d.answers||d;
-      Object.keys(answers).forEach(k=>delete answers[k]);
-      Object.keys(confirmed).forEach(k=>delete confirmed[k]);
-      Object.keys(isSuggested).forEach(k=>delete isSuggested[k]);
-      Object.entries(src).forEach(([k,v])=>{answers[k]=v;confirmed[k]=true;});
-      render();
-    }catch(err){alert("Could not read that file as questionnaire JSON.");}
-  };
-  r.readAsText(f);
-};
-document.getElementById("resetBtn").onclick=()=>{
-  if(!confirm) return;
-  Object.keys(answers).forEach(k=>delete answers[k]);
-  Object.keys(confirmed).forEach(k=>delete confirmed[k]);
-  Object.keys(isSuggested).forEach(k=>delete isSuggested[k]);
-  applySuggestions();render();
-};
-
-/* ============================================================
-   ENCRYPTION  —  AES-256-GCM via Web Crypto. No libraries.
-   Envelope format (itself JSON, safe to email):
-   { fmt:"fundq-enc-v1", kdf:"PBKDF2-SHA256", iter, salt, iv, ct }
-   All binary fields base64-encoded.
-============================================================ */
-const PBKDF2_ITER = 250000;
-const enc = new TextEncoder();
-const dec = new TextDecoder();
-const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-const unb64 = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0));
-
-async function deriveKey(pass, salt, iter){
-  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
-  return crypto.subtle.deriveKey(
-    {name:"PBKDF2", salt, iterations:iter, hash:"SHA-256"},
-    base, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
-}
-
-async function encryptPayload(obj, pass){
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv   = crypto.getRandomValues(new Uint8Array(12));
-  const key  = await deriveKey(pass, salt, PBKDF2_ITER);
-  const ct   = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, enc.encode(JSON.stringify(obj)));
-  return {fmt:"fundq-enc-v1", kdf:"PBKDF2-SHA256", iter:PBKDF2_ITER,
-          salt:b64(salt), iv:b64(iv), ct:b64(ct), generated_at:new Date().toISOString()};
-}
-
-async function decryptPayload(envelope, pass){
-  if(envelope.fmt!=="fundq-enc-v1") throw new Error("Not a recognised encrypted file.");
-  const key = await deriveKey(pass, unb64(envelope.salt), envelope.iter||PBKDF2_ITER);
-  const pt  = await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(envelope.iv)}, key, unb64(envelope.ct));
-  return JSON.parse(dec.decode(pt));
-}
-
-/* ---- encrypt dialog ---- */
-const encDlg=document.getElementById("encDlg");
-document.getElementById("encExportBtn").onclick=()=>{
-  document.getElementById("encPass").value="";
-  document.getElementById("encPass2").value="";
-  document.getElementById("encStrength").textContent="";
-  encDlg.showModal();
-};
-document.getElementById("encClose").onclick=()=>encDlg.close();
-document.getElementById("encCancel").onclick=()=>encDlg.close();
-function passNote(p){
-  if(p.length===0) return "";
-  if(p.length<12) return "Too short — use at least 12 characters.";
-  if(p.length<16) return "Acceptable. Longer is stronger.";
-  return "Good length.";
-}
-document.getElementById("encPass").addEventListener("input",e=>{
-  document.getElementById("encStrength").textContent=passNote(e.target.value);
-});
-document.getElementById("encGo").onclick=async()=>{
-  const p1=document.getElementById("encPass").value, p2=document.getElementById("encPass2").value;
-  const note=document.getElementById("encStrength");
-  if(p1.length<12){note.style.color="var(--danger)";note.textContent="Passphrase must be at least 12 characters.";return;}
-  if(p1!==p2){note.style.color="var(--danger)";note.textContent="Passphrases don't match.";return;}
-  note.style.color="var(--muted)";note.textContent="Encrypting…";
-  try{
-    const envelope=await encryptPayload(buildPayload(), p1);
-    const blob=new Blob([JSON.stringify(envelope,null,2)],{type:"application/json"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-    a.download="fund_launch_ENCRYPTED_"+Date.now()+".json";a.click();
-    note.textContent="Encrypted file downloaded. Share the passphrase separately.";
-    setTimeout(()=>encDlg.close(),1400);
-  }catch(err){note.style.color="var(--danger)";note.textContent="Encryption failed: "+err.message;}
-};
-
-/* ---- decrypt dialog ---- */
-const decDlg=document.getElementById("decDlg");
-let decEnvelope=null;
-document.getElementById("decryptBtn").onclick=()=>{
-  decEnvelope=null;
-  document.getElementById("decFileName").textContent="";
-  document.getElementById("decPass").value="";
-  document.getElementById("decMsg").textContent="";
-  const out=document.getElementById("decOut");out.style.display="none";out.textContent="";
-  document.getElementById("decCopy").style.display="none";
-  decDlg.showModal();
-};
-document.getElementById("decClose").onclick=()=>decDlg.close();
-document.getElementById("decCancel").onclick=()=>decDlg.close();
-document.getElementById("decPick").onclick=()=>document.getElementById("decFileInput").click();
-document.getElementById("decFileInput").onchange=e=>{
-  const f=e.target.files[0];if(!f)return;
-  document.getElementById("decFileName").textContent=f.name;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{decEnvelope=JSON.parse(r.result);}
-    catch{document.getElementById("decMsg").style.color="var(--danger)";
-          document.getElementById("decMsg").textContent="That file isn't valid JSON.";decEnvelope=null;}
-  };
-  r.readAsText(f);
-};
-document.getElementById("decGo").onclick=async()=>{
-  const msg=document.getElementById("decMsg");
-  if(!decEnvelope){msg.style.color="var(--danger)";msg.textContent="Choose an encrypted file first.";return;}
-  const pass=document.getElementById("decPass").value;
-  if(!pass){msg.style.color="var(--danger)";msg.textContent="Enter the passphrase.";return;}
-  msg.style.color="var(--muted)";msg.textContent="Decrypting…";
-  try{
-    const data=await decryptPayload(decEnvelope, pass);
-    msg.style.color="var(--locked)";msg.textContent="✓ Decrypted.";
-    const out=document.getElementById("decOut");
-    out.textContent=JSON.stringify(data,null,2);out.style.display="block";
-    document.getElementById("decCopy").style.display="inline-block";
-  }catch(err){
-    msg.style.color="var(--danger)";
-    msg.textContent="Could not decrypt — wrong passphrase or the file was altered.";
+  // blind-spot annotation
+  if(data.blindNote){
+    const g=svg.append("g").attr("opacity",0);
+    g.append("text").attr("x",data.blindNote.x).attr("y",data.blindNote.y)
+      .attr("class","axis-note").attr("fill","var(--red)").attr("text-anchor","middle")
+      .text("◬ silent stale path");
+    g.append("text").attr("x",data.blindNote.x).attr("y",data.blindNote.y+15)
+      .attr("class","axis-note").attr("fill","#8a5560").attr("text-anchor","middle")
+      .attr("font-size","9px").text("recon & NAV share the blind spot");
+    g.transition().delay(1400).duration(800).attr("opacity",1);
   }
-};
-document.getElementById("decCopy").onclick=()=>{
-  navigator.clipboard.writeText(document.getElementById("decOut").textContent);
-  document.getElementById("decCopy").textContent="Copied";
-  setTimeout(()=>document.getElementById("decCopy").textContent="Copy JSON",1500);
-};
 
-applySuggestions();
-render();
+  // nodes
+  const nodeLayer=svg.append("g");
+  data.nodes.forEach((n,i)=>{
+    const g=nodeLayer.append("g").attr("transform",`translate(${n.x},${n.y})`).attr("opacity",0);
+    const w=Math.max(150, n.label.length*8.2);
+    const isGate=n.id==="gate";
+    g.append("rect").attr("x",-w/2).attr("y",-26).attr("width",w).attr("height",52)
+      .attr("rx",9).attr("fill","var(--panel2)")
+      .attr("stroke",n.col).attr("stroke-width",isGate?1.8:1.1)
+      .attr("filter",isGate?"url(#glow2)":null);
+    if(isGate){
+      g.append("rect").attr("x",-w/2-3).attr("y",-29).attr("width",w+6).attr("height",58)
+        .attr("rx",11).attr("fill","none").attr("stroke","var(--red)").attr("stroke-width",0.8).attr("opacity",0.35)
+        .attr("stroke-dasharray","4,4");
+    }
+    g.append("circle").attr("cx",-w/2+13).attr("cy",-9).attr("r",3.5).attr("fill",n.col);
+    g.append("text").attr("x",-w/2+24).attr("y",-5).attr("class","node-label").text(n.label);
+    g.append("text").attr("x",-w/2+24).attr("y",13).attr("class","node-sub").text(n.sub);
+    g.transition().delay(300+i*130).duration(600).attr("opacity",1);
+  });
+
+  // stage caption strip
+  svg.append("text").attr("x",W/2).attr("y",H-14).attr("text-anchor","middle")
+     .attr("class","axis-note")
+     .text(data===current ? "feeds → platform & recon → break queue → accountant → publish   ·   no structural stop"
+                          : "feeds → 3 uncorrelated checks → symptom feed → STRIKE-GATE → human sign-off → publish with proof");
+}
+
+const states={cur:current,fut:future};
+function show(k){
+  const d=states[k];
+  document.getElementById("bt").textContent=d.title;
+  const bd=document.getElementById("bd");bd.textContent=d.badge;bd.className="badge "+d.badgeCls;
+  document.getElementById("btn-cur").classList.toggle("active",k==="cur");
+  document.getElementById("btn-fut").classList.toggle("active",k==="fut");
+  const leg=document.getElementById("leg");leg.innerHTML="";
+  d.legend.forEach(L=>{
+    const s=document.createElement("span");
+    s.innerHTML=`<span class="dot" style="background:${L.c}"></span>${L.t}`;
+    leg.appendChild(s);
+  });
+  render(d);
+}
+show('cur');
 </script>
 </body>
 </html>
