@@ -3,296 +3,311 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NAV Oversight — Current vs Future State</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<title>Opus 4.8 — One-Page Operator's Guide</title>
 <style>
   :root{
-    --ink:#0a1018;
-    --panel:#0e1722;
-    --panel2:#111d2b;
-    --hair:#1d2c3d;
-    --mute:#5b7080;
-    --txt:#c7d6e3;
-    --txt-dim:#7a8ea0;
-    --cyan:#36d6c3;
-    --cyan-dim:#1d8a7e;
-    --amber:#e8a13a;
-    --red:#e3565b;
-    --green:#3fb98a;
-    --gold:#d8b15a;
+    --ink:#1a1c1f;
+    --slate:#4a5159;
+    --paper:#fbfaf7;
+    --line:#d8d4ca;
+    --accent:#0b6b5f;       /* teal-green: signature */
+    --accent-soft:#e6f0ed;
+    --amber:#a8650c;
+    --amber-soft:#f6ecdc;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:var(--ink);color:var(--txt);font-family:"DM Sans",-apple-system,system-ui,sans-serif}
-  body{padding:48px 32px 80px;max-width:1320px;margin:0 auto}
-  .eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan-dim);margin-bottom:14px}
-  h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(28px,4vw,46px);line-height:1.05;letter-spacing:-.01em;color:#eef5fb;margin-bottom:10px}
-  h1 em{font-style:italic;color:var(--cyan)}
-  .sub{max-width:680px;color:var(--txt-dim);font-size:15px;line-height:1.55;margin-bottom:8px}
-  .principle{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px;color:var(--gold);letter-spacing:.02em;margin:18px 0 38px;padding-left:14px;border-left:2px solid var(--gold)}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:#e9e6df;
+    line-height:1.4;
+    padding:24px;
+    font-size:13px;
+  }
+  .sheet{
+    width:210mm;
+    min-height:297mm;
+    margin:0 auto;
+    background:var(--paper);
+    padding:14mm 14mm 12mm;
+    box-shadow:0 2px 18px rgba(0,0,0,.12);
+  }
 
-  .toggle{display:flex;gap:6px;margin-bottom:30px;background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:5px;width:fit-content}
-  .toggle button{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:transparent;border:none;color:var(--txt-dim);padding:10px 22px;border-radius:7px;cursor:pointer;transition:all .25s}
-  .toggle button.active{background:var(--panel2);color:var(--cyan)}
-  .toggle button.active.future{color:var(--gold)}
+  /* Header */
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    border-bottom:2.5px solid var(--ink);
+    padding-bottom:8px;
+    margin-bottom:14px;
+  }
+  .title-block h1{
+    font-size:23px;
+    font-weight:800;
+    letter-spacing:-.4px;
+    line-height:1;
+  }
+  .title-block .sub{
+    font-size:11.5px;
+    color:var(--slate);
+    margin-top:5px;
+    max-width:120mm;
+  }
+  .badge{
+    font-family:var(--mono);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--accent);
+    border:1.5px solid var(--accent);
+    border-radius:3px;
+    padding:4px 8px;
+    white-space:nowrap;
+  }
 
-  .stage-wrap{display:grid;grid-template-columns:1fr;gap:0}
-  .board{background:var(--panel);border:1px solid var(--hair);border-radius:16px;overflow:hidden;position:relative}
-  .board-head{display:flex;justify-content:space-between;align-items:center;padding:20px 26px;border-bottom:1px solid var(--hair)}
-  .board-title{font-family:"JetBrains Mono",monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
-  .badge{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;border-radius:20px;border:1px solid}
-  .badge.cur{color:var(--red);border-color:#3a2024;background:rgba(227,86,91,.07)}
-  .badge.fut{color:var(--gold);border-color:#3a3120;background:rgba(216,177,90,.07)}
-  svg{display:block;width:100%;height:auto}
+  /* Grid */
+  .cols{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:11px;
+  }
+  .card{
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:10px 11px 11px;
+    background:#fff;
+  }
+  .card.full{grid-column:1 / -1;}
+  .card h2{
+    font-size:12.5px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--accent);
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin-bottom:7px;
+  }
+  .card h2 .n{
+    font-family:var(--mono);
+    font-size:10px;
+    background:var(--accent);
+    color:#fff;
+    width:17px;height:17px;
+    border-radius:3px;
+    display:inline-flex;
+    align-items:center;justify-content:center;
+    flex:none;
+  }
+  ul{list-style:none;}
+  li{
+    padding-left:14px;
+    position:relative;
+    margin-bottom:4px;
+    font-size:12px;
+  }
+  li::before{
+    content:'';
+    position:absolute;left:2px;top:6px;
+    width:4px;height:4px;border-radius:50%;
+    background:var(--accent);
+  }
+  strong{font-weight:700;}
+  .k{font-family:var(--mono);font-size:11px;background:var(--accent-soft);padding:1px 4px;border-radius:3px;color:#063f38;}
 
-  .legend{display:flex;flex-wrap:wrap;gap:22px;padding:16px 26px;border-top:1px solid var(--hair);font-size:12px;color:var(--txt-dim)}
-  .legend span{display:flex;align-items:center;gap:8px}
-  .dot{width:9px;height:9px;border-radius:50%}
+  /* Workflow strip */
+  .flow{
+    display:flex;
+    gap:6px;
+    margin-bottom:13px;
+  }
+  .step{
+    flex:1;
+    background:var(--accent-soft);
+    border-radius:4px;
+    padding:7px 9px;
+    position:relative;
+  }
+  .step .num{
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--accent);
+    font-weight:700;
+  }
+  .step .lbl{font-size:11px;font-weight:700;display:block;margin-top:1px;}
+  .step .d{font-size:10px;color:var(--slate);margin-top:1px;line-height:1.25;}
+  .step:not(:last-child)::after{
+    content:'\2192';
+    position:absolute;right:-7px;top:50%;
+    transform:translateY(-50%);
+    color:var(--accent);font-weight:700;font-size:13px;z-index:2;
+  }
 
-  .takeaways{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  @media(max-width:780px){.takeaways{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:22px 24px}
-  .card h3{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
-  .card.cur h3{color:var(--red)}
-  .card.fut h3{color:var(--gold)}
-  .card p{font-size:13.5px;line-height:1.6;color:var(--txt-dim);margin-bottom:9px}
-  .card strong{color:var(--txt);font-weight:600}
+  /* Prompt recipe box */
+  .recipe{
+    font-family:var(--mono);
+    font-size:11px;
+    background:#1a1c1f;
+    color:#e8e6df;
+    border-radius:5px;
+    padding:10px 12px;
+    line-height:1.55;
+  }
+  .recipe .lab{color:#5fd0bf;}
+  .recipe .var{color:#e8b366;}
 
-  .flow-label{font-family:"JetBrains Mono",monospace;font-size:11px;fill:var(--txt-dim)}
-  .node-label{font-family:"DM Sans",sans-serif;font-size:13px;fill:#dce8f2;font-weight:600}
-  .node-sub{font-family:"JetBrains Mono",monospace;font-size:10px;fill:var(--txt-dim)}
-  .axis-note{font-family:"JetBrains Mono",monospace;font-size:10px;fill:#4a6076;letter-spacing:.08em}
+  /* Language table */
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th,td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);}
+  td:first-child{font-family:var(--mono);font-weight:700;color:var(--accent);white-space:nowrap;}
+
+  /* Amend card highlight */
+  .amend{border-color:var(--amber);background:var(--amber-soft);}
+  .amend h2{color:var(--amber);}
+  .amend h2 .n{background:var(--amber);}
+  .amend li::before{background:var(--amber);}
+
+  .pill{display:inline-block;font-size:10px;font-family:var(--mono);background:var(--amber);color:#fff;padding:1px 6px;border-radius:10px;margin-left:6px;}
+
+  footer{
+    margin-top:13px;
+    padding-top:8px;
+    border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;
+    font-size:10px;color:var(--slate);
+  }
+  .golden{
+    background:var(--ink);color:var(--paper);
+    border-radius:5px;padding:9px 12px;margin-bottom:13px;
+    font-size:12px;
+  }
+  .golden strong{color:#5fd0bf;}
+
+  @media print{
+    body{background:#fff;padding:0;}
+    .sheet{box-shadow:none;width:auto;min-height:auto;padding:8mm;}
+    @page{size:A4;margin:0;}
+  }
 </style>
 </head>
 <body>
-  <div class="eyebrow">NAV Oversight · Jane Street Operating Model Applied</div>
-  <h1>From <em>chasing causes</em> to <em>gating outputs</em></h1>
-  <p class="sub">The same NAV strike, run two ways. Current state pushes a fund accountant through every recon break hunting root causes. Future state inverts it — deterministic recompute and uncorrelated checks gate the output, and the human resolves only what telemetry structurally can't see.</p>
-  <p class="principle">// the halt is automatic and fast — the diagnosis needs a human who knows what a normal number looks like</p>
+<div class="sheet">
 
-  <div class="toggle">
-    <button id="btn-cur" class="active" onclick="show('cur')">Current state</button>
-    <button id="btn-fut" class="future" onclick="show('fut')">Future state</button>
+  <header>
+    <div class="title-block">
+      <h1>Working with Opus&nbsp;4.8</h1>
+      <div class="sub">A one-page operator's guide for building &amp; editing HTML decks that transpose cleanly to PowerPoint (16:9, 1280×720). Treat the LLM like a sharp junior who needs exact instructions — vague in, vague out.</div>
+    </div>
+    <div class="badge">Internal&nbsp;LLM&nbsp;·&nbsp;Opus&nbsp;4.8</div>
+  </header>
+
+  <!-- Golden rule -->
+  <div class="golden">
+    <strong>The one rule that fixes 80% of bad output:</strong> &nbsp;Don't ask for the whole thing in one go. State the goal, get a draft, then change <em>one thing at a time</em>. Consistency comes from iterating on a working draft — and a consistent deck is what transposes cleanly into PowerPoint.
   </div>
 
-  <div class="stage-wrap">
-    <div class="board">
-      <div class="board-head">
-        <div class="board-title" id="bt"></div>
-        <div class="badge" id="bd"></div>
+  <!-- Workflow strip -->
+  <div class="flow">
+    <div class="step"><span class="num">01</span><span class="lbl">Prompt the idea</span><span class="d">Describe what you want + who it's for + the format.</span></div>
+    <div class="step"><span class="num">02</span><span class="lbl">Check output</span><span class="d">Open it. Note what's wrong in plain words.</span></div>
+    <div class="step"><span class="num">03</span><span class="lbl">Prompt a change</span><span class="d">One fix at a time. Be specific.</span></div>
+    <div class="step"><span class="num">04</span><span class="lbl">Iterate</span><span class="d">Repeat 2–3 until you're happy.</span></div>
+  </div>
+
+  <div class="cols">
+
+    <!-- Anatomy of a good prompt -->
+    <div class="card full">
+      <h2><span class="n">1</span>Anatomy of a prompt that works</h2>
+      <div class="recipe">
+        <span class="lab">ROLE</span>     You are building a slide deck in HTML that will be converted to PowerPoint.<br>
+        <span class="lab">GOAL</span>     Create a <span class="var">[5-slide]</span> presentation on <span class="var">[topic]</span> for <span class="var">[audience]</span>.<br>
+        <span class="lab">FORMAT</span>   Each slide a fixed <span class="var">1280×720</span> container, absolutely-positioned. One slide per section.<br>
+        <span class="lab">STYLE</span>    <span class="var">[corporate / clean / dark]</span>; primary colour <span class="var">[#hex]</span>; named web font <span class="var">[name]</span>.<br>
+        <span class="lab">CONTENT</span>  Here is the text for each slide: <span class="var">[paste your bullets]</span>.<br>
+        <span class="lab">CONSTRAINTS</span> PowerPoint-safe: real text, solid colours, no gradient-text or backdrop filters.
       </div>
-      <svg id="canvas" viewBox="0 0 1180 560" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="legend" id="leg"></div>
+      <ul style="margin-top:7px;columns:2;column-gap:18px;">
+        <li>Name the <strong>audience</strong> — it sets the tone automatically.</li>
+        <li>Give <strong>exact colours/fonts</strong> as values, not "nice" or "professional".</li>
+        <li>Say <strong>"fixed 1280×720, PowerPoint-safe"</strong> so the transpose stays clean.</li>
+        <li>Paste real content — don't make it invent your numbers.</li>
+      </ul>
     </div>
+
+    <!-- Amending while keeping style -->
+    <div class="card amend">
+      <h2><span class="n">2</span>Editing a deck <span class="pill">KEEP STYLE</span></h2>
+      <ul>
+        <li><strong>Paste the existing file</strong> (or attach it) every time — the LLM can't see last week's version.</li>
+        <li>Start with: <span class="k">"Keep the 1280×720 slide size, positioning, colours and fonts exactly the same. Only change…"</span></li>
+        <li><strong>Never let it change the slide dimensions</strong> or switch to flowing layout — that's what breaks the PowerPoint convert.</li>
+        <li>Change <strong>one element per prompt</strong>, then re-check before the next.</li>
+        <li>If style drifts, be literal: <span class="k">"You moved the title — put it back to its original position."</span></li>
+        <li>Ask it to <strong>return the full file</strong> so you keep one source of truth.</li>
+      </ul>
+    </div>
+
+    <!-- When output is wrong -->
+    <div class="card">
+      <h2><span class="n">3</span>When the output is off</h2>
+      <ul>
+        <li><strong>Describe the symptom, not the fix:</strong> "the text overflows the slide" beats "make the div smaller".</li>
+        <li><strong>Paste the error</strong> if something breaks — copy it in verbatim.</li>
+        <li><strong>Show, don't tell:</strong> screenshot or describe exactly what you see vs. what you expected.</li>
+        <li><strong>Don't restart</strong> — keep iterating in the same chat so it retains context.</li>
+        <li>Stuck after 3 tries? Say <span class="k">"start over with a simpler version"</span>.</li>
+      </ul>
+    </div>
+
+    <!-- Which language to ask for -->
+    <div class="card full">
+      <h2><span class="n">4</span>Which language to ask for</h2>
+      <table>
+        <tr><th>Ask for…</th><th>When you want…</th><th>Say something like</th></tr>
+        <tr><td>HTML + CSS</td><td>Slides &amp; one-pagers you'll transpose to PowerPoint — the visual layer.</td><td>"HTML deck, 1280×720 slides, PowerPoint-safe."</td></tr>
+        <tr><td>JavaScript</td><td>Interactivity — clickable charts, navigation, filters, calculators inside the HTML.</td><td>"Add JS so the chart updates when I pick a year."</td></tr>
+        <tr><td>Python</td><td>Reshaping data, automating files, reading/writing Excel so it's clean for the LLM.</td><td>"Python to flatten this Excel into one tidy table per sheet."</td></tr>
+        <tr><td>SQL</td><td>Pulling, filtering or aggregating data from a database before charting it.</td><td>"SQL to total revenue by month for 2025."</td></tr>
+      </table>
+    </div>
+
+    <!-- PowerPoint-safe checklist -->
+    <div class="card amend">
+      <h2><span class="n">5</span>PowerPoint-safe checklist <span class="pill">TRANSPOSE</span></h2>
+      <ul>
+        <li>Fixed <strong>1280×720</strong> canvas, every slide identical size.</li>
+        <li><strong>Absolute positioning</strong> — not flowing/auto-sizing layout.</li>
+        <li><strong>Real text</strong> in elements, never text baked into images.</li>
+        <li><strong>Solid hex colours</strong> &amp; named web fonts — no gradient-on-text, no backdrop filters.</li>
+        <li>Tables &amp; shapes over CSS tricks with no PPT equivalent.</li>
+      </ul>
+    </div>
+
+    <!-- Quick wins / phrases -->
+    <div class="card">
+      <h2><span class="n">6</span>Phrases that raise quality</h2>
+      <ul>
+        <li><span class="k">"Keep slides 1280×720 and PowerPoint-safe."</span></li>
+        <li><span class="k">"Return the complete file."</span></li>
+        <li><span class="k">"Match this exact colour palette: …"</span></li>
+        <li><span class="k">"Keep everything else unchanged."</span></li>
+        <li><span class="k">"Explain what you changed in one line."</span></li>
+        <li><strong>Messy Excel?</strong> First: <span class="k">"Python to turn this sheet into a tidy CSV — one header row, no merged cells, no totals."</span></li>
+      </ul>
+    </div>
+
   </div>
 
-  <div class="takeaways">
-    <div class="card cur">
-      <h3>◣ What current state costs</h3>
-      <p><strong>Correlated blind spots.</strong> Recon and NAV read the same stale price, so both go green while the output is wrong. Two controls agree because they share a source.</p>
-      <p><strong>Cause-first triage.</strong> The accountant works every feed error by hand, ranked by noise, not by whether the NAV actually moved. Effort scales with alerts, not with risk.</p>
-      <p><strong>No hard stop.</strong> A wrong NAV can publish because nothing structurally prevents release — the Knight Capital failure mode: a missing halt.</p>
-    </div>
-    <div class="card fut">
-      <h3>◢ What future state changes</h3>
-      <p><strong>Uncorrelated redundancy.</strong> An independent shadow-NAV path catches what recon can't, because it doesn't share the blind spot. Defense in depth, by different authors.</p>
-      <p><strong>Symptom-first, "too good" alerting.</strong> The feed surfaces outputs that look wrong — including a return that's implausibly <em>smooth</em> — ranked by materiality, not error count.</p>
-      <p><strong>The strike-gate holds.</strong> NAV cannot publish while a material exception is open. The human signs the release; the model never posts, reverses, or signs.</p>
-    </div>
-  </div>
+  <footer>
+    <span>Pin this by your screen. The skill is in the iterating, not the first prompt.</span>
+    <span>v1 · for internal use</span>
+  </footer>
 
-<script>
-const W=1180,H=560;
-const svg=d3.select("#canvas");
-
-// ---------- data ----------
-const current={
-  title:"Current state — recon queue, cause-first",
-  badge:"Effort scales with alerts",
-  badgeCls:"cur",
-  legend:[
-    {c:"var(--green)",t:"green control / passes"},
-    {c:"var(--amber)",t:"manual review"},
-    {c:"var(--red)",t:"silent blind spot"}
-  ],
-  nodes:[
-    {id:"feed",x:90,y:280,label:"Price + expense feeds",sub:"vendor, custody, accruals",col:"var(--txt-dim)"},
-    {id:"nav",x:340,y:180,label:"Accounting platform",sub:"strikes NAV off last snapshot",col:"var(--txt-dim)"},
-    {id:"recon",x:340,y:380,label:"Recon controls",sub:"three-way, balanced",col:"var(--green)"},
-    {id:"queue",x:610,y:280,label:"Recon break queue",sub:"every break, ranked by noise",col:"var(--amber)"},
-    {id:"fa",x:860,y:280,label:"Fund accountant",sub:"works each cause by hand",col:"var(--amber)"},
-    {id:"pub",x:1075,y:280,label:"NAV published",sub:"no hard stop",col:"var(--txt-dim)"}
-  ],
-  links:[
-    {s:"feed",t:"nav",kind:"normal"},
-    {s:"feed",t:"recon",kind:"normal"},
-    {s:"nav",t:"queue",kind:"normal"},
-    {s:"recon",t:"queue",kind:"normal"},
-    {s:"queue",t:"fa",kind:"manual"},
-    {s:"fa",t:"pub",kind:"manual"},
-    {s:"feed",t:"nav",kind:"blind"} // the silent stale path
-  ],
-  blindNote:{x:215,y:130,t:"stale price flows through — both NAV and recon read it, both stay green"}
-};
-
-const future={
-  title:"Future state — strike-gate, symptom-first",
-  badge:"Effort scales with risk",
-  badgeCls:"fut",
-  legend:[
-    {c:"var(--green)",t:"deterministic proof"},
-    {c:"var(--cyan)",t:"uncorrelated check"},
-    {c:"var(--gold)",t:"human sign-off"},
-    {c:"var(--red)",t:"gate held"}
-  ],
-  nodes:[
-    {id:"feed",x:80,y:280,label:"Price + expense feeds",sub:"vendor, custody, accruals",col:"var(--txt-dim)"},
-    {id:"recompute",x:300,y:150,label:"Deterministic recompute",sub:"reproduces NAV to the cent",col:"var(--green)"},
-    {id:"shadow",x:300,y:290,label:"Shadow-NAV (independent path)",sub:"different price snapshot",col:"var(--cyan)"},
-    {id:"iso",x:300,y:430,label:"Isolation Forest + EWMA",sub:"multivariate outliers",col:"var(--cyan)"},
-    {id:"symptom",x:560,y:290,label:"Symptom feed",sub:'"too smooth" / divergence, ranked',col:"var(--cyan)"},
-    {id:"gate",x:790,y:290,label:"Strike-gate",sub:"holds while exception open",col:"var(--red)"},
-    {id:"fa",x:1000,y:160,label:"Fund accountant",sub:"resolves 6, not 40 — signs release",col:"var(--gold)"},
-    {id:"pub",x:1000,y:430,label:"NAV published",sub:"proof + signature attached",col:"var(--green)"}
-  ],
-  links:[
-    {s:"feed",t:"recompute",kind:"normal"},
-    {s:"feed",t:"shadow",kind:"check"},
-    {s:"feed",t:"iso",kind:"check"},
-    {s:"recompute",t:"symptom",kind:"normal"},
-    {s:"shadow",t:"symptom",kind:"check"},
-    {s:"iso",t:"symptom",kind:"check"},
-    {s:"symptom",t:"gate",kind:"normal"},
-    {s:"gate",t:"fa",kind:"human"},
-    {s:"fa",t:"gate",kind:"return"},
-    {s:"gate",t:"pub",kind:"release"}
-  ],
-  blindNote:null
-};
-
-const palette={
-  normal:"#2c4358",
-  manual:"var(--amber)",
-  blind:"var(--red)",
-  check:"var(--cyan)",
-  human:"var(--gold)",
-  return:"var(--gold)",
-  release:"var(--green)"
-};
-
-function nodeById(data,id){return data.nodes.find(n=>n.id===id);}
-
-let particleTimers=[];
-function clearTimers(){particleTimers.forEach(t=>clearInterval(t));particleTimers=[];}
-
-function render(data){
-  clearTimers();
-  svg.selectAll("*").remove();
-
-  // defs: glow
-  const defs=svg.append("defs");
-  ["var(--cyan)","var(--gold)","var(--red)","var(--green)"].forEach((c,i)=>{
-    const f=defs.append("filter").attr("id","glow"+i).attr("x","-50%").attr("y","-50%").attr("width","200%").attr("height","200%");
-    f.append("feGaussianBlur").attr("stdDeviation","3.2").attr("result","b");
-    const m=f.append("feMerge");m.append("feMergeNode").attr("in","b");m.append("feMergeNode").attr("in","SourceGraphic");
-  });
-
-  // links
-  const linkLayer=svg.append("g");
-  const pathFor=(l)=>{
-    const a=nodeById(data,l.s),b=nodeById(data,l.t);
-    const mx=(a.x+b.x)/2;
-    if(l.kind==="return"){ // curve back, offset
-      return `M${b.x-14},${b.y+18} C${mx},${b.y+70} ${mx},${a.y+70} ${a.x+14},${a.y+18}`;
-    }
-    return `M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}`;
-  };
-
-  data.links.forEach((l,i)=>{
-    const col=palette[l.kind]||"#2c4358";
-    const dash=(l.kind==="blind")?"2,6":(l.kind==="check"?"1,7":null);
-    const p=linkLayer.append("path")
-      .attr("d",pathFor(l))
-      .attr("fill","none")
-      .attr("stroke",col)
-      .attr("stroke-width",l.kind==="blind"?2:1.6)
-      .attr("opacity",0);
-    if(dash)p.attr("stroke-dasharray",dash);
-    const len=p.node().getTotalLength();
-    p.attr("stroke-dasharray",dash?dash:len+" "+len)
-     .attr("stroke-dashoffset",dash?0:len)
-     .transition().delay(200+i*120).duration(700)
-     .attr("opacity",l.kind==="blind"?0.85:0.55)
-     .attr("stroke-dashoffset",0)
-     .on("end",function(){if(dash)d3.select(this).attr("stroke-dasharray",dash);});
-
-    // flowing particles (skip blind = static danger line)
-    if(l.kind!=="blind"){
-      const t=setInterval(()=>{
-        const dot=linkLayer.append("circle").attr("r",2.6).attr("fill",col).attr("opacity",0.9);
-        dot.transition().duration(1600).ease(d3.easeLinear)
-          .attrTween("transform",()=>{return tt=>{const pt=p.node().getPointAtLength(tt*len);return `translate(${pt.x},${pt.y})`;};})
-          .attr("opacity",0).remove();
-      },900+Math.random()*400);
-      particleTimers.push(t);
-    }
-  });
-
-  // blind-spot annotation
-  if(data.blindNote){
-    const g=svg.append("g").attr("opacity",0);
-    g.append("text").attr("x",data.blindNote.x).attr("y",data.blindNote.y)
-      .attr("class","axis-note").attr("fill","var(--red)").attr("text-anchor","middle")
-      .text("◬ silent stale path");
-    g.append("text").attr("x",data.blindNote.x).attr("y",data.blindNote.y+15)
-      .attr("class","axis-note").attr("fill","#8a5560").attr("text-anchor","middle")
-      .attr("font-size","9px").text("recon & NAV share the blind spot");
-    g.transition().delay(1400).duration(800).attr("opacity",1);
-  }
-
-  // nodes
-  const nodeLayer=svg.append("g");
-  data.nodes.forEach((n,i)=>{
-    const g=nodeLayer.append("g").attr("transform",`translate(${n.x},${n.y})`).attr("opacity",0);
-    const w=Math.max(150, n.label.length*8.2);
-    const isGate=n.id==="gate";
-    g.append("rect").attr("x",-w/2).attr("y",-26).attr("width",w).attr("height",52)
-      .attr("rx",9).attr("fill","var(--panel2)")
-      .attr("stroke",n.col).attr("stroke-width",isGate?1.8:1.1)
-      .attr("filter",isGate?"url(#glow2)":null);
-    if(isGate){
-      g.append("rect").attr("x",-w/2-3).attr("y",-29).attr("width",w+6).attr("height",58)
-        .attr("rx",11).attr("fill","none").attr("stroke","var(--red)").attr("stroke-width",0.8).attr("opacity",0.35)
-        .attr("stroke-dasharray","4,4");
-    }
-    g.append("circle").attr("cx",-w/2+13).attr("cy",-9).attr("r",3.5).attr("fill",n.col);
-    g.append("text").attr("x",-w/2+24).attr("y",-5).attr("class","node-label").text(n.label);
-    g.append("text").attr("x",-w/2+24).attr("y",13).attr("class","node-sub").text(n.sub);
-    g.transition().delay(300+i*130).duration(600).attr("opacity",1);
-  });
-
-  // stage caption strip
-  svg.append("text").attr("x",W/2).attr("y",H-14).attr("text-anchor","middle")
-     .attr("class","axis-note")
-     .text(data===current ? "feeds → platform & recon → break queue → accountant → publish   ·   no structural stop"
-                          : "feeds → 3 uncorrelated checks → symptom feed → STRIKE-GATE → human sign-off → publish with proof");
-}
-
-const states={cur:current,fut:future};
-function show(k){
-  const d=states[k];
-  document.getElementById("bt").textContent=d.title;
-  const bd=document.getElementById("bd");bd.textContent=d.badge;bd.className="badge "+d.badgeCls;
-  document.getElementById("btn-cur").classList.toggle("active",k==="cur");
-  document.getElementById("btn-fut").classList.toggle("active",k==="fut");
-  const leg=document.getElementById("leg");leg.innerHTML="";
-  d.legend.forEach(L=>{
-    const s=document.createElement("span");
-    s.innerHTML=`<span class="dot" style="background:${L.c}"></span>${L.t}`;
-    leg.appendChild(s);
-  });
-  render(d);
-}
-show('cur');
-</script>
+</div>
 </body>
 </html>
